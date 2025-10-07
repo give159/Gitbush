@@ -1,0 +1,181 @@
+了解です！
+では、新人エンジニア向けに **Git/Git Bash + GitHub を使ったチーム開発の基礎** を、MECE（漏れなくダブりなく）で整理して、Windows環境での操作や結果の読み方も含めて解説します。なるべく初心者でも理解できるよう、図や例をイメージしやすく説明します。
+
+---
+
+# **1. 基本用語と概念整理（MECE）**
+
+| 分類         | 用語                   | 説明                                 |
+| ---------- | -------------------- | ---------------------------------- |
+| **作業単位**   | commit（コミット）         | 変更内容を記録する単位。変更履歴のスナップショット。         |
+|            | branch（ブランチ）         | 独立した作業ライン。mainやdevelopなど。          |
+|            | merge（マージ）           | ブランチの変更を他ブランチに統合。                  |
+|            | rebase（リベース）         | ブランチの基底を別ブランチに置き換えて履歴を整理。          |
+|            | cherry-pick（チェリーピック） | 特定のコミットだけを別ブランチに適用。                |
+|            | revert（リバート）         | 過去のコミットを打ち消す新しいコミットを作成。            |
+| **リモート操作** | push（プッシュ）           | ローカルコミットをGitHubなどのリモートに送信。         |
+|            | pull（プル）             | リモートの変更をローカルに反映。                   |
+|            | clone（クローン）          | GitHubリポジトリをローカルにコピー。              |
+| **状態管理**   | add（ステージング）          | 変更したファイルを次のコミット対象に追加。              |
+|            | status               | 現在の変更状況を確認。                        |
+|            | log                  | 履歴を確認。                             |
+| **認証・接続**  | SSHキー                | GitHubと安全に接続する鍵。                   |
+| **エラー・状態** | コンフリクト               | マージやリベース時に変更が衝突した状態。               |
+|            | 正常/異常                | Git Bash の結果（exit code, メッセージ）で確認。 |
+
+---
+
+# **2. Git Bash 基本操作の流れ（Windows向け）**
+
+### 2-1. 初期設定
+
+```bash
+# ユーザ名・メール
+git config --global user.name "Yukiko Ishiguro"
+git config --global user.email "yukiko@example.com"
+
+# SSH鍵作成（まだ作ってない場合）
+ssh-keygen -t ed25519 -C "yukiko@example.com"
+
+# SSHエージェント起動 & キー追加
+eval $(ssh-agent -s)
+ssh-add ~/.ssh/id_ed25519
+```
+
+### 2-2. リポジトリ操作
+
+```bash
+# GitHubリポジトリをクローン
+git clone git@github.com:username/repo.git
+
+# ブランチ一覧
+git branch         # ローカル
+git branch -r      # リモート
+git branch -a      # 両方
+
+# ブランチ切替
+git checkout develop
+
+# 新規ブランチ作成
+git checkout -b feature/login
+```
+
+### 2-3. 変更作業とコミット
+
+```bash
+# ファイル追加/編集後
+git status         # 変更確認
+
+# ステージング
+git add file.py
+
+# コミット
+git commit -m "ログイン機能追加"
+
+# 履歴確認
+git log --oneline
+```
+
+### 2-4. リモート反映
+
+```bash
+# push（初回はブランチ指定）
+git push -u origin feature/login
+
+# 既存ブランチ
+git push
+```
+
+---
+
+# **3. ブランチ間操作・応用**
+
+### 3-1. マージとコンフリクト
+
+```bash
+# developにfeatureをマージ
+git checkout develop
+git merge feature/login
+# コンフリクト発生時はファイルを編集
+git add conflicted_file.py
+git commit
+```
+
+### 3-2. リベース
+
+```bash
+# feature/login を develop 最新に合わせたい場合
+git checkout feature/login
+git rebase develop
+# コンフリクト解消後
+git rebase --continue
+```
+
+### 3-3. チェリーピック
+
+```bash
+# 特定コミットを他ブランチに反映
+git checkout develop
+git cherry-pick <コミットID>
+```
+
+### 3-4. リバート
+
+```bash
+# 過去の変更を取り消す新しいコミット
+git revert <コミットID>
+```
+
+---
+
+# **4. Git Bash 結果の読み方**
+
+* `git status`
+
+  * `Changes not staged for commit`: まだ add していない変更
+  * `Changes to be committed`: add 済みでコミット可能
+* `git log`
+
+  * `commit <ハッシュ>`: コミットID
+  * `Author:` 作成者
+  * `Date:` 日時
+  * `メッセージ`
+* エラー例
+
+  * `error: failed to push some refs`: リモートに既に変更がある → `git pull` 後再 push
+  * `CONFLICT`: コンフリクト発生 → 該当ファイル修正 & add & commit
+
+---
+
+# **5. チーム開発で気をつけるポイント**
+
+1. **ブランチ運用を統一**
+
+   * main/develop/feature
+2. **こまめに pull して最新反映**
+3. **コンフリクト時は焦らず解消**
+4. **コミットメッセージは分かりやすく**
+5. **push 前に status, log で確認**
+6. **チェリーピックやリバートは履歴整理に有効**
+
+---
+
+💡 **まとめ図イメージ（頭の中で）**
+
+```
+main ────●─────●
+          \
+develop    ●─────●
+           \
+feature     ●───●
+```
+
+* feature → develop → main へマージ
+* 必要に応じチェリーピックで特定コミットを main に反映
+* リバートは main の履歴を巻き戻す
+
+---
+
+もし希望であれば、次のステップとして **「新人向けに図解付き Git操作フロー全体マップ」** を作って、リベース・チェリーピック・リバート・コンフリクトの流れを一枚で理解できるようにできます。
+
+作ってほしいですか？
