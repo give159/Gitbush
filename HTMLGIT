@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git/GitBash チーム開発完全ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        nav {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 2px solid #e9ecef;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        nav button {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        nav button:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        nav button.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .chapter {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .chapter.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .step {
+            background: #f8f9fa;
+            border-left: 5px solid #667eea;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 5px;
+        }
+        
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+        
+        .command-box {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            position: relative;
+            overflow-x: auto;
+        }
+        
+        .command-box::before {
+            content: '💻 GitBash';
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            background: #667eea;
+            color: white;
+            padding: 3px 12px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        
+        .command {
+            color: #4ec9b0;
+            font-weight: bold;
+        }
+        
+        .output {
+            color: #ce9178;
+        }
+        
+        .success {
+            color: #4ec9b0;
+        }
+        
+        .error {
+            color: #f48771;
+        }
+        
+        .warning {
+            color: #dcdcaa;
+        }
+        
+        .copy-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        
+        .copy-btn:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+        
+        .explanation {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .diagram {
+            background: white;
+            border: 2px solid #e9ecef;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+        }
+        
+        .status-good {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        
+        .status-bad {
+            color: #f44336;
+            font-weight: bold;
+        }
+        
+        .status-warning {
+            color: #ff9800;
+            font-weight: bold;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+        }
+        
+        tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin: 5px;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        h2 {
+            color: #667eea;
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        h3 {
+            color: #764ba2;
+            margin: 25px 0 15px 0;
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 10px;
+            margin: 8px 0;
+            background: #f8f9fa;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .checklist li:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .checklist li::before {
+            content: '☐ ';
+            color: #667eea;
+            font-size: 1.3em;
+            margin-right: 10px;
+        }
+        
+        .visual-flow {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .flow-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px;
+            min-width: 150px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .flow-arrow {
+            font-size: 2em;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Git/GitBash完全マスターガイド</h1>
+            <p>新人エンジニア向け | ローカル作業→GitHub完全版</p>
+        </header>
+        
+        <nav>
+            <button class="nav-btn active" data-chapter="1">📚 基礎準備</button>
+            <button class="nav-btn" data-chapter="2">🔰 初回設定</button>
+            <button class="nav-btn" data-chapter="3">💻 日常作業</button>
+            <button class="nav-btn" data-chapter="4">🔍 状態確認</button>
+            <button class="nav-btn" data-chapter="5">🆘 エラー対処</button>
+            <button class="nav-btn" data-chapter="6">📊 完全チート</button>
+        </nav>
+        
+        <div class="content">
+            <!-- Chapter 1: 基礎準備 -->
+            <div class="chapter active" id="chapter-1">
+                <h2>📚 第1章: 基礎準備とMECE全体構造</h2>
+                
+                <div class="step">
+                    <h3><span class="step-number">📋</span>事前チェックリスト</h3>
+                    <ul class="checklist">
+                        <li>Gitがインストールされている</li>
+                        <li>GitBashが起動できる</li>
+                        <li>GitHubアカウントがある</li>
+                        <li>リポジトリのURLを知っている</li>
+                        <li>リポジトリへのアクセス権限がある</li>
+                    </ul>
+                </div>
+                
+                <div class="explanation">
+                    <h3>🎯 MECE構造: 全体の流れ</h3>
+                    <div class="visual-flow">
+                        <div class="flow-box">1. 初期設定<br>(初回のみ)</div>
+                        <span class="flow-arrow">→</span>
+                        <div class="flow-box">2. クローン<br>(初回のみ)</div>
+                        <span class="flow-arrow">→</span>
+                        <div class="flow-box">3. ブランチ作成<br>(機能ごと)</div>
+                        <span class="flow-arrow">→</span>
+                        <div class="flow-box">4. コード編集<br>(日常)</div>
+                    </div>
+                    <div class="visual-flow">
+                        <div class="flow-box">5. 確認<br>git status</div>
+                        <span class="flow-arrow">→</span>
+                        <div class="flow-box">6. 追加<br>git add</div>
+                        <span class="flow-arrow">→</span>
+                        <div class="flow-box">7. コミット<br>git commit</div>
+                        <span class="flow-arrow">→</span>
+                        <div class="flow-box">8. プッシュ<br>git push</div>
+                    </div>
+                </div>
+                
+                <h3>📝 コマンド分類(MECE)</h3>
+                <table>
+                    <tr>
+                        <th>分類</th>
+                        <th>コマンド</th>
+                        <th>用途</th>
+                        <th>頻度</th>
+                    </tr>
+                    <tr>
+                        <td>🔧 設定系</td>
+                        <td>git config</td>
+                        <td>ユーザー情報設定</td>
+                        <td>初回のみ</td>
+                    </tr>
+                    <tr>
+                        <td>📥 取得系</td>
+                        <td>git clone, git pull</td>
+                        <td>リモートから取得</td>
+                        <td>クローン1回、pull毎日</td>
+                    </tr>
+                    <tr>
+                        <td>🌿 ブランチ系</td>
+                        <td>git branch, git checkout</td>
+                        <td>ブランチ操作</td>
+                        <td>機能開発ごと</td>
+                    </tr>
+                    <tr>
+                        <td>💾 保存系</td>
+                        <td>git add, git commit</td>
+                        <td>変更を記録</td>
+                        <td>毎日何度も</td>
+                    </tr>
+                    <tr>
+                        <td>📤 送信系</td>
+                        <td>git push</td>
+                        <td>リモートへ送信</td>
+                        <td>コミット後</td>
+                    </tr>
+                    <tr>
+                        <td>🔍 確認系</td>
+                        <td>git status, git log</td>
+                        <td>状態確認</td>
+                        <td>常時</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <!-- Chapter 2: 初回設定 -->
+            <div class="chapter" id="chapter-2">
+                <h2>🔰 第2章: 初回設定(最初に1回だけ)</h2>
+                
+                <div class="step">
+                    <h3><span class="step-number">1</span>Git Bashを起動</h3>
+                    <div class="explanation">
+                        <strong>🖱️ 起動方法:</strong>
+                        <ul>
+                            <li>スタートメニュー → 「Git Bash」を検索</li>
+                            <li>または、プロジェクトフォルダで右クリック → 「Git Bash Here」</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <h3><span class="step-number">2</span>ユーザー名とメールアドレスを設定</h3>
+                    
+                    <div class="command-box">
+<span class="command">$ git config --global user.name "あなたの名前"</span>
+<button class="copy-btn" onclick="copyCommand('git config --global user.name &quot;あなたの名前&quot;')">📋 コピー</button>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>📖 読み方と意味:</strong><br>
+                        <code>git config</code> = ギット・コンフィグ(設定)<br>
+                        <code>--global</code> = グローバル(全体に適用)<br>
+                        <code>user.name</code> = ユーザー・ネーム(名前)<br>
+                        <strong>💡 意味:</strong> Gitで使う名前を設定する
+                    </div>
+                    
+                    <div class="command-box">
+<span class="command">$ git config --global user.email "your.email@example.com"</span>
+<button class="copy-btn" onclick="copyCommand('git config --global user.email &quot;your.email@example.com&quot;')">📋 コピー</button>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>📖 読み方と意味:</strong><br>
+                        <code>user.email</code> = ユーザー・イーメール(メールアドレス)<br>
+                        <strong>💡 意味:</strong> GitHubで使っているメールアドレスを設定
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <h3><span class="step-number">3</span>設定確認</h3>
+                    
+                    <div class="command-box">
+<span class="command">$ git config --list</span>
+<button class="copy-btn" onclick="copyCommand('git config --list')">📋 コピー</button>
+
+<span class="output">user.name=Tanaka Taro
+user.email=tanaka@example.com
+...</span>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>📖 読み方:</strong> <code>--list</code> = リスト(一覧表示)<br>
+                        <strong>✅ 正常の証拠:</strong> 名前とメールが表示される<br>
+                        <strong>❌ 異常の証拠:</strong> 何も表示されない、または違う名前
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <h3><span class="step-number">4</span>SSH鍵の設定(GitHub接続用)</h3>
+                    
+                    <div class="command-box">
+<span class="command">$ ssh-keygen -t ed25519 -C "your.email@example.com"</span>
+<button class="copy-btn" onclick="copyCommand('ssh-keygen -t ed25519 -C &quot;your.email@example.com&quot;')">📋 コピー</button>
+
+<span class="output">Generating public/private ed25519 key pair.
+Enter file in which to save the key (/c/Users/YourName/.ssh/id_ed25519):</span>
+<span class="command">← Enterキーを押す(そのまま)</span>
+
+<span class="output">Enter passphrase (empty for no passphrase):</span>
+<span class="command">← Enterキーを押す(パスワード不要なら)</span>
+
+<span class="output">Your identification has been saved in /c/Users/YourName/.ssh/id_ed25519</span>
+<span class="success">✅ 成功!</span>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>📖 読み方:</strong><br>
+                        <code>ssh-keygen</code> = エスエスエイチ・キージェン(SSH鍵生成)<br>
+                        <code>-t ed25519</code> = タイプ・イーディー25519(暗号化方式)<br>
+                        <code>-C</code> = コメント(識別用)<br>
+                        <strong>💡 意味:</strong> GitHubと安全に通信するための鍵を作成
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <h3><span class="step-number">5</span>公開鍵をコピー</h3>
+                    
+                    <div class="command-box">
+<span class="command">$ cat ~/.ssh/id_ed25519.pub</span>
+<button class="copy-btn" onclick="copyCommand('cat ~/.ssh/id_ed25519.pub')">📋 コピー</button>
+
+<span class="output">ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGx... your.email@example.com</span>
+<span class="command">← この全文をコピーする</span>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>📖 読み方:</strong><br>
+                        <code>cat</code> = キャット(ファイル内容表示)<br>
+                        <code>~/.ssh/</code> = ホームディレクトリのSSHフォルダ<br>
+                        <code>.pub</code> = パブリック(公開鍵)<br>
+                        <strong>💡 次のステップ:</strong> この鍵をGitHubに登録する
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>🌐 GitHubでの登録手順:</strong>
+                        <ol>
+                            <li>GitHub.comにログイン</li>
+                            <li>右上のアイコン → Settings</li>
+                            <li>左メニュー → SSH and GPG keys</li>
+                            <li>「New SSH key」ボタンをクリック</li>
+                            <li>Title: 「Windows PC」など</li>
+                            <li>Key: 上でコピーした鍵を貼り付け</li>
+                            <li>「Add SSH key」をクリック</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chapter 3: 日常作業 -->
+            <div class="chapter" id="chapter-3">
+                <h2>💻 第3章: 日常の作業フロー(毎日使う)</h2>
+                
+                <div class="step">
+                    <h3><span class="step-number">1</span>リポジトリをクローン(初回のみ)</h3>
+                    
+                    <div class="command-box">
+<span class="command">$ cd /c/projects</span>
+<button class="copy-btn" onclick="copyCommand('cd /c/projects')">📋 コピー</button>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>📖 読み方:</strong> <code>cd</code> = チェンジ・ディレクトリ(フォルダ移動)<br>
+                        <strong>💡 意味:</strong> C:\projects フォルダに移動<br>
+                        <strong>⚠️ 注意:</strong> Windowsの「\」ではなく「/」を使う
+                    </div>
+                    
+                    <div class="command-box">
+<span class="command">$ git clone git@github.com:company/project.git</span>
+<button class="copy-btn" onclick="copyCommand('git clone git@github.com:company/project.git')">📋 コピー</button>
+
+<span class="output">Cloning into 'project'...
+remote: Enumerating objects: 100, done.
+remote: Counting objects: 100% (100/100), done.
+remote: Compressing objects: 100% (75/75), done.
+Receiving objects: 100% (100/100), 1.23 MiB | 2.00 MiB/s, done.
+Resolving deltas: 100% (50/50), done.</span>
+<span class="success">✅ 成功!</span>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>📖 読み方:</strong><br>
+                        <code>git clone</code> = ギット・クローン(複製)<br>
+                        <code>git@github.com</code> = GitHubのSSH接続<br>
+                        <strong>💡 意味:</strong> リモートリポジトリを自分のPCにコピー<br><br>
+                        
+                        <strong>✅ 正常の証拠:</strong>
+                        <ul>
+                            <li><span class="status-good">done.</span> が表示される</li>
+                            <li><span class="status-good">100%</span> が表示される</li>
+                            <li>エラーメッセージが無い</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="command-box">
+<span class="command">$ cd project</span>
+<button class="copy-btn" onclick="copyCommand('cd project')">📋 コピー</button>
+
+<span class="command">$ pwd</span>
+<span class="output">/c/projects/project</span>
+<span class="success">✅ プロジェクトフォルダに入った!</span>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <h3><span class="step-number">2</span>最新の変更を取得(毎朝)</h3>
+                    
+                    <div class="command-box">
+<span class="command">$ git pull origin main</span>
+<button class="copy-btn" onclick="copyCommand('git pull origin main')">📋 コピー</button>
+
+<span class="output">From github.com:company/project
+ * branch            main       -> FETCH_HEAD
+Already up to date.</span>
+<span class="success">✅ 既に最新!</span>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>📖 読み方:</strong><br>
+                        <code>git pull</code> = ギット・プル(引く、取得)<br>
+                        <code>origin</code> = オリジン(リモートの名前)<br>
+                        <code>main</code> = メイン(ブランチ名)<br>
+                        <strong>💡 意味:</strong> チームメンバーの最新の変更を取得<br><br>
+                        
+                        <strong>✅ 成功パターン:</strong>
+                        <ul>
+                            <li><span class="status-good">Already up to date.</span> = 既に最新</li>
+                            <li><span class="status-good">Fast-forward</span> = 自動更新成功</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <h3><span class="step-number">3</span>作業用ブランチを作成</h3>
+                    
+                    <div class="command-box">
+<span class="command">$ git checkout -b feature/login-page</span>
+<button class="copy-btn" onclick="copyCommand('git checkout -b feature/login-page')">📋 コピー</button>
+
+<span class="output">Switched to a new branch 'feature/login-page'</span>
+<span class="success">✅ 新しいブランチ作成!</span>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>📖 読み方:</strong><br>
+                        <code>git checkout</code> = ギット・チェックアウト(切り替え)<br>
+                        <code>-b</code> = ブランチ(新規作成フラグ)<br>
+                        <code>feature/login-page</code> = 機能名<br>
+                        <strong>💡 意味:</strong> 新しい作業ブランチを作って切り替え<br><br>
+                        
+                        <strong>🏷️ ブランチ命名規則:</strong>
+                        <ul>
+                            <li><code>feature/機能名</code> - 新機能</li>
+                            <li><code>fix/バグ名</code> - バグ修正</li>
+                            <li><code>hotfix/緊急修正</code> - 緊急対応</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="command-box">
+<span class="command">$ git branch</span>
+<button class="copy-btn" onclick="copyCommand('git branch')">📋 コピー</button>
+
+<span class="output">* feature/login-page
+  main</span>
+<span class="success">✅ *印が付いているのが現在のブランチ</span>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <h3><span class="step-number">4</span>コードを編集</h3>
+                    
+                    <div class="explanation">
+                        <strong>💻 作業内容:</strong>
+                        <ul>
+                            <li>VSCode、PyCharmなどで<code>login.py</code>を編集</li>
+                            <li>新しいファイル<code>auth.py</code>を作成</li>
+                            <li>保存する</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <h3><span class="step-number">5</span>変更を確認</h3>
+                    
+                    <div class="command-box">
+<span class="command">$ git status</span>
+<button class="copy-btn" onclick="copyCommand('git status')">📋 コピー</button>
+
+<span class="output">On branch feature/login-page
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        <span class="error">modified:   login.py</span>
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        <span class="error">auth.py</span>
+
+no changes added to commit (use "git add" and/or "git commit -a")</span>
+                    </div>
+                    
+                    <div class="explanation">
+                        <strong>📖 読み方:</strong><br>
+                        <code>git status</code> = ギット・ステータス(状態確認)<br>
+                        <strong>💡 表示の意味:</strong><br>
+                        <ul>
+                            <li>
