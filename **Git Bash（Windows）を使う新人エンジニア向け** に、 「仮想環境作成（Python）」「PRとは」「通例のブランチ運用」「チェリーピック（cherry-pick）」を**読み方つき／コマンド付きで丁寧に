@@ -1,0 +1,256 @@
+
+以下は **Git Bash（Windows）を使う新人エンジニア向け** に、
+「仮想環境作成（Python）」「PRとは」「通例のブランチ運用」「チェリーピック（cherry-pick）」を**読み方つき／コマンド付きで丁寧に**まとめたハンドブックです。手を動かしながら読んでくださいね。
+
+# 仮想環境の作成（Python venv） — Git Bash での基本
+
+目的：プロジェクトごとに Python のパッケージを分ける（依存衝突を防ぐ）。
+
+1. **Python が使えるか確認**
+
+```bash
+python --version
+# あるいは Windows の場合: py -3 --version
+```
+
+（読み方：パイソン・ハイフン・バージョン）
+
+2. **プロジェクトフォルダを作る／移動**
+
+```bash
+mkdir myproject
+cd myproject
+```
+
+（読み方：メイク・ディア / シーディー）
+
+3. **仮想環境を作成**
+   推奨：プロジェクト直下に `.venv` や `venv` を置くと分かりやすい。
+
+```bash
+python -m venv .venv
+# もし python コマンドが無ければ: py -3 -m venv .venv
+```
+
+（読み方：パイソン マイナスエム ヴィーイーエヌ .ヴェンブ）
+
+4. **アクティベート（有効化）**
+   Git Bash（Windows）では、作成された環境の中に `Scripts` フォルダか `bin` フォルダがあるので確認してから実行してください。
+
+```bash
+# Git Bash（一般的な Windows の場合）
+source .venv/Scripts/activate
+
+# もし .venv/bin が存在する環境（WSL など）なら
+source .venv/bin/activate
+```
+
+（読み方：ソース ドットヴェンブ スクリプト アクティベート）
+
+成功するとプロンプトに `(.venv)` のように環境名が付きます。
+
+5. **パッケージのインストール・保存**
+
+```bash
+pip install requests
+pip freeze > requirements.txt
+```
+
+（読み方：ピップ インストール / ピップ フリーズ）
+
+6. **無効化（deactivate）**
+
+```bash
+deactivate
+```
+
+（読み方：デアクティベート）
+
+**トラブル小ネタ**
+
+* `source: no such file` が出たら `ls .venv` / `ls .venv/Scripts` でパスを確認。
+* `python` がない場合は Python をインストールして「Add to PATH」にチェックして再起動。
+
+---
+
+# PR（Pull Request／プルリクエスト）とは — 読み方と実務フロー
+
+**読み方：プルリクエスト（ピンポイント：Pull Request）**
+
+**意味（短く）**：自分の作業（ブランチ）を他のブランチ（通常は `main`）に入れてもらうための「レビュー依頼＋マージ申請」。
+チーム開発で変更を共有・レビュー・CI実行・承認・マージするための仕組みです。
+
+## 一般的な PR 作成フロー（実務）
+
+1. `main` を最新版にしてから feature ブランチを作る：
+
+```bash
+git checkout main
+git pull origin main
+git checkout -b feature/ISSUE-123-some-feature
+```
+
+2. 実装 → `git add` → `git commit` → `git push -u origin feature/…`
+3. GitHub の該当リポジトリで **New Pull Request** を作成
+
+   * タイトル：何を変えたか（簡潔に）
+   * 説明：目的、注意点、確認してほしい箇所、関連Issue番号（例：`#123`）
+4. 自動テスト（CI）が走る → 結果を確認
+5. レビュワーがコメント → 必要なら修正して `git push`（同じブランチに追加コミットでPRは自動更新）
+6. OKなら **Merge**（プロジェクトルールに沿って：Merge commit / Squash / Rebase）
+7. ローカルで `git pull origin main` → ローカル main を最新化
+8. 不要ならリモートとローカルの feature ブランチを削除
+
+## PR のマージ方法（チームの決めごと）
+
+* **Merge commit**：マージコミットを残す（履歴分岐が分かりやすい）
+* **Squash and merge**：複数コミットを1つにまとめる（履歴スッキリ）
+* **Rebase and merge**：コミットを main に付け替える（直線的履歴）
+
+**チェックリスト（PRの最低ライン）**
+
+* tests が通っている（CI）
+* 必要なレビュワーがアサインされている
+* 変更内容を要約した説明がある
+* 不要ファイル（.envや大きなバイナリ）が含まれていない
+
+---
+
+# 通例のブランチ運用（命名規則・流れ）
+
+**基本方針**
+
+* `main`（メイン）: 常にデプロイ可能／安定なブランチ
+* `develop`（任意）: 開発の統合ブランチ（チームで採用する場合）
+* `feature/*`: 機能追加（短命） → 例：`feature/ISSUE-123-login`
+* `fix/*` or `bugfix/*`: バグ修正 → 例：`fix/ISSUE-456-nullpointer`
+* `hotfix/*`: 本番緊急修正 → 例：`hotfix/fix-crash-20251007`
+* `chore/*` / `docs/*` / `refactor/*`：雑務、ドキュメント、リファクタ
+
+**命名ルール（推奨）**
+
+* 小文字とスラッシュで分類：`type/ISSUE-123-short-description`
+* 課題番号を入れると追跡が楽（例：JIRAチケットやIssue番号）
+
+**よく使うコマンド**
+
+```bash
+git checkout -b feature/ISSUE-123
+git push -u origin feature/ISSUE-123
+```
+
+**ブランチ保護**
+
+* `main` は直接 push 禁止、PR 必須、レビュー承認やCI通過を必須にするのが一般的（GitHub の Branch protection を設定）。
+
+---
+
+# cherry-pick（チェリーピック）とは — 使い方と注意点
+
+**読み方：チェリー・ピック（チェリーピック）**
+**意味（短く）**：あるブランチの特定コミットだけを取り出して、今いるブランチに適用（コピー）するコマンド。
+
+## 代表的な使い方（例）
+
+シナリオ：`feature/x` にあるバグ修正コミット `abc1234` を `main` に持っていきたい（merge をしたくない／または小さなホットフィックス）。
+
+```bash
+# まず適用先ブランチにチェックアウト
+git checkout main
+git pull origin main
+
+# チェリーピック実行（単一コミット）
+git cherry-pick abc1234
+
+# 競合が出たら修正して
+git add <file>
+git cherry-pick --continue
+
+# 問題なければ push
+git push origin main
+```
+
+（読み方：ギット チェリー・ピック ハッシュ）
+
+## 複数コミットを取り込む
+
+* 複数指定して順番に適用：
+
+```bash
+git cherry-pick abc1234 def5678
+```
+
+* 連続した範囲を指定（例：A..B の範囲） — 少し注意が必要なので、分かりにくければハッシュを複数指定するのがおすすめ：
+
+```bash
+git cherry-pick start_hash^..end_hash
+```
+
+## オプション
+
+* `-x`：元のコミット参照をコミットメッセージに追加（`(cherry picked from commit …)` が付く）→ 後で追跡しやすい。
+
+```bash
+git cherry-pick -x abc1234
+```
+
+* `-n` / `--no-commit`：適用してステージまで持ってくるが自動コミットはしない（メッセージを整えたいときに便利）。
+
+## 競合時の流れ（チェリーピック版）
+
+1. `git cherry-pick abc1234` → 競合が起きたら表示される
+2. `git status` で衝突ファイルを確認
+3. 問題箇所を手動で修正 → `git add <file>`
+4. `git cherry-pick --continue` （続行）
+5. もしやめたいなら `git cherry-pick --abort`（開始前の状態に戻る）
+
+## 注意点（重要！）
+
+* **コミットは複製される**（新しいコミットハッシュが作られる）→ 同じ変更が別ブランチに複数存在する形になる。
+  → その後元ブランチをマージするとコンフリクトや重複が発生することがある。
+* **履歴の整合性**：大きな機能を取り込む場合は普通に `merge` や `rebase` を検討する。`cherry-pick` は小さなホットフィックスや個別コミットの移植に向く。
+* **マージコミットをチェリーピックするなら** `-m` オプションが必要（少し高度なので注意）。
+
+---
+
+# いつ cherry-pick を使うか（実務的ガイド）
+
+* ✅ 緊急のバグ修正を main に持っていきたい（小さな単一コミット）
+* ✅ 特定のコミットだけを別リリースに入れたい（バックポート）
+* ❌ 大規模な機能を移すときは **merge/PR** を使う（履歴が分かりづらくなるため）
+
+---
+
+# まとめ（コマンドチートシート）
+
+```bash
+# 仮想環境
+python -m venv .venv
+source .venv/Scripts/activate   # Git Bash（Windows）で通常
+deactivate
+
+# ブランチ作成と push
+git checkout -b feature/ISSUE-123
+git push -u origin feature/ISSUE-123
+
+# PR フロー（ローカル）
+# 1) 作る 2) push 3) GitHubでPR作成 4) 修正 push 5) マージ
+
+# CHERRY-PICK
+git checkout main
+git pull origin main
+git cherry-pick <commit-hash>
+# 競合: fix -> git add <file> -> git cherry-pick --continue
+# 中断: git cherry-pick --abort
+```
+
+---
+
+# 最後に（学習プランの提案）
+
+やってみたい次のどれかを教えてください（そのまま実行できるコマンド付きで作ります）：
+A. 「Git Bash 上で仮想環境作成 → requirements 作って pip install までの実践スクリプト」
+B. 「PR 作成からレビュー→修正→マージまでの実践シナリオ（ローカル→GitHubの操作手順）」
+C. 「チェリーピックの実践演習スクリプト（コンフリクト発生〜解消含む）」
+
+どれを出しましょう？そのままコマンドをコピーして実行できる形で作ります。
