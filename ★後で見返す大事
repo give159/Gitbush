@@ -1,0 +1,947 @@
+# 🔄 Git Revert & Rebase 完全マスターガイド
+
+## 📚 目次
+1. [基礎知識: Revert vs Rebase vs Reset](#基礎知識)
+2. [Revert: 安全な取り消し方法](#revert編)
+3. [Rebase: 履歴を美しく整える](#rebase編)
+4. [実践シナリオ別対応](#実践シナリオ)
+5. [トラブルシューティング](#トラブルシューティング)
+6. [完全コマンドチートシート](#チートシート)
+
+---
+
+## 🎯 基礎知識: Revert vs Rebase vs Reset {#基礎知識}
+
+### MECE分類: 3つの「取り消し」系コマンド
+
+```mermaid
+graph LR
+    A[取り消し系コマンド] --> B[Reset<br/>歴史改変]
+    A --> C[Revert<br/>取り消しコミット作成]
+    A --> D[Rebase<br/>履歴整理]
+    
+    B --> B1[危険<br/>リモートに push 済みは NG]
+    C --> C1[安全<br/>いつでも OK]
+    D --> D1[要注意<br/>ローカルのみ推奨]
+```
+
+### 比較表
+
+| コマンド | 危険度 | 用途 | プッシュ済みに使える? | 履歴 |
+|---------|-------|------|---------------------|------|
+| **Reset** | 🔴 高 | ローカルの取り消し | ❌ NG | 消える |
+| **Revert** | 🟢 低 | 安全な取り消し | ✅ OK | 残る |
+| **Rebase** | 🟡 中 | 履歴の整理 | ⚠️ 要注意 | 書き換わる |
+
+### 使い分けフローチャート
+
+```
+リモートにプッシュ済み?
+  ├─ YES → Revert を使う (安全)
+  └─ NO
+       ├─ 履歴をキレイにしたい? 
+       │   ├─ YES → Rebase を使う
+       │   └─ NO → Reset を使う
+       └─ チーム作業中?
+           ├─ YES → Revert を使う (安全)
+           └─ NO → Reset を使う (速い)
+```
+
+---
+
+## 🔙 Revert編: 安全な取り消し方法 {#revert編}
+
+### 📖 Revertとは?
+
+> **Revert = 取り消しコミットを新たに作成する**
+> - 元のコミットは残る
+> - 「あのコミットを打ち消す」という新しいコミットを追加
+> - 最も安全な方法
+
+### 視覚的イメージ
+
+```
+Before:
+  A --- B --- C --- D (バグあり)
+                    ↑ HEAD
+
+Revert後:
+  A --- B --- C --- D --- D' (Dを打ち消すコミット)
+                          ↑ HEAD
+  
+※ D はそのまま残る
+※ D' は「Dの変更を取り消す」内容
+```
+
+---
+
+## 🔰 Revert: 基本操作
+
+### ステップ1: 現在の状態を確認
+
+```bash
+$ git log --oneline
+
+abc1234 (HEAD -> main) 機能Dを追加 ← このコミットを取り消したい!
+def5678 機能Cを追加
+ghi9012 機能Bを追加
+jkl3456 機能Aを追加
+```
+
+**📖 読み方:**
+- `git log` = ギット・ログ (履歴表示)
+- `--oneline` = ワンライン (1行ずつ表示)
+- `abc1234` = コミットハッシュ (コミットのID)
+- `(HEAD -> main)` = 現在mainブランチのここにいる
+
+**💡 見るべきポイント:**
+- 取り消したいコミットのハッシュ値をメモ → `abc1234`
+
+---
+
+### ステップ2: Revertを実行
+
+```bash
+$ git revert abc1234
+```
+
+**📖 読み方:**
+- `git revert` = ギット・リバート (取り消し)
+- `abc1234` = 取り消したいコミットのハッシュ
+
+**💻 実行すると...**
+
+```bash
+$ git revert abc1234
+
+[エディタが開く]
+Revert "機能Dを追加"
+
+This reverts commit abc1234567890abcdef1234567890abcdef12345.
+
+# Please enter the commit message for your changes...
+```
+
+**🎯 やること:**
+1. エディタが自動で開く
+2. デフォルトメッセージでOKなら**保存して閉じる**
+   - Vim: `:wq` + Enter
+   - Nano: Ctrl+O → Enter → Ctrl+X
+3. メッセージを変更したい場合は編集してから保存
+
+**✅ 成功時の表示:**
+
+```bash
+[main 9f8e7d6] Revert "機能Dを追加"
+ 1 file changed, 5 deletions(-)
+```
+
+**📊 結果の意味:**
+- `[main 9f8e7d6]` = mainブランチに新しいコミット9f8e7d6が作成された
+- `1 file changed` = 1ファイルが変更された
+- `5 deletions(-)` = 5行削除された (機能Dの追加分が削除された)
+
+---
+
+### ステップ3: 結果を確認
+
+```bash
+$ git log --oneline
+
+9f8e7d6 (HEAD -> main) Revert "機能Dを追加" ← NEW!
+abc1234 機能Dを追加 ← 残ってる!
+def5678 機能Cを追加
+ghi9012 機能Bを追加
+jkl3456 機能Aを追加
+```
+
+**✅ 正常の証拠:**
+- 新しい"Revert"コミットが追加されている
+- 元のコミット`abc1234`も残っている
+- エラーメッセージが無い
+
+```bash
+$ git status
+
+On branch main
+Your branch is ahead of 'origin/main' by 1 commit.
+  (use "git push" to publish your local commits)
+
+nothing to commit, working tree clean
+```
+
+**📖 読み方:**
+- `ahead of 'origin/main' by 1 commit` = リモートより1コミット進んでいる
+- `nothing to commit` = 作業ディレクトリはクリーン
+- **次にやること:** `git push` でリモートに反映
+
+---
+
+### ステップ4: リモートにプッシュ
+
+```bash
+$ git push origin main
+```
+
+**✅ 成功時の表示:**
+
+```bash
+Enumerating objects: 5, done.
+Counting objects: 100% (5/5), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 456 bytes | 456.00 KiB/s, done.
+Total 3 (delta 1), reused 0 (delta 0), pack-reused 0
+To github.com:company/project.git
+   abc1234..9f8e7d6  main -> main
+```
+
+**📊 成功の証拠:**
+- `done.` が表示される
+- `abc1234..9f8e7d6` = コミット範囲が更新された
+- エラーメッセージが無い
+
+---
+
+## 🎓 Revert: 応用テクニック
+
+### ケース1: 複数のコミットを取り消す
+
+```bash
+# 最新の3つのコミットを取り消す
+$ git revert HEAD~2..HEAD
+
+# または1つずつ
+$ git revert abc1234
+$ git revert def5678
+$ git revert ghi9012
+```
+
+**📖 読み方:**
+- `HEAD~2..HEAD` = 2つ前から現在まで
+- `HEAD~2` = HEADの2つ前 (HEAD, HEAD~1, HEAD~2 の3つ)
+
+---
+
+### ケース2: コミットせずにRevertする
+
+```bash
+$ git revert abc1234 --no-commit
+```
+
+**📖 読み方:**
+- `--no-commit` = ノー・コミット (コミットしない)
+
+**💡 使い道:**
+- 複数のRevertをまとめて1つのコミットにしたい時
+- 変更内容を確認してから手動でコミットしたい時
+
+**実行結果:**
+
+```bash
+$ git revert abc1234 --no-commit
+
+$ git status
+
+On branch main
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        modified:   login.py
+```
+
+**次にやること:**
+
+```bash
+# 確認してOKなら
+$ git commit -m "機能DとEを取り消し"
+```
+
+---
+
+### ケース3: Revertを取り消す (Revert の Revert)
+
+```bash
+# Revertコミットのハッシュを確認
+$ git log --oneline
+9f8e7d6 Revert "機能Dを追加" ← これを取り消したい
+
+# RevertのRevert
+$ git revert 9f8e7d6
+```
+
+**💡 結果:**
+- 機能Dが再び復活する
+- "Revert 'Revert "機能Dを追加"'" という新しいコミットが作成される
+
+---
+
+## 🔧 Rebase編: 履歴を美しく整える {#rebase編}
+
+### 📖 Rebaseとは?
+
+> **Rebase = コミット履歴を書き換えて整理する**
+> - コミットの順序を変える
+> - 複数のコミットをまとめる
+> - コミットメッセージを修正する
+> - **⚠️ 履歴が変わるので要注意!**
+
+### 視覚的イメージ
+
+```
+Before Rebase:
+  A --- B --- C (main)
+         \
+          D --- E --- F (feature)
+
+After Rebase:
+  A --- B --- C (main)
+                 \
+                  D' --- E' --- F' (feature)
+  
+※ D, E, F が D', E', F' に書き換わる
+※ ハッシュ値が変わる
+```
+
+---
+
+## 🔰 Rebase: 基本操作 (mainに追いつく)
+
+### シナリオ: 作業中にmainが進んでしまった
+
+```
+自分の作業:
+  A --- B --- C (main)
+         \
+          D --- E (feature/my-work) ← 作業中
+
+チームメンバーがmainにマージ:
+  A --- B --- C --- F --- G (main) ← 進んでいる!
+         \
+          D --- E (feature/my-work)
+```
+
+**😱 問題:**
+- 自分のブランチがmainから離れている
+- このままマージすると複雑になる
+
+**✨ 解決策: Rebaseでmainに追いつく!**
+
+---
+
+### ステップ1: 最新のmainを取得
+
+```bash
+$ git checkout main
+```
+
+**✅ 成功時の表示:**
+
+```bash
+Switched to branch 'main'
+Your branch is up to date with 'origin/main'.
+```
+
+```bash
+$ git pull origin main
+```
+
+**✅ 成功時の表示:**
+
+```bash
+From github.com:company/project
+ * branch            main       -> FETCH_HEAD
+Updating abc1234..ghi9012
+Fast-forward
+ app.py | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+```
+
+**📖 読み方:**
+- `Fast-forward` = 高速マージ成功
+- `app.py | 10 ++++++++++` = app.pyに10行追加
+
+---
+
+### ステップ2: 自分のブランチに切り替え
+
+```bash
+$ git checkout feature/my-work
+```
+
+**✅ 成功時の表示:**
+
+```bash
+Switched to branch 'feature/my-work'
+```
+
+```bash
+$ git log --oneline --graph --all
+
+* ghi9012 (main) チームの変更G
+* fgh8901 チームの変更F
+| * e4d5c6b (HEAD -> feature/my-work) 自分の作業E
+| * d3c4b5a 自分の作業D
+|/
+* abc1234 共通の祖先C
+```
+
+**📖 グラフの見方:**
+- `*` = コミット
+- `|` = ブランチの線
+- `|/` = 分岐点
+
+---
+
+### ステップ3: Rebaseを実行
+
+```bash
+$ git rebase main
+```
+
+**📖 読み方:**
+- `git rebase main` = mainブランチの最新に自分のコミットを乗せ直す
+
+**💻 成功時の表示:**
+
+```bash
+Successfully rebased and updated refs/heads/feature/my-work.
+```
+
+**✅ 成功の証拠:**
+- `Successfully rebased` = リベース成功
+- エラーメッセージが無い
+
+**📊 結果確認:**
+
+```bash
+$ git log --oneline --graph --all
+
+* z9y8x7w (HEAD -> feature/my-work) 自分の作業E
+* y8x7w6v 自分の作業D
+* ghi9012 (main) チームの変更G
+* fgh8901 チームの変更F
+* abc1234 共通の祖先C
+```
+
+**🎉 結果:**
+- 自分のコミット(D, E)がmainの最新(G)の上に移動した!
+- 一直線の履歴になった!
+- ハッシュ値が変わった (`e4d5c6b` → `z9y8x7w`)
+
+---
+
+## ⚠️ Rebase中にコンフリクトが起きたら
+
+### コンフリクト発生時の表示
+
+```bash
+$ git rebase main
+
+Applying: 自分の作業D
+Using index info to reconstruct a base tree...
+M       app.py
+Falling back to patching base and 3-way merge...
+Auto-merging app.py
+CONFLICT (content): Merge conflict in app.py
+error: Failed to merge in the changes.
+hint: Use 'git am --show-current-patch' to see the failed patch
+Resolve all conflicts manually, mark them as resolved with
+"git add/rm <conflicted_files>", then run "git rebase --continue".
+You can instead skip this commit: run "git rebase --skip".
+To abort and get back to the state before "git rebase", run "git rebase --abort".
+Could not apply d3c4b5a... 自分の作業D
+```
+
+**❌ コンフリクトの証拠:**
+- `CONFLICT (content)` = 内容の衝突
+- `Failed to merge` = マージ失敗
+- エラーメッセージが出ている
+
+---
+
+### ステップ1: コンフリクトを確認
+
+```bash
+$ git status
+
+interactive rebase in progress; onto ghi9012
+Last command done (1 command done):
+   pick d3c4b5a 自分の作業D
+Next command to do (1 remaining command):
+   pick e4d5c6b 自分の作業E
+  (use "git rebase --edit-todo" to view and edit)
+You are currently rebasing branch 'feature/my-work' on 'ghi9012'.
+  (fix conflicts and run "git rebase --continue")
+  (use "git rebase --skip" to skip this patch)
+  (use "git rebase --abort" to check out the original branch)
+
+Unmerged paths:
+  (use "git restore --staged <file>..." to unstage)
+  (use "git add <file>..." to mark resolution)
+        both modified:   app.py
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+**📖 読み方:**
+- `interactive rebase in progress` = リベース実行中
+- `both modified: app.py` = 両方が変更した = 衝突
+
+---
+
+### ステップ2: ファイルを開いて修正
+
+```bash
+$ code app.py
+```
+
+**ファイルの中身:**
+
+```python
+def login():
+<<<<<<< HEAD
+    # チームメンバーの変更
+    return authenticate_user_v2()
+=======
+    # 自分の変更
+    return validate_and_login()
+>>>>>>> 自分の作業D
+```
+
+**📖 記号の意味:**
+- `<<<<<<< HEAD` = mainの内容(相手の変更)
+- `=======` = 区切り線
+- `>>>>>>> 自分の作業D` = 自分の変更
+
+**✏️ 修正方法:**
+1. `<<<<<<<`, `=======`, `>>>>>>>` を全て削除
+2. 正しいコードだけ残す
+
+**修正後:**
+
+```python
+def login():
+    # 両方を統合
+    user = authenticate_user_v2()
+    return validate_and_login(user)
+```
+
+---
+
+### ステップ3: 修正をステージング
+
+```bash
+$ git add app.py
+```
+
+**何も表示されない = 成功**
+
+```bash
+$ git status
+
+interactive rebase in progress; onto ghi9012
+Last command done (1 command done):
+   pick d3c4b5a 自分の作業D
+Next command to do (1 remaining command):
+   pick e4d5c6b 自分の作業E
+You are currently rebasing branch 'feature/my-work' on 'ghi9012'.
+  (all conflicts fixed: run "git rebase --continue")
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        modified:   app.py
+```
+
+**✅ 修正完了の証拠:**
+- `all conflicts fixed` = 全てのコンフリクトが修正された
+- `Changes to be committed` = コミット準備完了
+
+---
+
+### ステップ4: Rebaseを続行
+
+```bash
+$ git rebase --continue
+```
+
+**📖 読み方:**
+- `--continue` = 続行 (コンフリクト解決後、リベースを続ける)
+
+**✅ 成功時の表示:**
+
+```bash
+[detached HEAD a1b2c3d] 自分の作業D
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+Successfully rebased and updated refs/heads/feature/my-work.
+```
+
+**🎉 リベース完了!**
+
+---
+
+### ステップ5: (オプション) 中止する場合
+
+```bash
+# リベースを諦めて元に戻す
+$ git rebase --abort
+```
+
+**📖 読み方:**
+- `--abort` = 中止 (リベース開始前の状態に戻る)
+
+**✅ 成功時の表示:**
+
+```bash
+$ git rebase --abort
+HEAD is now at e4d5c6b 自分の作業E
+```
+
+**💡 結果:**
+- リベース前の状態に戻る
+- 安全に元に戻せる
+
+---
+
+## 🎨 Interactive Rebase: コミットを整理する
+
+### 📖 Interactive Rebaseとは?
+
+> **複数のコミットをまとめたり、順序を変えたり、メッセージを修正したりできる**
+
+### よくある使い道
+
+1. **squash**: 複数のコミットを1つにまとめる
+2. **reword**: コミットメッセージを修正
+3. **edit**: コミット内容を修正
+4. **drop**: コミットを削除
+
+---
+
+## 🔰 実践: コミットをまとめる (squash)
+
+### シナリオ: 細かすぎるコミットを整理
+
+```bash
+$ git log --oneline
+
+e5f6g7h typo修正
+d4e5f6g デバッグ出力削除
+c3d4e5f 機能実装
+b2c3d4e 機能実装(WIP)
+a1b2c3d 機能実装開始
+```
+
+**😱 問題:**
+- コミットが細かすぎる
+- WIPやtypo修正などが混ざっている
+- プルリクエストが見づらい
+
+**✨ 解決策: Interactive Rebaseでまとめる!**
+
+---
+
+### ステップ1: Interactive Rebaseを開始
+
+```bash
+$ git rebase -i HEAD~5
+```
+
+**📖 読み方:**
+- `-i` = インタラクティブ (対話的に操作)
+- `HEAD~5` = 最新から5つ前まで
+
+**💻 エディタが開く:**
+
+```bash
+pick a1b2c3d 機能実装開始
+pick b2c3d4e 機能実装(WIP)
+pick c3d4e5f 機能実装
+pick d4e5f6g デバッグ出力削除
+pick e5f6g7h typo修正
+
+# Rebase 9a8b7c6..e5f6g7h onto 9a8b7c6 (5 commands)
+#
+# Commands:
+# p, pick <commit> = use commit
+# r, reword <commit> = use commit, but edit the commit message
+# e, edit <commit> = use commit, but stop for amending
+# s, squash <commit> = use commit, but meld into previous commit
+# f, fixup <commit> = like "squash", but discard this commit's log message
+# x, exec <command> = run command (the rest of the line) using shell
+# b, break = stop here (continue rebase later with 'git rebase --continue')
+# d, drop <commit> = remove commit
+# l, label <label> = label current HEAD with a name
+# t, reset <label> = reset HEAD to a label
+# m, merge [-C <commit> | -c <commit>] <label> [# <oneline>]
+#
+# These lines can be re-ordered; they are executed from top to bottom.
+```
+
+---
+
+### ステップ2: コマンドを編集
+
+**修正前:**
+```bash
+pick a1b2c3d 機能実装開始
+pick b2c3d4e 機能実装(WIP)
+pick c3d4e5f 機能実装
+pick d4e5f6g デバッグ出力削除
+pick e5f6g7h typo修正
+```
+
+**修正後:**
+```bash
+pick a1b2c3d 機能実装開始
+squash b2c3d4e 機能実装(WIP)
+squash c3d4e5f 機能実装
+squash d4e5f6g デバッグ出力削除
+squash e5f6g7h typo修正
+```
+
+**📖 意味:**
+- 最初の`pick`は残す
+- それ以降を`squash`に変更 = 前のコミットにまとめる
+
+**保存して閉じる**
+- Vim: `:wq` + Enter
+- Nano: Ctrl+O → Enter → Ctrl+X
+
+---
+
+### ステップ3: コミットメッセージを編集
+
+**エディタが再度開く:**
+
+```bash
+# This is a combination of 5 commits.
+# This is the 1st commit message:
+
+機能実装開始
+
+# This is the commit message #2:
+
+機能実装(WIP)
+
+# This is the commit message #3:
+
+機能実装
+
+# This is the commit message #4:
+
+デバッグ出力削除
+
+# This is the commit message #5:
+
+typo修正
+
+# Please enter the commit message for your changes...
+```
+
+**✏️ 編集:**
+- 不要な行を削除
+- 1つのメッセージにまとめる
+
+**修正後:**
+
+```bash
+ログイン機能を実装
+
+- ユーザー認証機能
+- セッション管理
+- エラーハンドリング
+```
+
+**保存して閉じる**
+
+---
+
+### ステップ4: 結果を確認
+
+**✅ 成功時の表示:**
+
+```bash
+[detached HEAD 1a2b3c4] ログイン機能を実装
+ Date: Wed Oct 8 10:00:00 2025 +0900
+ 5 files changed, 150 insertions(+), 10 deletions(-)
+Successfully rebased and updated refs/heads/feature/my-work.
+```
+
+```bash
+$ git log --oneline
+
+1a2b3c4 (HEAD -> feature/my-work) ログイン機能を実装
+9a8b7c6 前のコミット
+```
+
+**🎉 5つのコミットが1つにまとまった!**
+
+---
+
+## 📊 実践シナリオ別対応 {#実践シナリオ}
+
+### シナリオ1: 間違えてmainにコミットしてしまった
+
+**😱 状況:**
+```bash
+$ git log --oneline
+abc1234 (HEAD -> main) 機能追加 ← mainに直接コミットしてしまった!
+def5678 前のコミット
+```
+
+**✅ 解決方法:**
+
+```bash
+# Step 1: ブランチを作成(今のHEADの位置で)
+$ git branch feature/new-function
+
+# Step 2: mainを1つ前に戻す
+$ git reset --hard HEAD~1
+
+# Step 3: 新しいブランチに切り替え
+$ git checkout feature/new-function
+
+# 確認
+$ git log --oneline
+abc1234 (HEAD -> feature/new-function) 機能追加
+def5678 (main) 前のコミット
+```
+
+**📊 結果:**
+- コミットは`feature/new-function`ブランチに移動
+- `main`はクリーン
+
+---
+
+### シナリオ2: プッシュしたコミットにバグがあった
+
+**😱 状況:**
+```bash
+# 既にリモートにプッシュ済み
+$ git log --oneline
+abc1234 (HEAD -> main, origin/main) バグのある機能追加
+```
+
+**❌ やってはいけないこと:**
+```bash
+# これはNG! (既にプッシュ済み)
+$ git reset --hard HEAD~1
+```
+
+**✅ 正しい解決方法: Revert**
+
+```bash
+$ git revert abc1234
+
+# コミットメッセージが開く
+[エディタ]
+Revert "バグのある機能追加"
+
+バグ修正のため一時的に取り消し
+
+# 保存して閉じる
+
+# プッシュ
+$ git push origin main
+```
+
+---
+
+### シナリオ3: コミットメッセージを間違えた(プッシュ前)
+
+**😱 状況:**
+```bash
+$ git log --oneline
+abc1234 (HEAD -> feature/my-work) てst ← タイポ!
+```
+
+**✅ 解決方法:**
+
+```bash
+$ git commit --amend
+```
+
+**📖 読み方:**
+- `--amend` = 修正 (直前のコミットを修正)
+
+**エディタが開く:**
+```bash
+てst
+
+# Please enter the commit message...
+```
+
+**修正:**
+```bash
+テスト機能を追加
+
+# Please enter the commit message...
+```
+
+**保存して閉じる**
+
+**✅ 成功時の表示:**
+```bash
+[feature/my-work 1b2c3d4] テスト機能を追加
+ Date: Wed Oct 8 10:00:00 2025 +0900
+ 1 file changed, 10 insertions(+)
+```
+
+---
+
+### シナリオ4: コミット順序を入れ替えたい
+
+**😱 状況:**
+```bash
+$ git log --oneline
+ccc3333 機能C
+bbb2222 機能B
+aaa1111 機能A ← AとBの順序を入れ替えたい
+```
+
+**✅ 解決方法:**
+
+```bash
+$ git rebase -i HEAD~3
+```
+
+**エディタ:**
+```bash
+pick aaa1111 機能A
+pick bbb2222 機能B
+pick ccc3333 機能C
+```
+
+**修正:**
+```bash
+pick bbb2222 機能B  ← 順序を入れ替え
+pick aaa1111 機能A  ← 順序を入れ替え
+pick ccc3333 機能C
+```
+
+**保存して閉じる**
+
+**✅ 結果:**
+```bash
+$ git log --oneline
+ddd4444 機能C
+eee5555 機能A
+fff6666 機能B  ← 順序が変わった!
+```
+
+---
+
+## 🆘 トラブルシューティング {#トラブルシューティング}
+
+### エラー1: "Cannot rebase: You have unstaged changes"
+
+**❌ エラー表示:**
+```bash
+$ git rebase main
+
+error: cannot rebase: You have unstaged changes.
+error: Please commit or stash them.
+```
+
+**📖 意味:**
+- 未コミットの変更が
