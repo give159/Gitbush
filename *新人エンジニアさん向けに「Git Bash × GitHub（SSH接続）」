@@ -1,0 +1,181 @@
+了解です🐰✨
+ここでは、**新人エンジニアさん向けに「Git Bash × GitHub（SSH接続）」の基本設定から操作、そしてトラブル対応まで**を、やさしく・実務目線で解説します。
+
+---
+
+# 🧭 目次
+
+1. 【用語の読み方・基本理解】
+2. 【初期設定】（SSH認証の準備）
+3. 【リモートリポジトリ接続】
+4. 【基本操作】（clone／add／commit／push）
+5. 【よくあるトラブルと対処法】
+6. 【確認コマンドまとめ】
+
+---
+
+## 1️⃣ 用語の読み方・基本理解
+
+| 用語            | 読み方               | 意味・イメージ               |
+| ------------- | ----------------- | --------------------- |
+| Git（ギット）      | ぎっと               | ソースコードの「変更履歴」を管理するツール |
+| GitHub（ギットハブ） | ぎっとはぶ             | コードを共有・保管するオンライン倉庫    |
+| SSH（エスエスエイチ）  | Secure Shell      | 安全に通信するための「鍵付きドア」     |
+| リポジトリ         | repository（りぽじとり） | プロジェクトフォルダのようなもの      |
+| コミット          | commit（こみっと）      | 「変更を保存」する操作           |
+| プッシュ          | push（ぷっしゅ）        | ローカルの変更をGitHubに送る操作   |
+
+---
+
+## 2️⃣ 初期設定（SSH認証の準備）
+
+### 🧩 ステップ1：Git Bashを開く
+
+Windowsの検索バーに「Git Bash」と入力して起動します。
+
+---
+
+### 🧩 ステップ2：ユーザー名とメール設定
+
+```bash
+git config --global user.name "あなたのGitHubユーザー名"
+git config --global user.email "あなたのGitHub登録メール"
+```
+
+確認：
+
+```bash
+git config --list
+```
+
+---
+
+### 🧩 ステップ3：SSH鍵を作成
+
+GitHubに安全にアクセスするための「鍵」を作ります。
+
+```bash
+ssh-keygen -t ed25519 -C "あなたのGitHub登録メール"
+```
+
+**ポイント：**
+
+* Enterを3回押すだけでOK（デフォルト保存）。
+* 作成場所 → `C:\Users\あなたの名前\.ssh\id_ed25519.pub`
+
+---
+
+### 🧩 ステップ4：公開鍵をGitHubに登録
+
+1. Git Bashで鍵を表示：
+
+   ```bash
+   cat ~/.ssh/id_ed25519.pub
+   ```
+2. 表示された文字列をコピー。
+3. GitHub → [Settings] → [SSH and GPG keys] → [New SSH key]
+4. 「Title」は任意、「Key」に貼り付け → Save
+
+---
+
+### 🧩 ステップ5：接続テスト
+
+```bash
+ssh -T git@github.com
+```
+
+成功すると：
+
+```
+Hi yourname! You've successfully authenticated.
+```
+
+これでSSH接続完了🎉
+
+---
+
+## 3️⃣ リモートリポジトリ接続
+
+### ✅ 既存のリポジトリをclone（ダウンロード）
+
+```bash
+git clone git@github.com:ユーザー名/リポジトリ名.git
+```
+
+例：
+
+```bash
+git clone git@github.com:yukiko-dev/sample-app.git
+```
+
+---
+
+### ✅ すでにローカルにプロジェクトがある場合（リモート追加）
+
+```bash
+git remote add origin git@github.com:ユーザー名/リポジトリ名.git
+git branch -M main
+git push -u origin main
+```
+
+---
+
+## 4️⃣ 基本操作フロー（毎回使う流れ）
+
+| 操作           | コマンド                    | 意味            |
+| ------------ | ----------------------- | ------------- |
+| 状況確認         | `git status`            | 今の変更状況を確認     |
+| ファイルをステージに追加 | `git add ファイル名`         | コミット対象にする     |
+| 変更を保存（コミット）  | `git commit -m "メッセージ"` | 変更を記録         |
+| GitHubに反映    | `git push`              | GitHubにアップロード |
+
+### 🌟 例：
+
+```bash
+git status
+git add .
+git commit -m "ログイン機能を修正"
+git push
+```
+
+---
+
+## 5️⃣ トラブル発生対応（よくあるケース）
+
+| 状況                                | 原因            | 対処法                                                          |
+| --------------------------------- | ------------- | ------------------------------------------------------------ |
+| ❌ `Permission denied (publickey)` | SSH鍵未登録       | GitHubに公開鍵を再登録、または`ssh-add ~/.ssh/id_ed25519`                |
+| ❌ `fatal: not a git repository`   | Git管理外フォルダ    | `cd`で正しいプロジェクトフォルダへ移動                                        |
+| ❌ `merge conflict`                | 他人の変更と競合      | 該当ファイルを手動修正 → `git add` → `git commit`                       |
+| ❌ `rejected`（pushできない）            | リモートに新しい変更がある | `git pull origin main` で最新を取り込み再push                         |
+| ❌ `remote: Repository not found`  | URLミス         | `git remote -v`でURL確認、修正する場合`git remote set-url origin 新URL` |
+
+---
+
+## 6️⃣ よく使う確認コマンドまとめ
+
+| 内容        | コマンド                |
+| --------- | ------------------- |
+| Git設定確認   | `git config --list` |
+| 接続先確認     | `git remote -v`     |
+| 現在のブランチ   | `git branch`        |
+| 直近のコミット履歴 | `git log --oneline` |
+
+---
+
+## 🌼 まとめ
+
+* Gitは「変更履歴の管理ツール」
+* GitHubは「クラウド上の倉庫」
+* SSH鍵で安全に通信
+* `git add → commit → push`が基本操作
+* エラーは落ち着いて「原因→対処」を確認
+
+---
+
+もしご希望があれば次は👇のような発展編もできます。
+
+* 🪴 **「ブランチ運用（main／featureブランチ）」**
+* 🚑 **「Gitトラブル再現＆リカバリー演習」**
+* 🧰 **「GitHub Desktop GUI操作版」**
+
