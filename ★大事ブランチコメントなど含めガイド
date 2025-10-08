@@ -1,0 +1,2171 @@
+# 🚀 Git/GitBash チーム開発完全ガイド
+**ローカル作業→GitHubコミットまでの完全手順**
+
+---
+
+## 📋 目次
+1. [事前準備](#事前準備)
+2. [初期設定](#初期設定)
+3. [日常的な作業フロー](#日常的な作業フロー)
+4. [コマンド実行結果の読み方](#コマンド実行結果の読み方)
+5. [トラブルシューティング](#トラブルシューティング)
+
+---
+
+## 🔧 事前準備
+
+### 必要なツール
+- ✅ Git (インストール済み確認: `git --version`)
+- ✅ GitBash (Windowsの場合)
+- ✅ GitHubアカウント
+- ✅ テキストエディタ (VS Code推奨)
+
+---
+
+## ⚙️ 初期設定
+
+### STEP 0: ユーザー情報の設定 (最初の1回だけ)
+
+```bash
+git config --global user.name "あなたの名前"
+```
+**読み方**: ギット・コンフィグ・グローバル・ユーザー・ネーム
+
+**意味**: Gitに自分の名前を登録する
+
+```bash
+git config --global user.email "your.email@example.com"
+```
+**読み方**: ギット・コンフィグ・グローバル・ユーザー・イーメール
+
+**意味**: Gitに自分のメールアドレスを登録する
+
+```bash
+git config --list
+```
+**読み方**: ギット・コンフィグ・リスト
+
+**意味**: 設定内容を確認する
+
+**結果の見方**:
+```
+user.name=Taro Yamada
+user.email=taro@example.com
+core.editor=vim
+...
+```
+→ 自分の名前とメールが表示されればOK!
+
+---
+
+## 📦 STEP 1: リポジトリの準備
+
+### パターンA: 既存のGitHubリポジトリをクローンする場合
+
+```bash
+cd /c/Users/あなたのユーザー名/Documents
+```
+**読み方**: チェンジ・ディレクトリ
+
+**意味**: 作業したいフォルダに移動する
+
+```bash
+git clone https://github.com/チーム名/リポジトリ名.git
+```
+**読み方**: ギット・クローン
+
+**意味**: GitHubからプロジェクトをコピーしてくる
+
+**結果の見方**:
+```
+Cloning into 'リポジトリ名'...
+remote: Enumerating objects: 100, done.
+remote: Counting objects: 100% (100/100), done.
+remote: Compressing objects: 100% (80/80), done.
+Receiving objects: 100% (100/100), 1.5 MiB | 2.3 MiB/s, done.
+```
+→ "done" が複数出たら成功!
+
+```bash
+cd リポジトリ名
+```
+**意味**: クローンしたフォルダの中に入る
+
+---
+
+### パターンB: ローカルの既存プロジェクトをGitで管理開始する場合
+
+```bash
+cd /c/path/to/your/project
+```
+**意味**: プロジェクトフォルダに移動
+
+```bash
+git init
+```
+**読み方**: ギット・イニット (initialize の略)
+
+**意味**: このフォルダをGitで管理開始する
+
+**結果の見方**:
+```
+Initialized empty Git repository in /c/path/to/your/project/.git/
+```
+→ ".git/" フォルダが作成されればOK!
+
+```bash
+git remote add origin https://github.com/あなたのユーザー名/リポジトリ名.git
+```
+**読み方**: ギット・リモート・アッド・オリジン
+
+**意味**: GitHubのリポジトリと紐付ける
+
+---
+
+## 🔄 STEP 2: ブランチの作成と切り替え
+
+### 現在のブランチを確認
+
+```bash
+git branch
+```
+**読み方**: ギット・ブランチ
+
+**意味**: ブランチ一覧を表示
+
+**結果の見方**:
+```
+* main
+  develop
+  feature/login
+```
+→ `*` がついているのが現在のブランチ
+
+---
+
+### 新しいブランチを作成して切り替え
+
+```bash
+git checkout -b feature/新機能名
+```
+**読み方**: ギット・チェックアウト・マイナスビー
+
+**意味**: 新しいブランチを作って、そこに移動する
+
+**結果の見方**:
+```
+Switched to a new branch 'feature/新機能名'
+```
+→ "Switched to a new branch" なら成功!
+
+**ブランチ命名規則の例**:
+- `feature/ログイン機能` - 新機能追加
+- `feature/user-authentication` - ユーザー認証機能
+- `feature/api-integration` - API連携
+- `feature/payment-system` - 決済システム
+- `fix/バグ修正内容` - バグ修正
+- `fix/login-error` - ログインエラー修正
+- `fix/memory-leak` - メモリリーク修正
+- `bugfix/issue-123` - Issue番号付きバグ修正
+- `hotfix/緊急修正` - 緊急の修正
+- `hotfix/security-patch` - セキュリティパッチ
+- `hotfix/critical-bug` - クリティカルなバグ修正
+- `refactor/リファクタ内容` - コード整理
+- `refactor/database-structure` - DB構造の見直し
+- `refactor/code-cleanup` - コードクリーンアップ
+- `docs/update-readme` - ドキュメント更新
+- `docs/api-documentation` - APIドキュメント追加
+- `test/unit-tests` - テスト追加
+- `test/integration-tests` - 統合テスト追加
+- `chore/update-dependencies` - 依存関係更新
+- `chore/setup-ci` - CI/CD設定
+- `style/format-code` - コードフォーマット
+- `perf/optimize-query` - パフォーマンス改善
+- `release/v1.0.0` - リリース準備
+- `develop` - 開発統合ブランチ
+- `staging` - ステージング環境用
+
+**命名のベストプラクティス**:
+✅ 小文字とハイフンを使用
+✅ 簡潔で意味が明確
+✅ Issue番号を含める（例: `feature/issue-456-add-search`）
+❌ 日本語の使用は避ける（一部ツールで問題が起きる場合あり）
+❌ スペースや特殊文字は使わない
+
+---
+
+## 💻 STEP 3: 作業する
+
+この段階で、VS Codeなどでコードを編集します。
+Pythonファイルを作成・編集したら、次のステップへ!
+
+---
+
+## 📸 STEP 4: 変更内容を確認・追加
+
+### 変更されたファイルを確認
+
+```bash
+git status
+```
+**読み方**: ギット・ステータス
+
+**意味**: 今の状態を確認する
+
+**結果の見方**:
+```
+On branch feature/新機能名
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   main.py
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        new_feature.py
+```
+
+**色分けの意味**:
+- 🔴 **赤色**: まだステージングされていない変更
+- 🟢 **緑色**: ステージング済みの変更
+- ⚪ **灰色**: 追跡されていない新規ファイル
+
+---
+
+### 変更の詳細を確認
+
+```bash
+git diff
+```
+**読み方**: ギット・ディフ (difference の略)
+
+**意味**: 何が変更されたか詳しく表示
+
+**結果の見方**:
+```
+diff --git a/main.py b/main.py
+index 1234567..abcdefg 100644
+--- a/main.py
++++ b/main.py
+@@ -10,7 +10,7 @@ def hello():
+-    print("Hello")
++    print("Hello, World!")
+```
+- `-` で始まる行(赤): 削除された行
+- `+` で始まる行(緑): 追加された行
+
+---
+
+### 変更をステージングエリアに追加
+
+```bash
+git add ファイル名.py
+```
+**読み方**: ギット・アッド
+
+**意味**: このファイルをコミット対象に含める
+
+**複数ファイルを一度に追加**:
+```bash
+git add .
+```
+**意味**: すべての変更ファイルを追加
+
+**特定の拡張子のみ**:
+```bash
+git add *.py
+```
+**意味**: すべての .py ファイルを追加
+
+---
+
+### 追加後の確認
+
+```bash
+git status
+```
+**結果の見方**:
+```
+On branch feature/新機能名
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        modified:   main.py
+        new file:   new_feature.py
+```
+→ 🟢 **緑色** になっていればステージング成功!
+
+---
+
+## 💾 STEP 5: コミット(保存)する
+
+```bash
+git commit -m "機能: ログイン機能を追加"
+```
+**読み方**: ギット・コミット・マイナスエム
+
+**意味**: 変更内容を記録する(`-m` はメッセージの略)
+
+**コミットメッセージの書き方**:
+
+### 📝 基本フォーマット
+```
+[種類] 簡潔なタイトル（50文字以内）
+
+詳細な説明（必要に応じて）
+- 変更理由
+- 影響範囲
+- 関連Issue番号
+```
+
+### 🏷️ プレフィックス（種類）の例
+
+| プレフィックス | 英語表記 | 使用場面 | 例 |
+|--------------|---------|---------|-----|
+| **機能** | feat | 新機能追加 | `feat: ユーザー登録機能を追加` |
+| **修正** | fix | バグ修正 | `fix: ログイン時のエラーを修正` |
+| **改善** | improve | 機能改善 | `improve: 検索速度を50%向上` |
+| **文書** | docs | ドキュメント | `docs: README にAPI仕様を追加` |
+| **整形** | style | コード整形 | `style: PEP8に準拠するよう修正` |
+| **リファクタ** | refactor | コード整理 | `refactor: 重複コードを関数化` |
+| **性能** | perf | パフォーマンス | `perf: データベースクエリを最適化` |
+| **テスト** | test | テスト追加 | `test: ログイン機能のテストを追加` |
+| **ビルド** | build | ビルド関連 | `build: Dockerfileを更新` |
+| **CI** | ci | CI/CD設定 | `ci: GitHub Actionsを追加` |
+| **雑務** | chore | その他作業 | `chore: 依存パッケージを更新` |
+| **差し戻し** | revert | 変更を戻す | `revert: commit a1b2c3d を取り消し` |
+| **WIP** | wip | 作業途中 | `wip: ログイン機能実装中` |
+
+### ✅ 良いコミットメッセージの例
+
+```bash
+# 基本パターン
+git commit -m "feat: ユーザー認証機能を追加"
+git commit -m "fix: ログイン時の500エラーを修正"
+git commit -m "docs: API仕様書を更新"
+
+# 詳細付きパターン
+git commit -m "feat: パスワードリセット機能を追加
+
+- メール送信機能の実装
+- トークン生成ロジックの追加
+- パスワード変更画面の作成
+Closes #123"
+
+# Issue番号付き
+git commit -m "fix: #456 決済処理のタイムアウトを修正"
+git commit -m "feat: #789 商品検索機能を実装"
+
+# 影響範囲を明記
+git commit -m "refactor(auth): 認証ロジックを分離"
+git commit -m "fix(payment): クレジットカード決済エラーを修正"
+git commit -m "perf(database): インデックスを追加してクエリ速度向上"
+
+# 英語での例
+git commit -m "feat: add user authentication"
+git commit -m "fix: resolve login timeout issue"
+git commit -m "docs: update installation guide"
+git commit -m "refactor: separate database connection logic"
+git commit -m "test: add unit tests for payment module"
+git commit -m "perf: optimize image loading performance"
+git commit -m "chore: update dependencies to latest version"
+
+# 複数行メッセージ（詳細を含む）
+git commit -m "feat: add shopping cart functionality
+
+- Implemented add to cart feature
+- Added cart item management
+- Created checkout process
+- Fixes #234, Closes #235"
+```
+
+### ❌ 悪いコミットメッセージの例
+
+```bash
+# 避けるべき例
+git commit -m "更新"           # ❌ 何を更新したか不明
+git commit -m "修正"           # ❌ 何を修正したか不明
+git commit -m "aaa"            # ❌ 意味不明
+git commit -m "test"           # ❌ 何のテストか不明
+git commit -m "いろいろ変更"    # ❌ 具体性がない
+git commit -m "バグ直した"      # ❌ どのバグか不明
+git commit -m "とりあえず保存"  # ❌ コミットの意味がない
+git commit -m "WIP"            # ❌ 作業内容が不明（wip: 具体的な内容 とすべき）
+```
+
+### 📏 コミットメッセージのルール
+
+1. **1行目は50文字以内**
+   - 簡潔に要点をまとめる
+   - 命令形で書く（「追加する」ではなく「追加」）
+
+2. **2行目は空行**
+   - 詳細説明を書く場合は1行目と2行目の間に空行
+
+3. **3行目以降に詳細**
+   - 何を変更したか
+   - なぜ変更したか
+   - どう動作するか
+
+4. **Issue番号を含める**
+   - `Fixes #123` - バグ修正の場合
+   - `Closes #456` - 機能実装の場合
+   - `Refs #789` - 参照する場合
+
+### 🎯 コミットの粒度
+
+```bash
+# ✅ 良い例：機能ごとに分ける
+git commit -m "feat: ユーザー登録フォームを追加"
+git commit -m "feat: メール検証機能を実装"
+git commit -m "test: ユーザー登録のテストを追加"
+
+# ❌ 悪い例：全部まとめる
+git commit -m "feat: ユーザー機能一式を追加"  # 大きすぎる
+```
+
+### 🌐 Conventional Commits（国際標準）
+
+より厳密なルールに従いたい場合:
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**例**:
+```bash
+git commit -m "feat(auth): add JWT authentication
+
+Implemented JWT-based authentication system
+- Added token generation
+- Added token validation middleware
+- Updated user model
+
+Breaking Change: Authentication header format changed
+Closes #123"
+```
+
+**結果の見方**:
+```
+[feature/新機能名 a1b2c3d] 機能: ログイン機能を追加
+ 2 files changed, 45 insertions(+), 3 deletions(-)
+ create mode 100644 new_feature.py
+```
+- `2 files changed`: 2ファイルが変更された
+- `45 insertions(+)`: 45行追加された
+- `3 deletions(-)`: 3行削除された
+
+---
+
+## 📤 STEP 6: GitHubにプッシュ(アップロード)
+
+### 最新の状態を取得(重要!)
+
+```bash
+git pull origin main
+```
+**読み方**: ギット・プル・オリジン・メイン
+
+**意味**: GitHubの最新状態をダウンロードして統合
+
+**結果の見方**:
+```
+Already up to date.
+```
+→ これなら問題なし!
+
+```
+Updating 1234567..abcdefg
+Fast-forward
+ some_file.py | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+```
+→ 他のメンバーの変更が取り込まれた
+
+---
+
+### 自分の変更をアップロード
+
+```bash
+git push origin feature/新機能名
+```
+**読み方**: ギット・プッシュ・オリジン
+
+**意味**: 自分の変更をGitHubにアップロード
+
+**初回プッシュの場合**:
+```bash
+git push -u origin feature/新機能名
+```
+**意味**: `-u` でこのブランチを追跡設定する(次回から `git push` だけでOK)
+
+**結果の見方**:
+```
+Enumerating objects: 5, done.
+Counting objects: 100% (5/5), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 456 bytes | 456.00 KiB/s, done.
+Total 3 (delta 1), reused 0 (delta 0)
+To https://github.com/team/repo.git
+   1234567..abcdefg  feature/新機能名 -> feature/新機能名
+```
+→ 最後に `->` で表示されれば成功!
+
+---
+
+## 🔀 STEP 7: プルリクエスト(PR)作成
+
+### GitHubウェブサイトでの操作
+
+1. **GitHubにアクセス**
+   - ブラウザで `https://github.com/チーム名/リポジトリ名` を開く
+
+2. **プルリクエストを作成**
+   - 黄色いバーの「Compare & pull request」をクリック
+   - または「Pull requests」タブ → 「New pull request」
+
+3. **内容を記入**
+   ```
+   タイトル: [機能追加] ユーザーログイン機能
+   
+   ## 変更内容
+   - ログインフォームの追加
+   - 認証ロジックの実装
+   - テストケースの追加
+   
+   ## 確認事項
+   - [ ] テストが通ることを確認
+   - [ ] コードレビュー依頼
+   ```
+
+4. **レビュアーを指定**
+   - チームメンバーを Reviewers に追加
+
+5. **Create pull request** ボタンをクリック
+
+---
+
+## 📊 日常的な作業フロー(完全版)
+
+```bash
+# 1. 最新の状態に更新
+git checkout main                    # メインブランチに移動
+git pull origin main                 # 最新を取得
+
+# 2. 作業用ブランチを作成
+git checkout -b feature/新機能名     # 新ブランチ作成
+
+# 3. コードを編集(VS Codeなど)
+
+# 4. 変更を確認
+git status                           # 状態確認
+git diff                             # 変更内容確認
+
+# 5. 変更を追加
+git add .                            # 全ファイル追加
+
+# 6. コミット
+git commit -m "機能: ○○を追加"      # 変更を記録
+
+# 7. プッシュ
+git push -u origin feature/新機能名  # GitHubにアップロード
+
+# 8. GitHubでPR作成
+```
+
+---
+
+## 🎯 よく使うコマンド一覧表
+
+| コマンド | 読み方 | 意味 | いつ使う? |
+|---------|--------|------|----------|
+| `git status` | ステータス | 現在の状態確認 | こまめに確認! |
+| `git log` | ログ | コミット履歴表示 | 履歴を見たい時 |
+| `git log --oneline` | ログ・ワンライン | 履歴を1行で表示 | 簡潔に見たい時 |
+| `git branch` | ブランチ | ブランチ一覧 | 今どこ?を確認 |
+| `git checkout ブランチ名` | チェックアウト | ブランチ移動 | 作業場所を変える |
+| `git checkout -b 新ブランチ名` | チェックアウト -b | ブランチ作成+移動 | 新機能開発開始 |
+| `git pull origin ブランチ名` | プル | 最新取得 | 作業前に必須! |
+| `git push origin ブランチ名` | プッシュ | アップロード | 作業後に必須! |
+| `git stash` | スタッシュ | 変更を一時保存 | 急な作業切り替え |
+| `git stash pop` | スタッシュ・ポップ | 保存した変更を戻す | 作業に戻る時 |
+
+---
+
+## 🔍 コマンド実行結果の読み方
+
+### `git status` の読み方
+
+```bash
+On branch feature/login              # ← 今いるブランチ
+Your branch is up to date with 'origin/feature/login'.  # ← GitHubと同期済み
+
+Changes to be committed:             # ← コミット準備完了(緑)
+  (use "git restore --staged <file>..." to unstage)
+        modified:   login.py
+
+Changes not staged for commit:      # ← まだ準備していない(赤)
+  (use "git add <file>..." to update what will be committed)
+        modified:   main.py
+
+Untracked files:                    # ← 新規ファイル(赤)
+  (use "git add <file>..." to include in what will be committed)
+        new_file.py
+```
+
+---
+
+### `git log` の読み方
+
+```bash
+commit a1b2c3d4e5f6g7h8i9j0  # ← コミットID(ハッシュ値)
+Author: Taro Yamada <taro@example.com>  # ← 誰が
+Date:   Thu Oct 9 14:30:00 2025 +0900   # ← いつ
+
+    機能: ログイン機能を追加  # ← 何をしたか
+```
+
+---
+
+### エラーメッセージの読み方
+
+#### ❌ コンフリクト(衝突)が発生
+
+```
+Auto-merging main.py
+CONFLICT (content): Merge conflict in main.py
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+**意味**: 同じファイルの同じ場所を複数人が編集した
+
+**対処法**:
+1. ファイルを開くと以下のような表示がある
+```python
+<<<<<<< HEAD
+your_code = "あなたのコード"
+=======
+their_code = "相手のコード"
+>>>>>>> branch_name
+```
+
+2. どちらを採用するか選んで、マーカーを削除
+3. `git add ファイル名`
+4. `git commit -m "コンフリクト解決"`
+
+---
+
+#### ❌ プッシュが拒否された
+
+```
+ ! [rejected]        main -> main (fetch first)
+error: failed to push some refs to 'https://github.com/...'
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally. This is usually caused by another repository pushing
+hint: to the same ref. You may want to first integrate the remote changes
+```
+
+**意味**: GitHubに自分より新しい変更がある
+
+**対処法**:
+```bash
+git pull origin main  # 最新を取得
+git push origin main  # 再度プッシュ
+```
+
+---
+
+## 🆘 トラブルシューティング
+
+### Q1: 間違えてコミットしてしまった!
+
+**直前のコミットを取り消し**:
+```bash
+git reset --soft HEAD~1
+```
+**意味**: コミットを取り消すが、変更内容は残す
+
+**完全に取り消し**(⚠️注意):
+```bash
+git reset --hard HEAD~1
+```
+**意味**: コミットも変更内容も完全削除
+
+---
+
+### Q2: 間違えてmainブランチで作業してしまった!
+
+```bash
+git stash                        # 変更を一時保存
+git checkout -b feature/新機能   # 新ブランチ作成
+git stash pop                    # 変更を戻す
+```
+
+---
+
+### Q3: ブランチ名を間違えた!
+
+```bash
+git branch -m 古いブランチ名 新しいブランチ名
+```
+
+---
+
+### Q4: .gitignore を後から追加したい
+
+```bash
+# .gitignore ファイルを作成・編集
+echo "*.pyc" >> .gitignore
+echo "__pycache__/" >> .gitignore
+echo ".env" >> .gitignore
+
+# キャッシュをクリア
+git rm -r --cached .
+git add .
+git commit -m "gitignoreを追加"
+```
+
+---
+
+## 📝 Python開発でよく使う .gitignore
+
+```.gitignore
+# Python
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# 環境変数
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+```
+
+---
+
+## 🎓 チーム開発のベストプラクティス
+
+### ✅ DO (推奨)
+- ✅ 作業前に必ず `git pull` で最新化
+- ✅ 1機能1ブランチの原則
+- ✅ こまめにコミット(1日最低1回)
+- ✅ わかりやすいコミットメッセージ
+- ✅ プッシュ前にテストを実行
+- ✅ コードレビューを受ける
+
+### ❌ DON'T (非推奨)
+- ❌ mainブランチに直接コミット
+- ❌ 大量の変更を1コミットにまとめる
+- ❌ 意味不明なコミットメッセージ
+- ❌ 他人のブランチを勝手に変更
+- ❌ プッシュせずに長期間ローカルに溜める
+- ❌ コンフリクトを放置
+
+---
+
+## 🚀 次のステップ
+
+このガイドをマスターしたら:
+1. ✅ Gitの内部構造を学ぶ
+2. ✅ リベース(`git rebase`)を学ぶ
+3. ✅ チェリーピック(`git cherry-pick`)を学ぶ
+4. ✅ Git Flowを理解する
+5. ✅ CI/CDツールと連携する
+
+---
+
+## 📚 参考リンク
+
+- [Git公式ドキュメント](https://git-scm.com/doc)
+- [GitHub Docs](https://docs.github.com/)
+- [Gitコマンドチートシート](https://education.github.com/git-cheat-sheet-education.pdf)
+
+---
+
+**🎉 これでGit/GitBashの基本はバッチリです!**
+
+困ったときはこのガイドを見返してくださいね。
+チーム開発、頑張ってください! 💪
+
+# 🚀 Git/GitBash チーム開発完全ガイド
+**ローカル作業→GitHubコミットまでの完全手順**
+
+---
+
+## 📋 目次
+1. [事前準備](#事前準備)
+2. [初期設定](#初期設定)
+3. [日常的な作業フロー](#日常的な作業フロー)
+4. [コマンド実行結果の読み方](#コマンド実行結果の読み方)
+5. [トラブルシューティング](#トラブルシューティング)
+
+---
+
+## 🔧 事前準備
+
+### 必要なツール
+- ✅ Git (インストール済み確認: `git --version`)
+- ✅ GitBash (Windowsの場合)
+- ✅ GitHubアカウント
+- ✅ テキストエディタ (VS Code推奨)
+
+---
+
+## ⚙️ 初期設定
+
+### STEP 0: ユーザー情報の設定 (最初の1回だけ)
+
+```bash
+git config --global user.name "あなたの名前"
+```
+**読み方**: ギット・コンフィグ・グローバル・ユーザー・ネーム
+
+**意味**: Gitに自分の名前を登録する
+
+```bash
+git config --global user.email "your.email@example.com"
+```
+**読み方**: ギット・コンフィグ・グローバル・ユーザー・イーメール
+
+**意味**: Gitに自分のメールアドレスを登録する
+
+```bash
+git config --list
+```
+**読み方**: ギット・コンフィグ・リスト
+
+**意味**: 設定内容を確認する
+
+**結果の見方**:
+```
+user.name=Taro Yamada
+user.email=taro@example.com
+core.editor=vim
+...
+```
+→ 自分の名前とメールが表示されればOK!
+
+---
+
+## 📦 STEP 1: リポジトリの準備
+
+### パターンA: 既存のGitHubリポジトリをクローンする場合
+
+```bash
+cd /c/Users/あなたのユーザー名/Documents
+```
+**読み方**: チェンジ・ディレクトリ
+
+**意味**: 作業したいフォルダに移動する
+
+```bash
+git clone https://github.com/チーム名/リポジトリ名.git
+```
+**読み方**: ギット・クローン
+
+**意味**: GitHubからプロジェクトをコピーしてくる
+
+**結果の見方**:
+```
+Cloning into 'リポジトリ名'...
+remote: Enumerating objects: 100, done.
+remote: Counting objects: 100% (100/100), done.
+remote: Compressing objects: 100% (80/80), done.
+Receiving objects: 100% (100/100), 1.5 MiB | 2.3 MiB/s, done.
+```
+→ "done" が複数出たら成功!
+
+```bash
+cd リポジトリ名
+```
+**意味**: クローンしたフォルダの中に入る
+
+---
+
+### パターンB: ローカルの既存プロジェクトをGitで管理開始する場合
+
+```bash
+cd /c/path/to/your/project
+```
+**意味**: プロジェクトフォルダに移動
+
+```bash
+git init
+```
+**読み方**: ギット・イニット (initialize の略)
+
+**意味**: このフォルダをGitで管理開始する
+
+**結果の見方**:
+```
+Initialized empty Git repository in /c/path/to/your/project/.git/
+```
+→ ".git/" フォルダが作成されればOK!
+
+```bash
+git remote add origin https://github.com/あなたのユーザー名/リポジトリ名.git
+```
+**読み方**: ギット・リモート・アッド・オリジン
+
+**意味**: GitHubのリポジトリと紐付ける
+
+---
+
+## 🔄 STEP 2: ブランチの作成と切り替え
+
+### 現在のブランチを確認
+
+```bash
+git branch
+```
+**読み方**: ギット・ブランチ
+
+**意味**: ブランチ一覧を表示
+
+**結果の見方**:
+```
+* main
+  develop
+  feature/login
+```
+→ `*` がついているのが現在のブランチ
+
+---
+
+### 新しいブランチを作成して切り替え
+
+```bash
+git checkout -b feature/新機能名
+```
+**読み方**: ギット・チェックアウト・マイナスビー
+
+**意味**: 新しいブランチを作って、そこに移動する
+
+**結果の見方**:
+```
+Switched to a new branch 'feature/新機能名'
+```
+→ "Switched to a new branch" なら成功!
+
+**ブランチ命名規則の例**:
+- `feature/ログイン機能` - 新機能追加
+- `feature/user-authentication` - ユーザー認証機能
+- `feature/api-integration` - API連携
+- `feature/payment-system` - 決済システム
+- `fix/バグ修正内容` - バグ修正
+- `fix/login-error` - ログインエラー修正
+- `fix/memory-leak` - メモリリーク修正
+- `bugfix/issue-123` - Issue番号付きバグ修正
+- `hotfix/緊急修正` - 緊急の修正
+- `hotfix/security-patch` - セキュリティパッチ
+- `hotfix/critical-bug` - クリティカルなバグ修正
+- `refactor/リファクタ内容` - コード整理
+- `refactor/database-structure` - DB構造の見直し
+- `refactor/code-cleanup` - コードクリーンアップ
+- `docs/update-readme` - ドキュメント更新
+- `docs/api-documentation` - APIドキュメント追加
+- `test/unit-tests` - テスト追加
+- `test/integration-tests` - 統合テスト追加
+- `chore/update-dependencies` - 依存関係更新
+- `chore/setup-ci` - CI/CD設定
+- `style/format-code` - コードフォーマット
+- `perf/optimize-query` - パフォーマンス改善
+- `release/v1.0.0` - リリース準備
+- `develop` - 開発統合ブランチ
+- `staging` - ステージング環境用
+
+**命名のベストプラクティス**:
+✅ 小文字とハイフンを使用
+✅ 簡潔で意味が明確
+✅ Issue番号を含める（例: `feature/issue-456-add-search`）
+❌ 日本語の使用は避ける（一部ツールで問題が起きる場合あり）
+❌ スペースや特殊文字は使わない
+
+---
+
+## 💻 STEP 3: 作業する
+
+この段階で、VS Codeなどでコードを編集します。
+Pythonファイルを作成・編集したら、次のステップへ!
+
+---
+
+## 📸 STEP 4: 変更内容を確認・追加
+
+### 変更されたファイルを確認
+
+```bash
+git status
+```
+**読み方**: ギット・ステータス
+
+**意味**: 今の状態を確認する
+
+**結果の見方**:
+```
+On branch feature/新機能名
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   main.py
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        new_feature.py
+```
+
+**色分けの意味**:
+- 🔴 **赤色**: まだステージングされていない変更
+- 🟢 **緑色**: ステージング済みの変更
+- ⚪ **灰色**: 追跡されていない新規ファイル
+
+---
+
+### 変更の詳細を確認
+
+```bash
+git diff
+```
+**読み方**: ギット・ディフ (difference の略)
+
+**意味**: 何が変更されたか詳しく表示
+
+**結果の見方**:
+```
+diff --git a/main.py b/main.py
+index 1234567..abcdefg 100644
+--- a/main.py
++++ b/main.py
+@@ -10,7 +10,7 @@ def hello():
+-    print("Hello")
++    print("Hello, World!")
+```
+- `-` で始まる行(赤): 削除された行
+- `+` で始まる行(緑): 追加された行
+
+---
+
+### 変更をステージングエリアに追加
+
+```bash
+git add ファイル名.py
+```
+**読み方**: ギット・アッド
+
+**意味**: このファイルをコミット対象に含める
+
+**複数ファイルを一度に追加**:
+```bash
+git add .
+```
+**意味**: すべての変更ファイルを追加
+
+**特定の拡張子のみ**:
+```bash
+git add *.py
+```
+**意味**: すべての .py ファイルを追加
+
+---
+
+### 追加後の確認
+
+```bash
+git status
+```
+**結果の見方**:
+```
+On branch feature/新機能名
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        modified:   main.py
+        new file:   new_feature.py
+```
+→ 🟢 **緑色** になっていればステージング成功!
+
+---
+
+## 💾 STEP 5: コミット(保存)する
+
+```bash
+git commit -m "機能: ログイン機能を追加"
+```
+**読み方**: ギット・コミット・マイナスエム
+
+**意味**: 変更内容を記録する(`-m` はメッセージの略)
+
+**コミットメッセージの書き方**:
+
+### 📝 基本フォーマット
+```
+[種類] 簡潔なタイトル（50文字以内）
+
+詳細な説明（必要に応じて）
+- 変更理由
+- 影響範囲
+- 関連Issue番号
+```
+
+### 🏷️ プレフィックス（種類）の例
+
+| プレフィックス | 英語表記 | 使用場面 | 例 |
+|--------------|---------|---------|-----|
+| **機能** | feat | 新機能追加 | `feat: ユーザー登録機能を追加` |
+| **修正** | fix | バグ修正 | `fix: ログイン時のエラーを修正` |
+| **改善** | improve | 機能改善 | `improve: 検索速度を50%向上` |
+| **文書** | docs | ドキュメント | `docs: README にAPI仕様を追加` |
+| **整形** | style | コード整形 | `style: PEP8に準拠するよう修正` |
+| **リファクタ** | refactor | コード整理 | `refactor: 重複コードを関数化` |
+| **性能** | perf | パフォーマンス | `perf: データベースクエリを最適化` |
+| **テスト** | test | テスト追加 | `test: ログイン機能のテストを追加` |
+| **ビルド** | build | ビルド関連 | `build: Dockerfileを更新` |
+| **CI** | ci | CI/CD設定 | `ci: GitHub Actionsを追加` |
+| **雑務** | chore | その他作業 | `chore: 依存パッケージを更新` |
+| **差し戻し** | revert | 変更を戻す | `revert: commit a1b2c3d を取り消し` |
+| **WIP** | wip | 作業途中 | `wip: ログイン機能実装中` |
+
+### ✅ 良いコミットメッセージの例
+
+```bash
+# 基本パターン
+git commit -m "feat: ユーザー認証機能を追加"
+git commit -m "fix: ログイン時の500エラーを修正"
+git commit -m "docs: API仕様書を更新"
+
+# 詳細付きパターン
+git commit -m "feat: パスワードリセット機能を追加
+
+- メール送信機能の実装
+- トークン生成ロジックの追加
+- パスワード変更画面の作成
+Closes #123"
+
+# Issue番号付き
+git commit -m "fix: #456 決済処理のタイムアウトを修正"
+git commit -m "feat: #789 商品検索機能を実装"
+
+# 影響範囲を明記
+git commit -m "refactor(auth): 認証ロジックを分離"
+git commit -m "fix(payment): クレジットカード決済エラーを修正"
+git commit -m "perf(database): インデックスを追加してクエリ速度向上"
+
+# 英語での例
+git commit -m "feat: add user authentication"
+git commit -m "fix: resolve login timeout issue"
+git commit -m "docs: update installation guide"
+git commit -m "refactor: separate database connection logic"
+git commit -m "test: add unit tests for payment module"
+git commit -m "perf: optimize image loading performance"
+git commit -m "chore: update dependencies to latest version"
+
+# 複数行メッセージ（詳細を含む）
+git commit -m "feat: add shopping cart functionality
+
+- Implemented add to cart feature
+- Added cart item management
+- Created checkout process
+- Fixes #234, Closes #235"
+```
+
+### ❌ 悪いコミットメッセージの例
+
+```bash
+# 避けるべき例
+git commit -m "更新"           # ❌ 何を更新したか不明
+git commit -m "修正"           # ❌ 何を修正したか不明
+git commit -m "aaa"            # ❌ 意味不明
+git commit -m "test"           # ❌ 何のテストか不明
+git commit -m "いろいろ変更"    # ❌ 具体性がない
+git commit -m "バグ直した"      # ❌ どのバグか不明
+git commit -m "とりあえず保存"  # ❌ コミットの意味がない
+git commit -m "WIP"            # ❌ 作業内容が不明（wip: 具体的な内容 とすべき）
+```
+
+### 📏 コミットメッセージのルール
+
+1. **1行目は50文字以内**
+   - 簡潔に要点をまとめる
+   - 命令形で書く（「追加する」ではなく「追加」）
+
+2. **2行目は空行**
+   - 詳細説明を書く場合は1行目と2行目の間に空行
+
+3. **3行目以降に詳細**
+   - 何を変更したか
+   - なぜ変更したか
+   - どう動作するか
+
+4. **Issue番号を含める**
+   - `Fixes #123` - バグ修正の場合
+   - `Closes #456` - 機能実装の場合
+   - `Refs #789` - 参照する場合
+
+### 🎯 コミットの粒度
+
+```bash
+# ✅ 良い例：機能ごとに分ける
+git commit -m "feat: ユーザー登録フォームを追加"
+git commit -m "feat: メール検証機能を実装"
+git commit -m "test: ユーザー登録のテストを追加"
+
+# ❌ 悪い例：全部まとめる
+git commit -m "feat: ユーザー機能一式を追加"  # 大きすぎる
+```
+
+### 🌐 Conventional Commits（国際標準）
+
+より厳密なルールに従いたい場合:
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**例**:
+```bash
+git commit -m "feat(auth): add JWT authentication
+
+Implemented JWT-based authentication system
+- Added token generation
+- Added token validation middleware
+- Updated user model
+
+Breaking Change: Authentication header format changed
+Closes #123"
+```
+
+**結果の見方**:
+```
+[feature/新機能名 a1b2c3d] 機能: ログイン機能を追加
+ 2 files changed, 45 insertions(+), 3 deletions(-)
+ create mode 100644 new_feature.py
+```
+- `2 files changed`: 2ファイルが変更された
+- `45 insertions(+)`: 45行追加された
+- `3 deletions(-)`: 3行削除された
+
+---
+
+## 📤 STEP 6: GitHubにプッシュ(アップロード)
+
+### 最新の状態を取得(重要!)
+
+```bash
+git pull origin main
+```
+**読み方**: ギット・プル・オリジン・メイン
+
+**意味**: GitHubの最新状態をダウンロードして統合
+
+**結果の見方**:
+```
+Already up to date.
+```
+→ これなら問題なし!
+
+```
+Updating 1234567..abcdefg
+Fast-forward
+ some_file.py | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+```
+→ 他のメンバーの変更が取り込まれた
+
+---
+
+### 自分の変更をアップロード
+
+```bash
+git push origin feature/新機能名
+```
+**読み方**: ギット・プッシュ・オリジン
+
+**意味**: 自分の変更をGitHubにアップロード
+
+**初回プッシュの場合**:
+```bash
+git push -u origin feature/新機能名
+```
+**意味**: `-u` でこのブランチを追跡設定する(次回から `git push` だけでOK)
+
+**結果の見方**:
+```
+Enumerating objects: 5, done.
+Counting objects: 100% (5/5), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 456 bytes | 456.00 KiB/s, done.
+Total 3 (delta 1), reused 0 (delta 0)
+To https://github.com/team/repo.git
+   1234567..abcdefg  feature/新機能名 -> feature/新機能名
+```
+→ 最後に `->` で表示されれば成功!
+
+---
+
+## 🔀 STEP 7: プルリクエスト(PR)作成
+
+### GitHubウェブサイトでの操作
+
+1. **GitHubにアクセス**
+   - ブラウザで `https://github.com/チーム名/リポジトリ名` を開く
+
+2. **プルリクエストを作成**
+   - 黄色いバーの「Compare & pull request」をクリック
+   - または「Pull requests」タブ → 「New pull request」
+
+3. **内容を記入**
+   ```
+   タイトル: [機能追加] ユーザーログイン機能
+   
+   ## 変更内容
+   - ログインフォームの追加
+   - 認証ロジックの実装
+   - テストケースの追加
+   
+   ## 確認事項
+   - [ ] テストが通ることを確認
+   - [ ] コードレビュー依頼
+   ```
+
+4. **レビュアーを指定**
+   - チームメンバーを Reviewers に追加
+
+5. **Create pull request** ボタンをクリック
+
+---
+
+## 🔄 STEP 8: マージ操作（複数チーム開発向け）
+
+### マージの基本概念
+
+**マージとは**: 別々のブランチの変更を統合すること
+
+```
+main ──●──●──●──●──●
+        \           \
+feature  ●──●──●──●  ← ここでマージ
+```
+
+---
+
+### 🎯 マージの3つの方法
+
+#### 1️⃣ **Merge Commit（マージコミット）** 推奨★
+
+```bash
+git checkout main
+git pull origin main
+git merge feature/新機能
+```
+**読み方**: ギット・マージ
+
+**結果の見方**:
+```
+Updating a1b2c3d..e4f5g6h
+Fast-forward
+ login.py    | 50 ++++++++++++++++++++++++++++++++++++++
+ test.py     | 25 +++++++++++++++++++
+ 2 files changed, 75 insertions(+)
+```
+- `Fast-forward`: 競合なくスムーズにマージ完了
+- `2 files changed`: 2ファイルが変更された
+- `75 insertions(+)`: 75行追加された
+
+**メリット**:
+- ✅ 履歴が保持される
+- ✅ いつマージされたか明確
+- ✅ 複数チームの作業が追跡しやすい
+
+**デメリット**:
+- ❌ 履歴が複雑になりやすい
+
+---
+
+#### 2️⃣ **Squash and Merge（スカッシュマージ）**
+
+複数のコミットを1つにまとめてマージ
+
+```bash
+git checkout main
+git merge --squash feature/新機能
+git commit -m "feat: ログイン機能を追加（統合コミット）"
+```
+**読み方**: ギット・マージ・スカッシュ
+
+**結果の見方**:
+```
+Squash commit -- not updating HEAD
+Automatic merge went well; stopped before committing as requested
+```
+→ 手動でコミットが必要
+
+**メリット**:
+- ✅ 履歴がシンプル
+- ✅ 細かいコミットを隠せる
+
+**デメリット**:
+- ❌ 詳細な履歴が失われる
+
+---
+
+#### 3️⃣ **Rebase and Merge（リベースマージ）** 上級者向け
+
+```bash
+git checkout feature/新機能
+git rebase main
+git checkout main
+git merge feature/新機能
+```
+**読み方**: ギット・リベース
+
+**結果の見方**:
+```
+First, rewinding head to replay your work on top of it...
+Applying: feat: ログインフォームを追加
+Applying: feat: 認証ロジックを実装
+Applying: test: テストを追加
+```
+
+**メリット**:
+- ✅ 直線的な履歴
+- ✅ きれいなコミット履歴
+
+**デメリット**:
+- ❌ コンフリクト解決が複数回必要な場合あり
+- ❌ 共有ブランチでは危険
+
+---
+
+### 🏢 複数チーム開発でのマージ戦略
+
+#### **シナリオ1: 機能チーム並行開発**
+
+```
+main ─────●─────●─────●─────●
+           \     \     \     \
+teamA       ●─●─● merge ●─●─●merge
+             \           \
+teamB         ●─●─●─merge  ●─●─●─merge
+```
+
+**推奨フロー**:
+```bash
+# Team Aのマージ準備
+git checkout feature/teamA-login
+git pull origin main              # 最新のmainを取り込む
+git push origin feature/teamA-login
+
+# GitHubでPR作成 → レビュー → Merge
+
+# Team Bも同様
+git checkout feature/teamB-payment
+git pull origin main              # Team Aの変更も含まれる
+git push origin feature/teamB-payment
+```
+
+---
+
+#### **シナリオ2: develop ブランチを使った開発**
+
+```
+main ────────●───────────● (本番リリース)
+              \           /
+develop ●──●──●──●──●──●──● (開発統合)
+        /  /        \  \
+feature1 ●●          ●●  feature2
+```
+
+**推奨フロー**:
+```bash
+# 1. developから機能ブランチ作成
+git checkout develop
+git pull origin develop
+git checkout -b feature/新機能
+
+# 2. 作業完了後、developにマージ
+git checkout develop
+git pull origin develop
+git merge feature/新機能
+git push origin develop
+
+# 3. リリース時にmainにマージ
+git checkout main
+git pull origin main
+git merge develop
+git tag v1.0.0
+git push origin main --tags
+```
+
+---
+
+### 🚨 マージ時のコンフリクト（衝突）完全ガイド
+
+#### コンフリクトが発生する原因
+
+```python
+# Team Aの変更
+def login(username, password):
+    return authenticate_user(username, password)
+
+# Team Bの変更（同じ場所）
+def login(email, password):
+    return check_credentials(email, password)
+```
+
+両チームが同じファイルの同じ行を編集した!
+
+---
+
+#### コンフリクト発生時の表示
+
+```bash
+git merge feature/teamB
+```
+
+**結果**:
+```
+Auto-merging login.py
+CONFLICT (content): Merge conflict in login.py
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+---
+
+#### コンフリクトの確認方法
+
+```bash
+git status
+```
+
+**結果の見方**:
+```
+On branch main
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+        both modified:   login.py  ← ★両方が変更したファイル
+```
+
+---
+
+#### コンフリクトの内容を確認
+
+```bash
+cat login.py
+```
+
+**結果の見方**:
+```python
+def login(username, password):
+<<<<<<< HEAD
+    # 現在のブランチ（main）の内容
+    return authenticate_user(username, password)
+=======
+    # マージしようとしているブランチの内容
+    return check_credentials(email, password)
+>>>>>>> feature/teamB
+```
+
+**マーカーの意味**:
+- `<<<<<<< HEAD`: 現在のブランチの変更開始
+- `=======`: 区切り線
+- `>>>>>>> feature/teamB`: マージ元ブランチの変更終了
+
+---
+
+#### コンフリクトの解決手順
+
+**STEP 1: どちらを採用するか決める**
+
+```python
+# 選択肢1: HEADを採用
+def login(username, password):
+    return authenticate_user(username, password)
+
+# 選択肢2: feature/teamBを採用
+def login(email, password):
+    return check_credentials(email, password)
+
+# 選択肢3: 両方を統合（推奨）
+def login(username, password):
+    # 両方の良いところを取り入れる
+    if "@" in username:  # メールアドレスの場合
+        return check_credentials(username, password)
+    return authenticate_user(username, password)
+```
+
+**STEP 2: マーカーを削除して保存**
+
+```python
+# ✅ 最終的なコード（マーカー削除済み）
+def login(username, password):
+    if "@" in username:
+        return check_credentials(username, password)
+    return authenticate_user(username, password)
+```
+
+**STEP 3: 解決済みファイルを追加**
+
+```bash
+git add login.py
+```
+
+**STEP 4: 状態を確認**
+
+```bash
+git status
+```
+
+**結果の見方**:
+```
+On branch main
+All conflicts fixed but you are still merging.
+  (use "git commit" to conclude merge)
+
+Changes to be committed:
+        modified:   login.py  ← ★緑色になればOK
+```
+
+**STEP 5: マージをコミット**
+
+```bash
+git commit -m "merge: feature/teamB を main にマージ（コンフリクト解決済み）"
+```
+
+**結果の見方**:
+```
+[main a1b2c3d] merge: feature/teamB を main にマージ（コンフリクト解決済み）
+```
+
+**STEP 6: プッシュ**
+
+```bash
+git push origin main
+```
+
+---
+
+### 🛑 マージを中止したい場合
+
+```bash
+git merge --abort
+```
+**読み方**: ギット・マージ・アボート
+
+**意味**: マージ操作を取り消して元に戻す
+
+**結果の見方**:
+```
+# 何も表示されない = 正常に中止された
+```
+
+```bash
+git status
+```
+```
+On branch main
+Your branch is up to date with 'origin/main'.
+nothing to commit, working tree clean  ← 元に戻った!
+```
+
+---
+
+### 🔍 マージ前の差分確認（重要！）
+
+```bash
+# mainと比較
+git diff main feature/新機能
+```
+
+**結果の見方**:
+```diff
+diff --git a/login.py b/login.py
+index 1234567..abcdefg 100644
+--- a/login.py
++++ b/login.py
+@@ -1,5 +1,10 @@
+ def login(username, password):
+-    return True
++    # 新しい認証ロジック
++    user = User.find_by_username(username)
++    if user and user.check_password(password):
++        return True
++    return False
+```
+- `-` (赤): 削除される行
+- `+` (緑): 追加される行
+
+---
+
+### 📊 マージ後の確認コマンド
+
+```bash
+# マージ履歴を確認
+git log --oneline --graph --all
+```
+
+**結果の見方**:
+```
+*   a1b2c3d (HEAD -> main) Merge branch 'feature/teamB'
+|\
+| * e4f5g6h (feature/teamB) feat: 決済機能を追加
+| * h7i8j9k feat: カート機能を追加
+* | k0l1m2n feat: ログイン機能を追加
+|/
+* n3o4p5q Initial commit
+```
+
+**記号の意味**:
+- `*`: コミット
+- `|`: ブランチのライン
+- `/`: マージポイント
+- `(HEAD -> main)`: 現在位置
+
+---
+
+### 🏆 複数チーム開発のベストプラクティス
+
+#### ✅ マージ前のチェックリスト
+
+```bash
+# 1. 最新のmainを取得
+git checkout main
+git pull origin main
+
+# 2. 自分のブランチに最新のmainを統合
+git checkout feature/自分のブランチ
+git merge main
+# または
+git rebase main
+
+# 3. コンフリクトがあれば解決
+
+# 4. テストを実行
+python -m pytest  # Pythonの例
+
+# 5. プッシュ
+git push origin feature/自分のブランチ
+
+# 6. GitHubでPR作成
+
+# 7. レビュー承認後にマージ
+```
+
+---
+
+#### 🚫 避けるべきパターン
+
+```bash
+# ❌ 最新を取得せずにマージ
+git merge feature/xxx  # 他チームの変更が含まれていない!
+
+# ❌ コンフリクトを適当に解決
+# マーカーを削除しただけでテストしない
+
+# ❌ 大量の変更を一度にマージ
+# 小さい単位でこまめにマージすべき
+
+# ❌ mainブランチで直接作業
+# 必ずfeatureブランチを作る
+```
+
+---
+
+### 🆘 マージトラブルシューティング
+
+#### ❌ トラブル1: マージ後に動かない!
+
+**原因**: コンフリクト解決時にコードが壊れた
+
+**対処法**:
+```bash
+# マージを取り消す
+git reset --hard HEAD~1
+
+# または特定のコミットに戻る
+git reset --hard a1b2c3d  # 戻りたいコミットのハッシュ
+```
+
+---
+
+#### ❌ トラブル2: 間違えてマージしてしまった!
+
+**対処法**:
+```bash
+# 直前のマージを取り消す
+git reset --hard ORIG_HEAD
+
+# または
+git revert -m 1 HEAD
+```
+
+---
+
+#### ❌ トラブル3: コンフリクトが多すぎて解決できない!
+
+**対処法**:
+```bash
+# 一旦マージを中止
+git merge --abort
+
+# 相手のブランチを確認
+git checkout feature/teamB
+git pull
+
+# 自分のブランチで最新のmainを取り込む
+git checkout feature/自分のブランチ
+git merge main
+
+# 小さい単位でコミットしてから再度マージ
+```
+
+---
+
+#### ❌ トラブル4: プッシュが拒否される
+
+```
+ ! [rejected]        main -> main (non-fast-forward)
+```
+
+**対処法**:
+```bash
+# リモートの最新を取得
+git pull origin main
+
+# コンフリクトがあれば解決してから
+git push origin main
+```
+
+---
+
+### 📱 複数チームでの連携コマンド
+
+```bash
+# 他チームの最新状況を確認
+git fetch --all
+git branch -a  # すべてのブランチ表示
+
+# 他チームのブランチをチェックアウト
+git checkout -b teamB-feature origin/feature/teamB-xxx
+
+# 自分のブランチに他チームの変更を取り込む
+git checkout feature/自分のブランチ
+git merge origin/feature/teamB-xxx
+
+# リモートブランチの削除（マージ済みブランチ）
+git push origin --delete feature/完了したブランチ
+```
+
+---
+
+### 🎯 GitBashでよく使うマージ関連コマンド一覧
+
+| コマンド | 読み方 | 意味 | 使うタイミング |
+|---------|--------|------|---------------|
+| `git merge ブランチ名` | マージ | ブランチを統合 | PR承認後 |
+| `git merge --abort` | マージ・アボート | マージ中止 | コンフリクトで困った時 |
+| `git merge --squash` | マージ・スカッシュ | コミット統合マージ | 履歴をきれいに |
+| `git rebase main` | リベース | ベースを変更 | mainの変更を取り込む |
+| `git cherry-pick a1b2c3d` | チェリーピック | 特定コミットを適用 | 一部だけ取り込む |
+| `git diff main..feature` | ディフ | 差分表示 | マージ前確認 |
+| `git log --graph` | ログ・グラフ | 履歴を図で表示 | マージ後確認 |
+| `git reset --hard HEAD~1` | リセット・ハード | 強制的に戻す | マージ取り消し |
+| `git revert -m 1 HEAD` | リバート | マージを打ち消す | 公開後の取り消し |
+
+---
+
+### 🌟 まとめ: 複数チーム開発の鉄則
+
+1. **こまめにpull**: 1日最低1回は `git pull origin main`
+2. **小さく分割**: 大きな機能は小さいPRに分ける
+3. **早めにマージ**: 長期間放置しない（コンフリクトの原因）
+4. **コミュニケーション**: 同じファイルを触る時はチームに確認
+5. **テスト必須**: マージ前に必ずテストを実行
+6. **レビュー文化**: すべてのマージにレビューを入れる
+
+---
+
+## 📊 日常的な作業フロー(完全版)
+
+```bash
+# 1. 最新の状態に更新
+git checkout main                    # メインブランチに移動
+git pull origin main                 # 最新を取得
+
+# 2. 作業用ブランチを作成
+git checkout -b feature/新機能名     # 新ブランチ作成
+
+# 3. コードを編集(VS Codeなど)
+
+# 4. 変更を確認
+git status                           # 状態確認
+git diff                             # 変更内容確認
+
+# 5. 変更を追加
+git add .                            # 全ファイル追加
+
+# 6. コミット
+git commit -m "機能: ○○を追加"      # 変更を記録
+
+# 7. プッシュ
+git push -u origin feature/新機能名  # GitHubにアップロード
+
+# 8. GitHubでPR作成
+```
+
+---
+
+## 🎯 よく使うコマンド一覧表
+
+| コマンド | 読み方 | 意味 | いつ使う? |
+|---------|--------|------|----------|
+| `git status` | ステータス | 現在の状態確認 | こまめに確認! |
+| `git log` | ログ | コミット履歴表示 | 履歴を見たい時 |
+| `git log --oneline` | ログ・ワンライン | 履歴を1行で表示 | 簡潔に見たい時 |
+| `git branch` | ブランチ | ブランチ一覧 | 今どこ?を確認 |
+| `git checkout ブランチ名` | チェックアウト | ブランチ移動 | 作業場所を変える |
+| `git checkout -b 新ブランチ名` | チェックアウト -b | ブランチ作成+移動 | 新機能開発開始 |
+| `git pull origin ブランチ名` | プル | 最新取得 | 作業前に必須! |
+| `git push origin ブランチ名` | プッシュ | アップロード | 作業後に必須! |
+| `git stash` | スタッシュ | 変更を一時保存 | 急な作業切り替え |
+| `git stash pop` | スタッシュ・ポップ | 保存した変更を戻す | 作業に戻る時 |
+
+---
+
+## 🔍 コマンド実行結果の読み方
+
+### `git status` の読み方
+
+```bash
+On branch feature/login              # ← 今いるブランチ
+Your branch is up to date with 'origin/feature/login'.  # ← GitHubと同期済み
+
+Changes to be committed:             # ← コミット準備完了(緑)
+  (use "git restore --staged <file>..." to unstage)
+        modified:   login.py
+
+Changes not staged for commit:      # ← まだ準備していない(赤)
+  (use "git add <file>..." to update what will be committed)
+        modified:   main.py
+
+Untracked files:                    # ← 新規ファイル(赤)
+  (use "git add <file>..." to include in what will be committed)
+        new_file.py
+```
+
+---
+
+### `git log` の読み方
+
+```bash
+commit a1b2c3d4e5f6g7h8i9j0  # ← コミットID(ハッシュ値)
+Author: Taro Yamada <taro@example.com>  # ← 誰が
+Date:   Thu Oct 9 14:30:00 2025 +0900   # ← いつ
+
+    機能: ログイン機能を追加  # ← 何をしたか
+```
+
+---
+
+### エラーメッセージの読み方
+
+#### ❌ コンフリクト(衝突)が発生
+
+```
+Auto-merging main.py
+CONFLICT (content): Merge conflict in main.py
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+**意味**: 同じファイルの同じ場所を複数人が編集した
+
+**対処法**:
+1. ファイルを開くと以下のような表示がある
+```python
+<<<<<<< HEAD
+your_code = "あなたのコード"
+=======
+their_code = "相手のコード"
+>>>>>>> branch_name
+```
+
+2. どちらを採用するか選んで、マーカーを削除
+3. `git add ファイル名`
+4. `git commit -m "コンフリクト解決"`
+
+---
+
+#### ❌ プッシュが拒否された
+
+```
+ ! [rejected]        main -> main (fetch first)
+error: failed to push some refs to 'https://github.com/...'
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally. This is usually caused by another repository pushing
+hint: to the same ref. You may want to first integrate the remote changes
+```
+
+**意味**: GitHubに自分より新しい変更がある
+
+**対処法**:
+```bash
+git pull origin main  # 最新を取得
+git push origin main  # 再度プッシュ
+```
+
+---
+
+## 🆘 トラブルシューティング
+
+### Q1: 間違えてコミットしてしまった!
+
+**直前のコミットを取り消し**:
+```bash
+git reset --soft HEAD~1
+```
+**意味**: コミットを取り消すが、変更内容は残す
+
+**完全に取り消し**(⚠️注意):
+```bash
+git reset --hard HEAD~1
+```
+**意味**: コミットも変更内容も完全削除
+
+---
+
+### Q2: 間違えてmainブランチで作業してしまった!
+
+```bash
+git stash                        # 変更を一時保存
+git checkout -b feature/新機能   # 新ブランチ作成
+git stash pop                    # 変更を戻す
+```
+
+---
+
+### Q3: ブランチ名を間違えた!
+
+```bash
+git branch -m 古いブランチ名 新しいブランチ名
+```
+
+---
+
+### Q4: .gitignore を後から追加したい
+
+```bash
+# .gitignore ファイルを作成・編集
+echo "*.pyc" >> .gitignore
+echo "__pycache__/" >> .gitignore
+echo ".env" >> .gitignore
+
+# キャッシュをクリア
+git rm -r --cached .
+git add .
+git commit -m "gitignoreを追加"
+```
+
+---
+
+## 📝 Python開発でよく使う .gitignore
+
+```.gitignore
+# Python
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# 環境変数
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+```
+
+---
+
+## 🎓 チーム開発のベストプラクティス
+
+### ✅ DO (推奨)
+- ✅ 作業前に必ず `git pull` で最新化
+- ✅ 1機能1ブランチの原則
+- ✅ こまめにコミット(1日最低1回)
+- ✅ わかりやすいコミットメッセージ
+- ✅ プッシュ前にテストを実行
+- ✅ コードレビューを受ける
+
+### ❌ DON'T (非推奨)
+- ❌ mainブランチに直接コミット
+- ❌ 大量の変更を1コミットにまとめる
+- ❌ 意味不明なコミットメッセージ
+- ❌ 他人のブランチを勝手に変更
+- ❌ プッシュせずに長期間ローカルに溜める
+- ❌ コンフリクトを放置
+
+---
+
+## 🚀 次のステップ
+
+このガイドをマスターしたら:
+1. ✅ Gitの内部構造を学ぶ
+2. ✅ リベース(`git rebase`)を学ぶ
+3. ✅ チェリーピック(`git cherry-pick`)を学ぶ
+4. ✅ Git Flowを理解する
+5. ✅ CI/CDツールと連携する
+
+---
+
+## 📚 参考リンク
+
+- [Git公式ドキュメント](https://git-scm.com/doc)
+- [GitHub Docs](https://docs.github.com/)
+- [Gitコマンドチートシート](https://education.github.com/git-cheat-sheet-education.pdf)
+
+---
+
+**🎉 これでGit/GitBashの基本はバッチリです!**
+
+困ったときはこのガイドを見返してくださいね。
+チーム開発、頑張ってください! 💪
