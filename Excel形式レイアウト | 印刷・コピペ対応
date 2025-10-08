@@ -1,0 +1,1370 @@
+📊 Git/GitBash コマンド完全一覧表
+Excel形式レイアウト | 印刷・コピペ対応
+
+🖨️ 印刷 / PDF保存
+📋 全表をコピー
+💾 CSV出力
+📂 基本ナビゲーション・移動コマンド
+コマンド	読み方	意味	使用例	頻度	操作
+pwd	ピー・ダブリュー・ディー	現在のディレクトリを表示	pwd	⭐⭐⭐	コピー
+cd	シー・ディー	ディレクトリ移動	cd /c/projects	⭐⭐⭐	コピー
+cd ..	シー・ディー・ドット・ドット	一つ上のフォルダに移動	cd ..	⭐⭐⭐	コピー
+cd ~	シー・ディー・チルダ	ホームディレクトリに移動	cd ~	⭐⭐	コピー
+cd -	シー・ディー・ハイフン	直前のディレクトリに戻る	cd -	⭐⭐	コピー
+ls	エル・エス	ファイル一覧表示	ls	⭐⭐⭐	コピー
+ls -la	エル・エス・オプション・エル・エー	詳細表示(隠しファイル含む)	ls -la	⭐⭐⭐	コピー
+ls -lh	エル・エス・オプション・エル・エイチ	サイズを読みやすく表示	ls -lh	⭐⭐	コピー
+📁 ファイル・フォルダ操作コマンド
+コマンド	読み方	意味	使用例	頻度	操作
+mkdir	エムケー・ディーアイアール	フォルダ作成	mkdir myapp	⭐⭐⭐	コピー
+mkdir -p	エムケー・ディーアイアール・ピー	階層フォルダ作成	mkdir -p a/b/c	⭐⭐	コピー
+touch	タッチ	空ファイル作成	touch app.py	⭐⭐⭐	コピー
+rm	アールエム	ファイル削除	rm file.txt	⭐⭐	コピー
+rm -r	アールエム・アール	フォルダ削除(再帰的)	rm -r myfolder	⭐⭐	コピー
+rm -i	アールエム・アイ	確認しながら削除	rm -i file.txt	⭐⭐⭐	コピー
+cp	シー・ピー	コピー	cp a.txt b.txt	⭐⭐	コピー
+cp -r	シー・ピー・アール	フォルダをコピー	cp -r folder1 folder2	⭐⭐	コピー
+mv	エム・ブイ	移動/リネーム	mv old.txt new.txt	⭐⭐⭐	コピー
+cat	キャット	ファイル内容表示	cat app.py	⭐⭐⭐	コピー
+echo	エコー	文字列表示/書き込み	echo "text" > file.txt	⭐⭐	コピー
+🔧 Git初期設定コマンド
+コマンド	読み方	意味	使用例	操作
+git --version	ギット・バージョン	Gitのバージョン確認	git --version	コピー
+git config --global user.name	ギット・コンフィグ・グローバル・ユーザー・ネーム	ユーザー名設定	git config --global user.name "Taro"	コピー
+git config --global user.email	ギット・コンフィグ・グローバル・ユーザー・イーメール	メールアドレス設定	git config --global user.email "a@b.com"	コピー
+git config --list	ギット・コンフィグ・リスト	設定一覧表示	git config --list	コピー
+ssh-keygen -t ed25519	エスエスエイチ・キージェン	SSH鍵を生成	ssh-keygen -t ed25519 -C "email@example.com"	コピー
+cat ~/.ssh/id_ed25519.pub	キャット・公開鍵	公開鍵を表示	cat ~/.ssh/id_ed25519.pub	コピー
+ssh -T git@github.com	エスエスエイチ・テスト	GitHub接続テスト	ssh -T git@github.com	コピー
+📦 Git基本操作コマンド
+コマンド	読み方	意味	使用例	頻度	操作
+git init	ギット・イニット	リポジトリ初期化	git init	⭐	コピー
+git clone	ギット・クローン	リポジトリを複製	git clone git@github.com:user/repo.git	⭐⭐	コピー
+git status	ギット・ステータス	状態確認	git status	⭐⭐⭐	コピー
+git add .	ギット・アド・ドット	全ファイルをステージング	git add .	⭐⭐⭐	コピー
+git add [file]	ギット・アド・ファイル	特定ファイルをステージング	git add app.py	⭐⭐⭐	コピー
+git commit -m	ギット・コミット・エム	コミット(記録)	git commit -m "message"	⭐⭐⭐	コピー
+git push	ギット・プッシュ	リモートに送信	git push	⭐⭐⭐	コピー
+git push -u origin main	ギット・プッシュ・ユー・オリジン・メイン	初回プッシュ(上流設定)	git push -u origin main	⭐	コピー
+git pull	ギット・プル	最新を取得	git pull	⭐⭐⭐	コピー
+git pull origin main	ギット・プル・オリジン・メイン	mainブランチの最新を取得	git pull origin main	⭐⭐	コピー
+🌿 ブランチ操作コマンド
+コマンド	読み方	意味	使用例	頻度	操作
+git branch	ギット・ブランチ	ブランチ一覧表示	git branch	⭐⭐⭐	コピー
+git branch [name]	ギット・ブランチ・ネーム	ブランチ作成	git branch feature/login	⭐⭐	コピー
+git checkout [name]	ギット・チェックアウト・ネーム	ブランチ切り替え	git checkout main	⭐⭐⭐	コピー
+git checkout -b [name]	ギット・チェックアウト・ビー	ブランチ作成+切り替え	git checkout -b feature/test	⭐⭐⭐	コピー
+git merge [branch]	ギット・マージ・ブランチ	ブランチをマージ	git merge feature/login	⭐⭐	コピー
+git branch -d [name]	ギット・ブランチ・ディー	ブランチ削除	git branch -d feature/old	⭐⭐	コピー
+git branch -a	ギット・ブランチ・エー	全ブランチ表示(リモート含む)	git branch -a	⭐⭐	コピー
+🔍 確認・履歴コマンド
+コマンド	読み方	意味	使用例	頻度	操作
+git log	ギット・ログ	コミット履歴表示	git log	⭐⭐⭐	コピー
+git log --oneline	ギット・ログ・ワンライン	コミット履歴を1行表示	git log --oneline	⭐⭐⭐	コピー
+git log --graph	ギット・ログ・グラフ	履歴をグラフ表示	git log --oneline --graph --all	⭐⭐	コピー
+git diff	ギット・ディフ	変更差分を表示	git diff	⭐⭐⭐	コピー
+git diff --staged	ギット・ディフ・ステージド	ステージング済みの差分表示	git diff --staged	⭐⭐	コピー
+git remote -v	ギット・リモート・ブイ	リモートリポジトリ確認	git remote -v	⭐⭐	コピー
+git show [commit]	ギット・ショウ	特定コミットの詳細表示	git show abc1234	⭐	コピー
+↩️ 取り消し・修正コマンド
+コマンド	読み方	意味	使用例	操作
+git restore [file]	ギット・リストア	変更を破棄	git restore app.py	コピー
+git restore --staged [file]	ギット・リストア・ステージド	addを取り消し	git restore --staged .	コピー
+git reset --soft HEAD~1	ギット・リセット・ソフト	直前のコミット取り消し(変更は保持)	git reset --soft HEAD~1	コピー
+git reset --hard HEAD~1	ギット・リセット・ハード	直前のコミット完全削除(危険!)	git reset --hard HEAD~1	コピー
+git revert [commit]	ギット・リバート	コミットを安全に取り消し	git revert abc1234	コピー
+git commit --amend	ギット・コミット・アメンド	直前のコミットを修正	git commit --amend	コピー
+git stash	ギット・スタッシュ	変更を一時退避	git stash	コピー
+git stash pop	ギット・スタッシュ・ポップ	退避した変更を復元	git stash pop	コピー
+git clean -fd	ギット・クリーン	追跡されていないファイルを削除	git clean -fd	コピー
+🌐 リモート操作コマンド
+コマンド	読み方	意味	操作
+git remote add origin [URL]	ギット・リモート・アド・オリジン	リモートリポジトリを登録	コピー
+git remote remove origin	ギット・リモート・リムーブ	リモートリポジトリを削除	コピー
+git fetch	ギット・フェッチ	リモートの情報を取得(マージしない)	コピー
+git push --force-with-lease	ギット・プッシュ・フォース・ウィズ・リース	安全な強制プッシュ	コピー
+git push origin --delete [branch]	ギット・プッシュ・オリジン・デリート	リモートブランチを削除	コピー
+🗂️ WindowsパスとGitBashパス対応表
+Windows表記	GitBash表記	説明
+C:\	/c/	Cドライブのルート
+D:\	/d/	Dドライブのルート
+C:\Users	/c/Users	ユーザーフォルダ
+C:\Users\YourName	/c/Users/YourName	ユーザーホーム
+C:\projects\myapp	/c/projects/myapp	プロジェクトフォルダ
+C:\Program Files	/c/Program Files	プログラムフォルダ(スペース注意)
+~	/c/Users/YourName	ホームディレクトリの略記
+📝 記号の意味と入力要否
+記号	名前	意味	出現場所	入力する?
+$	ドルマーク	GitBashのプロンプト	コマンドラインの先頭	❌ NO
+>>>	大なり3つ	Pythonのプロンプト	Python対話モード	❌ NO
+...	ドット3つ	Python続き入力	Python複数行入力時	❌ NO
+#	シャープ	コメント(説明文)	コマンドの後ろ	❌ NO
+(main)	ブランチ表示	現在のブランチ名	プロンプトの一部	❌ NO
+~	チルダ	ホームディレクトリ	パス指定	✅ YES
+.	ドット	現在のディレクトリ	パス指定、git add	✅ YES
+..	ドット・ドット	親ディレクトリ	パス指定	✅ YES
+/	スラッシュ	パスの区切り	パス指定	✅ YES
+🎯 よく使うコマンドパターン
+シチュエーション	コマンドシーケンス	説明
+新規プロジェクト作成	mkdir myapp
+cd myapp
+git init
+touch README.md
+git add .
+git commit -m "Initial commit"	フォルダ作成からコミットまで
+日常のコミット	git status
+git add .
+git commit -m "message"
+git push	確認→追加→コミット→プッシュ
+ブランチで開発	git checkout -b feature/new
+(コーディング)
+git add .
+git commit -m "新機能"
+git push -u origin feature/new	ブランチ作成から初回プッシュ
+朝の作業開始	cd /c/projects/myapp
+git checkout main
+git pull
+git checkout -b feature/today	最新取得して作業開始
+コンフリクト解決	git pull
+(CONFLICTと表示)
+code ファイル名
+(衝突箇所を修正)
+git add .
+git commit -m "コンフリクト解決"	衝突発生から解決まで
+既存プロジェクトに参加	cd /c/projects
+git clone git@github.com:user/repo.git
+cd repo
+git checkout -b feature/mywork	クローンから作業開始
+🆘 よくあるエラーと対処法
+エラーメッセージ	原因	解決コマンド
+Permission denied (publickey)	SSH鍵の認証エラー	ssh -T git@github.com
+ssh-keygen -t ed25519 -C "email"
+→ GitHubに公開鍵を再登録
+Your branch is behind	リモートが進んでいる	git pull origin main
+CONFLICT (content)	マージコンフリクト	ファイルを開いて修正
+git add .
+git commit -m "解決"
+Please commit your changes	未コミットの変更あり	git stash
+git pull
+git stash pop
+not a git repository	Gitリポジトリではない	git init
+または正しいフォルダに移動
+pathspec did not match	ブランチが存在しない	git branch -a
+git fetch
+💡 使い方のヒント
+✅ 各コマンドの「コピー」ボタンで簡単コピペ
+✅ 「印刷/PDF保存」で紙やPDFに出力可能
+✅ 「全表をコピー」でテキストエディタに貼り付け可能
+✅ 「CSV出力」でExcelで開ける形式に変換
+✅ 頻度: ⭐⭐⭐(よく使う) ⭐⭐(たまに) ⭐(たまに)
+
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git/GitBashコマンド完全一覧表</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Yu Gothic', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #28a745;
+        }
+        
+        .btn-secondary:hover {
+            background: #218838;
+        }
+        
+        .content {
+            padding: 30px;
+            overflow-x: auto;
+        }
+        
+        .table-section {
+            margin-bottom: 50px;
+        }
+        
+        .table-section h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        th {
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 1.1em;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        tbody tr:nth-child(even):hover {
+            background: #e9ecef;
+        }
+        
+        .code {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #4ec9b0;
+            padding: 6px 10px;
+            border-radius: 5px;
+            font-size: 0.95em;
+            display: inline-block;
+        }
+        
+        .category {
+            background: #ffc107;
+            color: #000;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .frequency {
+            text-align: center;
+            font-size: 1.2em;
+        }
+        
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+        }
+        
+        .copy-btn:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+        
+        .note {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls {
+                display: none;
+            }
+            
+            .copy-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Git/GitBash コマンド完全一覧表</h1>
+            <p>Excel形式レイアウト | 印刷・コピペ対応</p>
+        </header>
+        
+        <div class="controls">
+            <button class="btn" onclick="window.print()">🖨️ 印刷 / PDF保存</button>
+            <button class="btn btn-secondary" onclick="copyAllTables()">📋 全表をコピー</button>
+            <button class="btn" onclick="exportToCSV()">💾 CSV出力</button>
+        </div>
+        
+        <div class="content">
+            <!-- 表1: 基本ナビゲーション -->
+            <div class="table-section">
+                <h2>📂 基本ナビゲーション・移動コマンド</h2>
+                <table id="table1">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">コマンド</th>
+                            <th style="width: 20%;">読み方</th>
+                            <th style="width: 25%;">意味</th>
+                            <th style="width: 25%;">使用例</th>
+                            <th style="width: 10%;">頻度</th>
+                            <th style="width: 5%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">pwd</span></td>
+                            <td>ピー・ダブリュー・ディー</td>
+                            <td>現在のディレクトリを表示</td>
+                            <td><span class="code">pwd</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('pwd')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">cd</span></td>
+                            <td>シー・ディー</td>
+                            <td>ディレクトリ移動</td>
+                            <td><span class="code">cd /c/projects</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('cd ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">cd ..</span></td>
+                            <td>シー・ディー・ドット・ドット</td>
+                            <td>一つ上のフォルダに移動</td>
+                            <td><span class="code">cd ..</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('cd ..')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">cd ~</span></td>
+                            <td>シー・ディー・チルダ</td>
+                            <td>ホームディレクトリに移動</td>
+                            <td><span class="code">cd ~</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('cd ~')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">cd -</span></td>
+                            <td>シー・ディー・ハイフン</td>
+                            <td>直前のディレクトリに戻る</td>
+                            <td><span class="code">cd -</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('cd -')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">ls</span></td>
+                            <td>エル・エス</td>
+                            <td>ファイル一覧表示</td>
+                            <td><span class="code">ls</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('ls')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">ls -la</span></td>
+                            <td>エル・エス・オプション・エル・エー</td>
+                            <td>詳細表示(隠しファイル含む)</td>
+                            <td><span class="code">ls -la</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('ls -la')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">ls -lh</span></td>
+                            <td>エル・エス・オプション・エル・エイチ</td>
+                            <td>サイズを読みやすく表示</td>
+                            <td><span class="code">ls -lh</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('ls -lh')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 表2: ファイル・フォルダ操作 -->
+            <div class="table-section">
+                <h2>📁 ファイル・フォルダ操作コマンド</h2>
+                <table id="table2">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">コマンド</th>
+                            <th style="width: 20%;">読み方</th>
+                            <th style="width: 25%;">意味</th>
+                            <th style="width: 25%;">使用例</th>
+                            <th style="width: 10%;">頻度</th>
+                            <th style="width: 5%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">mkdir</span></td>
+                            <td>エムケー・ディーアイアール</td>
+                            <td>フォルダ作成</td>
+                            <td><span class="code">mkdir myapp</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('mkdir ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">mkdir -p</span></td>
+                            <td>エムケー・ディーアイアール・ピー</td>
+                            <td>階層フォルダ作成</td>
+                            <td><span class="code">mkdir -p a/b/c</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('mkdir -p ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">touch</span></td>
+                            <td>タッチ</td>
+                            <td>空ファイル作成</td>
+                            <td><span class="code">touch app.py</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('touch ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">rm</span></td>
+                            <td>アールエム</td>
+                            <td>ファイル削除</td>
+                            <td><span class="code">rm file.txt</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('rm ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">rm -r</span></td>
+                            <td>アールエム・アール</td>
+                            <td>フォルダ削除(再帰的)</td>
+                            <td><span class="code">rm -r myfolder</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('rm -r ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">rm -i</span></td>
+                            <td>アールエム・アイ</td>
+                            <td>確認しながら削除</td>
+                            <td><span class="code">rm -i file.txt</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('rm -i ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">cp</span></td>
+                            <td>シー・ピー</td>
+                            <td>コピー</td>
+                            <td><span class="code">cp a.txt b.txt</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('cp ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">cp -r</span></td>
+                            <td>シー・ピー・アール</td>
+                            <td>フォルダをコピー</td>
+                            <td><span class="code">cp -r folder1 folder2</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('cp -r ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">mv</span></td>
+                            <td>エム・ブイ</td>
+                            <td>移動/リネーム</td>
+                            <td><span class="code">mv old.txt new.txt</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('mv ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">cat</span></td>
+                            <td>キャット</td>
+                            <td>ファイル内容表示</td>
+                            <td><span class="code">cat app.py</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('cat ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">echo</span></td>
+                            <td>エコー</td>
+                            <td>文字列表示/書き込み</td>
+                            <td><span class="code">echo "text" > file.txt</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('echo ')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 表3: Git初期設定 -->
+            <div class="table-section">
+                <h2>🔧 Git初期設定コマンド</h2>
+                <table id="table3">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">コマンド</th>
+                            <th style="width: 20%;">読み方</th>
+                            <th style="width: 30%;">意味</th>
+                            <th style="width: 20%;">使用例</th>
+                            <th style="width: 5%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git --version</span></td>
+                            <td>ギット・バージョン</td>
+                            <td>Gitのバージョン確認</td>
+                            <td><span class="code">git --version</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git --version')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git config --global user.name</span></td>
+                            <td>ギット・コンフィグ・グローバル・ユーザー・ネーム</td>
+                            <td>ユーザー名設定</td>
+                            <td><span class="code">git config --global user.name "Taro"</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git config --global user.name ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git config --global user.email</span></td>
+                            <td>ギット・コンフィグ・グローバル・ユーザー・イーメール</td>
+                            <td>メールアドレス設定</td>
+                            <td><span class="code">git config --global user.email "a@b.com"</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git config --global user.email ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git config --list</span></td>
+                            <td>ギット・コンフィグ・リスト</td>
+                            <td>設定一覧表示</td>
+                            <td><span class="code">git config --list</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git config --list')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">ssh-keygen -t ed25519</span></td>
+                            <td>エスエスエイチ・キージェン</td>
+                            <td>SSH鍵を生成</td>
+                            <td><span class="code">ssh-keygen -t ed25519 -C "email@example.com"</span></td>
+                            <td><button class="copy-btn" onclick="copyText('ssh-keygen -t ed25519 -C ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">cat ~/.ssh/id_ed25519.pub</span></td>
+                            <td>キャット・公開鍵</td>
+                            <td>公開鍵を表示</td>
+                            <td><span class="code">cat ~/.ssh/id_ed25519.pub</span></td>
+                            <td><button class="copy-btn" onclick="copyText('cat ~/.ssh/id_ed25519.pub')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">ssh -T git@github.com</span></td>
+                            <td>エスエスエイチ・テスト</td>
+                            <td>GitHub接続テスト</td>
+                            <td><span class="code">ssh -T git@github.com</span></td>
+                            <td><button class="copy-btn" onclick="copyText('ssh -T git@github.com')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 表4: Git基本操作 -->
+            <div class="table-section">
+                <h2>📦 Git基本操作コマンド</h2>
+                <table id="table4">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%;">コマンド</th>
+                            <th style="width: 20%;">読み方</th>
+                            <th style="width: 25%;">意味</th>
+                            <th style="width: 20%;">使用例</th>
+                            <th style="width: 10%;">頻度</th>
+                            <th style="width: 5%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git init</span></td>
+                            <td>ギット・イニット</td>
+                            <td>リポジトリ初期化</td>
+                            <td><span class="code">git init</span></td>
+                            <td class="frequency">⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git init')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git clone</span></td>
+                            <td>ギット・クローン</td>
+                            <td>リポジトリを複製</td>
+                            <td><span class="code">git clone git@github.com:user/repo.git</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git clone ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git status</span></td>
+                            <td>ギット・ステータス</td>
+                            <td>状態確認</td>
+                            <td><span class="code">git status</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git status')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git add .</span></td>
+                            <td>ギット・アド・ドット</td>
+                            <td>全ファイルをステージング</td>
+                            <td><span class="code">git add .</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git add .')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git add [file]</span></td>
+                            <td>ギット・アド・ファイル</td>
+                            <td>特定ファイルをステージング</td>
+                            <td><span class="code">git add app.py</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git add ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git commit -m</span></td>
+                            <td>ギット・コミット・エム</td>
+                            <td>コミット(記録)</td>
+                            <td><span class="code">git commit -m "message"</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git commit -m \"\"')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git push</span></td>
+                            <td>ギット・プッシュ</td>
+                            <td>リモートに送信</td>
+                            <td><span class="code">git push</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git push')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git push -u origin main</span></td>
+                            <td>ギット・プッシュ・ユー・オリジン・メイン</td>
+                            <td>初回プッシュ(上流設定)</td>
+                            <td><span class="code">git push -u origin main</span></td>
+                            <td class="frequency">⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git push -u origin main')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git pull</span></td>
+                            <td>ギット・プル</td>
+                            <td>最新を取得</td>
+                            <td><span class="code">git pull</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git pull')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git pull origin main</span></td>
+                            <td>ギット・プル・オリジン・メイン</td>
+                            <td>mainブランチの最新を取得</td>
+                            <td><span class="code">git pull origin main</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git pull origin main')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 表5: ブランチ操作 -->
+            <div class="table-section">
+                <h2>🌿 ブランチ操作コマンド</h2>
+                <table id="table5">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%;">コマンド</th>
+                            <th style="width: 20%;">読み方</th>
+                            <th style="width: 25%;">意味</th>
+                            <th style="width: 20%;">使用例</th>
+                            <th style="width: 10%;">頻度</th>
+                            <th style="width: 5%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git branch</span></td>
+                            <td>ギット・ブランチ</td>
+                            <td>ブランチ一覧表示</td>
+                            <td><span class="code">git branch</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git branch')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git branch [name]</span></td>
+                            <td>ギット・ブランチ・ネーム</td>
+                            <td>ブランチ作成</td>
+                            <td><span class="code">git branch feature/login</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git branch ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git checkout [name]</span></td>
+                            <td>ギット・チェックアウト・ネーム</td>
+                            <td>ブランチ切り替え</td>
+                            <td><span class="code">git checkout main</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git checkout ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git checkout -b [name]</span></td>
+                            <td>ギット・チェックアウト・ビー</td>
+                            <td>ブランチ作成+切り替え</td>
+                            <td><span class="code">git checkout -b feature/test</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git checkout -b ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git merge [branch]</span></td>
+                            <td>ギット・マージ・ブランチ</td>
+                            <td>ブランチをマージ</td>
+                            <td><span class="code">git merge feature/login</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git merge ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git branch -d [name]</span></td>
+                            <td>ギット・ブランチ・ディー</td>
+                            <td>ブランチ削除</td>
+                            <td><span class="code">git branch -d feature/old</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git branch -d ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git branch -a</span></td>
+                            <td>ギット・ブランチ・エー</td>
+                            <td>全ブランチ表示(リモート含む)</td>
+                            <td><span class="code">git branch -a</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git branch -a')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 表6: 確認・履歴 -->
+            <div class="table-section">
+                <h2>🔍 確認・履歴コマンド</h2>
+                <table id="table6">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%;">コマンド</th>
+                            <th style="width: 20%;">読み方</th>
+                            <th style="width: 25%;">意味</th>
+                            <th style="width: 20%;">使用例</th>
+                            <th style="width: 10%;">頻度</th>
+                            <th style="width: 5%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git log</span></td>
+                            <td>ギット・ログ</td>
+                            <td>コミット履歴表示</td>
+                            <td><span class="code">git log</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git log')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git log --oneline</span></td>
+                            <td>ギット・ログ・ワンライン</td>
+                            <td>コミット履歴を1行表示</td>
+                            <td><span class="code">git log --oneline</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git log --oneline')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git log --graph</span></td>
+                            <td>ギット・ログ・グラフ</td>
+                            <td>履歴をグラフ表示</td>
+                            <td><span class="code">git log --oneline --graph --all</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git log --oneline --graph --all')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff</span></td>
+                            <td>ギット・ディフ</td>
+                            <td>変更差分を表示</td>
+                            <td><span class="code">git diff</span></td>
+                            <td class="frequency">⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff --staged</span></td>
+                            <td>ギット・ディフ・ステージド</td>
+                            <td>ステージング済みの差分表示</td>
+                            <td><span class="code">git diff --staged</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff --staged')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git remote -v</span></td>
+                            <td>ギット・リモート・ブイ</td>
+                            <td>リモートリポジトリ確認</td>
+                            <td><span class="code">git remote -v</span></td>
+                            <td class="frequency">⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git remote -v')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git show [commit]</span></td>
+                            <td>ギット・ショウ</td>
+                            <td>特定コミットの詳細表示</td>
+                            <td><span class="code">git show abc1234</span></td>
+                            <td class="frequency">⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git show ')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 表7: 取り消し・修正 -->
+            <div class="table-section">
+                <h2>↩️ 取り消し・修正コマンド</h2>
+                <table id="table7">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">コマンド</th>
+                            <th style="width: 20%;">読み方</th>
+                            <th style="width: 25%;">意味</th>
+                            <th style="width: 20%;">使用例</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git restore [file]</span></td>
+                            <td>ギット・リストア</td>
+                            <td>変更を破棄</td>
+                            <td><span class="code">git restore app.py</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git restore ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git restore --staged [file]</span></td>
+                            <td>ギット・リストア・ステージド</td>
+                            <td>addを取り消し</td>
+                            <td><span class="code">git restore --staged .</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git restore --staged ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git reset --soft HEAD~1</span></td>
+                            <td>ギット・リセット・ソフト</td>
+                            <td>直前のコミット取り消し(変更は保持)</td>
+                            <td><span class="code">git reset --soft HEAD~1</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git reset --soft HEAD~1')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git reset --hard HEAD~1</span></td>
+                            <td>ギット・リセット・ハード</td>
+                            <td>直前のコミット完全削除(危険!)</td>
+                            <td><span class="code">git reset --hard HEAD~1</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git reset --hard HEAD~1')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git revert [commit]</span></td>
+                            <td>ギット・リバート</td>
+                            <td>コミットを安全に取り消し</td>
+                            <td><span class="code">git revert abc1234</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git revert ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git commit --amend</span></td>
+                            <td>ギット・コミット・アメンド</td>
+                            <td>直前のコミットを修正</td>
+                            <td><span class="code">git commit --amend</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git commit --amend')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git stash</span></td>
+                            <td>ギット・スタッシュ</td>
+                            <td>変更を一時退避</td>
+                            <td><span class="code">git stash</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git stash')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git stash pop</span></td>
+                            <td>ギット・スタッシュ・ポップ</td>
+                            <td>退避した変更を復元</td>
+                            <td><span class="code">git stash pop</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git stash pop')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git clean -fd</span></td>
+                            <td>ギット・クリーン</td>
+                            <td>追跡されていないファイルを削除</td>
+                            <td><span class="code">git clean -fd</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git clean -fd')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 表8: リモート操作 -->
+            <div class="table-section">
+                <h2>🌐 リモート操作コマンド</h2>
+                <table id="table8">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">コマンド</th>
+                            <th style="width: 20%;">読み方</th>
+                            <th style="width: 30%;">意味</th>
+                            <th style="width: 20%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git remote add origin [URL]</span></td>
+                            <td>ギット・リモート・アド・オリジン</td>
+                            <td>リモートリポジトリを登録</td>
+                            <td><button class="copy-btn" onclick="copyText('git remote add origin ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git remote remove origin</span></td>
+                            <td>ギット・リモート・リムーブ</td>
+                            <td>リモートリポジトリを削除</td>
+                            <td><button class="copy-btn" onclick="copyText('git remote remove origin')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git fetch</span></td>
+                            <td>ギット・フェッチ</td>
+                            <td>リモートの情報を取得(マージしない)</td>
+                            <td><button class="copy-btn" onclick="copyText('git fetch')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git push --force-with-lease</span></td>
+                            <td>ギット・プッシュ・フォース・ウィズ・リース</td>
+                            <td>安全な強制プッシュ</td>
+                            <td><button class="copy-btn" onclick="copyText('git push --force-with-lease')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git push origin --delete [branch]</span></td>
+                            <td>ギット・プッシュ・オリジン・デリート</td>
+                            <td>リモートブランチを削除</td>
+                            <td><button class="copy-btn" onclick="copyText('git push origin --delete ')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 表9: Windowsパス対応表 -->
+            <div class="table-section">
+                <h2>🗂️ WindowsパスとGitBashパス対応表</h2>
+                <table id="table9">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">Windows表記</th>
+                            <th style="width: 35%;">GitBash表記</th>
+                            <th style="width: 30%;">説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">C:\</span></td>
+                            <td><span class="code">/c/</span></td>
+                            <td>Cドライブのルート</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">D:\</span></td>
+                            <td><span class="code">/d/</span></td>
+                            <td>Dドライブのルート</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">C:\Users</span></td>
+                            <td><span class="code">/c/Users</span></td>
+                            <td>ユーザーフォルダ</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">C:\Users\YourName</span></td>
+                            <td><span class="code">/c/Users/YourName</span></td>
+                            <td>ユーザーホーム</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">C:\projects\myapp</span></td>
+                            <td><span class="code">/c/projects/myapp</span></td>
+                            <td>プロジェクトフォルダ</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">C:\Program Files</span></td>
+                            <td><span class="code">/c/Program Files</span></td>
+                            <td>プログラムフォルダ(スペース注意)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">~</span></td>
+                            <td><span class="code">/c/Users/YourName</span></td>
+                            <td>ホームディレクトリの略記</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 表10: 記号の意味 -->
+            <div class="table-section">
+                <h2>📝 記号の意味と入力要否</h2>
+                <table id="table10">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">記号</th>
+                            <th style="width: 20%;">名前</th>
+                            <th style="width: 30%;">意味</th>
+                            <th style="width: 20%;">出現場所</th>
+                            <th style="width: 20%;">入力する?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">$</span></td>
+                            <td>ドルマーク</td>
+                            <td>GitBashのプロンプト</td>
+                            <td>コマンドラインの先頭</td>
+                            <td style="color: #ff6b6b; font-weight: bold;">❌ NO</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">>>></span></td>
+                            <td>大なり3つ</td>
+                            <td>Pythonのプロンプト</td>
+                            <td>Python対話モード</td>
+                            <td style="color: #ff6b6b; font-weight: bold;">❌ NO</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">...</span></td>
+                            <td>ドット3つ</td>
+                            <td>Python続き入力</td>
+                            <td>Python複数行入力時</td>
+                            <td style="color: #ff6b6b; font-weight: bold;">❌ NO</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">#</span></td>
+                            <td>シャープ</td>
+                            <td>コメント(説明文)</td>
+                            <td>コマンドの後ろ</td>
+                            <td style="color: #ff6b6b; font-weight: bold;">❌ NO</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">(main)</span></td>
+                            <td>ブランチ表示</td>
+                            <td>現在のブランチ名</td>
+                            <td>プロンプトの一部</td>
+                            <td style="color: #ff6b6b; font-weight: bold;">❌ NO</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">~</span></td>
+                            <td>チルダ</td>
+                            <td>ホームディレクトリ</td>
+                            <td>パス指定</td>
+                            <td style="color: #51cf66; font-weight: bold;">✅ YES</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">.</span></td>
+                            <td>ドット</td>
+                            <td>現在のディレクトリ</td>
+                            <td>パス指定、git add</td>
+                            <td style="color: #51cf66; font-weight: bold;">✅ YES</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">..</span></td>
+                            <td>ドット・ドット</td>
+                            <td>親ディレクトリ</td>
+                            <td>パス指定</td>
+                            <td style="color: #51cf66; font-weight: bold;">✅ YES</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">/</span></td>
+                            <td>スラッシュ</td>
+                            <td>パスの区切り</td>
+                            <td>パス指定</td>
+                            <td style="color: #51cf66; font-weight: bold;">✅ YES</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 表11: よく使うパターン -->
+            <div class="table-section">
+                <h2>🎯 よく使うコマンドパターン</h2>
+                <table id="table11">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%;">シチュエーション</th>
+                            <th style="width: 50%;">コマンドシーケンス</th>
+                            <th style="width: 30%;">説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>新規プロジェクト作成</strong></td>
+                            <td>
+                                <span class="code">mkdir myapp</span><br>
+                                <span class="code">cd myapp</span><br>
+                                <span class="code">git init</span><br>
+                                <span class="code">touch README.md</span><br>
+                                <span class="code">git add .</span><br>
+                                <span class="code">git commit -m "Initial commit"</span>
+                            </td>
+                            <td>フォルダ作成からコミットまで</td>
+                        </tr>
+                        <tr>
+                            <td><strong>日常のコミット</strong></td>
+                            <td>
+                                <span class="code">git status</span><br>
+                                <span class="code">git add .</span><br>
+                                <span class="code">git commit -m "message"</span><br>
+                                <span class="code">git push</span>
+                            </td>
+                            <td>確認→追加→コミット→プッシュ</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ブランチで開発</strong></td>
+                            <td>
+                                <span class="code">git checkout -b feature/new</span><br>
+                                <span class="code">(コーディング)</span><br>
+                                <span class="code">git add .</span><br>
+                                <span class="code">git commit -m "新機能"</span><br>
+                                <span class="code">git push -u origin feature/new</span>
+                            </td>
+                            <td>ブランチ作成から初回プッシュ</td>
+                        </tr>
+                        <tr>
+                            <td><strong>朝の作業開始</strong></td>
+                            <td>
+                                <span class="code">cd /c/projects/myapp</span><br>
+                                <span class="code">git checkout main</span><br>
+                                <span class="code">git pull</span><br>
+                                <span class="code">git checkout -b feature/today</span>
+                            </td>
+                            <td>最新取得して作業開始</td>
+                        </tr>
+                        <tr>
+                            <td><strong>コンフリクト解決</strong></td>
+                            <td>
+                                <span class="code">git pull</span><br>
+                                <span class="code">(CONFLICTと表示)</span><br>
+                                <span class="code">code ファイル名</span><br>
+                                <span class="code">(衝突箇所を修正)</span><br>
+                                <span class="code">git add .</span><br>
+                                <span class="code">git commit -m "コンフリクト解決"</span>
+                            </td>
+                            <td>衝突発生から解決まで</td>
+                        </tr>
+                        <tr>
+                            <td><strong>既存プロジェクトに参加</strong></td>
+                            <td>
+                                <span class="code">cd /c/projects</span><br>
+                                <span class="code">git clone git@github.com:user/repo.git</span><br>
+                                <span class="code">cd repo</span><br>
+                                <span class="code">git checkout -b feature/mywork</span>
+                            </td>
+                            <td>クローンから作業開始</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 表12: エラー対処 -->
+            <div class="table-section">
+                <h2>🆘 よくあるエラーと対処法</h2>
+                <table id="table12">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">エラーメッセージ</th>
+                            <th style="width: 30%;">原因</th>
+                            <th style="width: 40%;">解決コマンド</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">Permission denied (publickey)</span></td>
+                            <td>SSH鍵の認証エラー</td>
+                            <td>
+                                <span class="code">ssh -T git@github.com</span><br>
+                                <span class="code">ssh-keygen -t ed25519 -C "email"</span><br>
+                                → GitHubに公開鍵を再登録
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">Your branch is behind</span></td>
+                            <td>リモートが進んでいる</td>
+                            <td>
+                                <span class="code">git pull origin main</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">CONFLICT (content)</span></td>
+                            <td>マージコンフリクト</td>
+                            <td>
+                                ファイルを開いて修正<br>
+                                <span class="code">git add .</span><br>
+                                <span class="code">git commit -m "解決"</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">Please commit your changes</span></td>
+                            <td>未コミットの変更あり</td>
+                            <td>
+                                <span class="code">git stash</span><br>
+                                <span class="code">git pull</span><br>
+                                <span class="code">git stash pop</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">not a git repository</span></td>
+                            <td>Gitリポジトリではない</td>
+                            <td>
+                                <span class="code">git init</span><br>
+                                または正しいフォルダに移動
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">pathspec did not match</span></td>
+                            <td>ブランチが存在しない</td>
+                            <td>
+                                <span class="code">git branch -a</span><br>
+                                <span class="code">git fetch</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="note">
+                <h3>💡 使い方のヒント</h3>
+                <ul style="list-style: none; padding-left: 0;">
+                    <li>✅ 各コマンドの「コピー」ボタンで簡単コピペ</li>
+                    <li>✅ 「印刷/PDF保存」で紙やPDFに出力可能</li>
+                    <li>✅ 「全表をコピー」でテキストエディタに貼り付け可能</li>
+                    <li>✅ 「CSV出力」でExcelで開ける形式に変換</li>
+                    <li>✅ 頻度: ⭐⭐⭐(よく使う) ⭐⭐(たまに) ⭐(たまに)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✓ コピー完了!';
+                btn.style.background = '#28a745';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#28a745';
+                }, 2000);
+            });
+        }
+        
+        function copyAllTables() {
+            const tables = document.querySelectorAll('table');
+            let allText = '# Git/GitBash コマンド完全一覧表\n\n';
+            
+            tables.forEach((table, index) => {
+                const section = table.closest('.table-section');
+                const title = section.querySelector('h2').textContent;
+                allText += `\n## ${title}\n\n`;
+                
+                const rows = table.querySelectorAll('tr');
+                rows.forEach((row, rowIndex) => {
+                    const cells = row.querySelectorAll('th, td');
+                    const rowText = Array.from(cells).map(cell => {
+                        return cell.textContent.replace(/\s+/g, ' ').trim();
+                    }).join('\t');
+                    allText += rowText + '\n';
+                });
+            });
+            
+            navigator.clipboard.writeText(allText).then(() => {
+                alert('✓ 全ての表をコピーしました！\nテキストエディタに貼り付けてください。');
+            });
+        }
+        
+        function exportToCSV() {
+            const tables = document.querySelectorAll('table');
+            let csv = '\uFEFF'; // BOM for Excel UTF-8
+            
+            tables.forEach((table, index) => {
+                const section = table.closest('.table-section');
+                const title = section.querySelector('h2').textContent;
+                csv += `\n"${title}"\n`;
+                
+                const rows = table.querySelectorAll('tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('th, td');
+                    const rowData = Array.from(cells).map(cell => {
+                        let text = cell.textContent.replace(/\s+/g, ' ').trim();
+                        // CSV用にダブルクォートをエスケープ
+                        text = text.replace(/"/g, '""');
+                        return `"${text}"`;
+                    }).join(',');
+                    csv += rowData + '\n';
+                });
+                csv += '\n';
+            });
+            
+            // CSVファイルとしてダウンロード
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'git-commands-complete-list.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
