@@ -1,0 +1,8700 @@
+# 🚨 Git実務トラブル完全解決ガイド
+**ブランチ操作・履歴修正・マージ問題の実践的解決法**
+
+---
+
+## 📋 目次
+1. [ブランチ切り替え・すげ替え完全ガイド](#ブランチ切り替えすげ替え完全ガイド)
+2. [履歴削除・修正テクニック](#履歴削除修正テクニック)
+3. [マージ問題と解決法](#マージ問題と解決法)
+4. [実務でよくあるトラブル20選](#実務でよくあるトラブル20選)
+5. [緊急時の対応フローチャート](#緊急時の対応フローチャート)
+
+---
+
+## 🔄 ブランチ切り替え・すげ替え完全ガイド
+
+### 🎯 CASE 1: ブランチを間違えて作業してしまった!
+
+**状況**: mainブランチで作業してしまった...
+
+```bash
+# 現在の状況を確認
+git status
+```
+
+**結果**:
+```
+On branch main
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+        modified:   app.py
+        modified:   config.py
+```
+
+#### 解決法A: まだコミットしていない場合
+
+```bash
+# 変更を一時保存
+git stash save "間違えてmainで作業した内容"
+```
+
+**結果の見方**:
+```
+Saved working directory and index state On main: 間違えてmainで作業した内容
+```
+→ 変更が一時保存された！
+
+```bash
+# 正しいブランチを作成・移動
+git checkout -b feature/正しいブランチ名
+```
+
+**結果**:
+```
+Switched to a new branch 'feature/正しいブランチ名'
+```
+
+```bash
+# 一時保存した変更を戻す
+git stash pop
+```
+
+**結果の見方**:
+```
+On branch feature/正しいブランチ名
+Changes not staged for commit:
+        modified:   app.py
+        modified:   config.py
+
+Dropped refs/stash@{0} (a1b2c3d4e5f6...)
+```
+→ `Dropped` と表示されれば成功！変更が戻った
+
+```bash
+# 通常通りコミット
+git add .
+git commit -m "feat: 新機能を追加"
+```
+
+---
+
+#### 解決法B: すでにコミットしてしまった場合
+
+```bash
+# コミット履歴を確認
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD -> main) feat: 新機能を追加  ← これを移動したい
+e4f5g6h fix: バグ修正
+h7i8j9k Initial commit
+```
+
+```bash
+# 新しいブランチを作成（コミットを保持したまま）
+git branch feature/正しいブランチ名
+```
+
+```bash
+# mainブランチを1つ前に戻す
+git reset --hard HEAD~1
+```
+
+**結果の見方**:
+```
+HEAD is now at e4f5g6h fix: バグ修正
+```
+→ mainが1つ前のコミットに戻った
+
+```bash
+# 新ブランチに移動して確認
+git checkout feature/正しいブランチ名
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD -> feature/正しいブランチ名) feat: 新機能を追加  ← ここにある！
+e4f5g6h fix: バグ修正
+h7i8j9k Initial commit
+```
+→ コミットが正しいブランチに移動完了！
+
+---
+
+### 🎯 CASE 2: 作業中のブランチを切り替えたい
+
+**状況**: feature/Aで作業中だが、緊急でhotfix/Bに切り替える必要がある
+
+```bash
+# 現在の状況
+git status
+```
+
+**結果**:
+```
+On branch feature/A
+Changes not staged for commit:
+        modified:   file1.py
+        modified:   file2.py
+Untracked files:
+        new_file.py
+```
+
+#### ❌ このままcheckoutすると...
+
+```bash
+git checkout hotfix/B
+```
+
+**エラー**:
+```
+error: Your local changes to the following files would be overwritten by checkout:
+        file1.py
+Please commit your changes or stash them before you switch branches.
+Aborting
+```
+→ 変更が失われる可能性があるため、Gitが拒否！
+
+#### ✅ 正しい対処法
+
+**方法1: stash（一時保存）を使う** ★推奨
+
+```bash
+# 作業を一時保存
+git stash save "feature/Aの途中作業"
+```
+
+**結果**:
+```
+Saved working directory and index state On feature/A: feature/Aの途中作業
+```
+
+```bash
+# ブランチ切り替え
+git checkout hotfix/B
+```
+
+**結果**:
+```
+Switched to branch 'hotfix/B'
+```
+→ クリーンな状態でhotfix作業可能！
+
+```bash
+# hotfix完了後、元のブランチに戻る
+git checkout feature/A
+git stash list  # 保存した作業一覧を確認
+```
+
+**結果**:
+```
+stash@{0}: On feature/A: feature/Aの途中作業
+stash@{1}: On feature/C: 別の作業
+```
+
+```bash
+# 作業を復元
+git stash pop
+```
+
+**結果**:
+```
+On branch feature/A
+Changes not staged for commit:
+        modified:   file1.py
+        modified:   file2.py
+Dropped refs/stash@{0} (...)
+```
+→ 作業が復元された！
+
+**方法2: WIP（Work In Progress）コミット**
+
+```bash
+# 途中だがコミット
+git add .
+git commit -m "WIP: 作業途中（後で修正）"
+
+# ブランチ切り替え
+git checkout hotfix/B
+
+# 後で戻ってきたら...
+git checkout feature/A
+
+# 最後のコミットを取り消して編集再開
+git reset --soft HEAD~1
+```
+
+**結果**:
+```
+# 変更はステージングエリアに残る
+git status
+```
+```
+On branch feature/A
+Changes to be committed:
+        modified:   file1.py
+        modified:   file2.py
+```
+
+---
+
+### 🎯 CASE 3: ブランチの分岐元（ベース）を変更したい
+
+**状況**: mainから切ったつもりが、間違えてdevelopから切ってしまった
+
+```
+develop ──●──●──●──●
+           \
+            ●──● feature/my-branch (間違い！)
+
+main ───────●──────● (ここから切りたかった)
+```
+
+#### 解決法: rebase でブランチをすげ替える
+
+```bash
+# 現在のブランチ構造を確認
+git log --oneline --graph --all
+```
+
+**結果**:
+```
+* a1b2c3d (HEAD -> feature/my-branch) feat: 新機能2
+* e4f5g6h feat: 新機能1
+* h7i8j9k (develop) develop上のコミット
+| * k0l1m2n (main) main上のコミット
+|/
+* n3o4p5q Initial commit
+```
+
+```bash
+# mainブランチの最新を取得
+git fetch origin main
+
+# feature/my-branchをmain基準に付け替える
+git rebase --onto main develop feature/my-branch
+```
+
+**読み方**: ギット・リベース・オントゥ
+
+**意味**: 「developから分岐したfeature/my-branchを、mainから分岐したように付け替える」
+
+**結果の見方**:
+```
+First, rewinding head to replay your work on top of it...
+Applying: feat: 新機能1
+Applying: feat: 新機能2
+```
+→ `Applying` が表示されれば成功！
+
+```bash
+# 結果を確認
+git log --oneline --graph --all
+```
+
+**結果**:
+```
+* x1y2z3a (HEAD -> feature/my-branch) feat: 新機能2
+* b4c5d6e feat: 新機能1
+* k0l1m2n (main) main上のコミット ← ★ここから分岐に変わった！
+| * h7i8j9k (develop) develop上のコミット
+|/
+* n3o4p5q Initial commit
+```
+
+---
+
+### 🎯 CASE 4: ブランチ名を変更したい
+
+```bash
+# ローカルブランチ名を変更（現在のブランチ）
+git branch -m 新しいブランチ名
+```
+
+**読み方**: ギット・ブランチ・マイナスエム（move の略）
+
+**結果**:
+```
+# 確認
+git branch
+```
+```
+* 新しいブランチ名
+  develop
+  main
+```
+
+```bash
+# 他のブランチ名を変更する場合
+git branch -m 古いブランチ名 新しいブランチ名
+```
+
+**リモートも変更する場合**:
+
+```bash
+# 古いブランチを削除
+git push origin --delete 古いブランチ名
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+ - [deleted]         古いブランチ名
+```
+
+```bash
+# 新しいブランチをプッシュ
+git push origin 新しいブランチ名
+
+# 上流ブランチを設定
+git push --set-upstream origin 新しいブランチ名
+```
+
+**結果**:
+```
+Branch '新しいブランチ名' set up to track remote branch '新しいブランチ名' from 'origin'.
+```
+
+---
+
+### 🎯 CASE 5: 不要なブランチを削除したい
+
+```bash
+# ローカルブランチを削除
+git branch -d ブランチ名
+```
+
+**読み方**: ギット・ブランチ・マイナスディー（delete の略）
+
+**結果**:
+```
+Deleted branch ブランチ名 (was a1b2c3d).
+```
+
+**マージ済みでない場合のエラー**:
+```
+error: The branch 'ブランチ名' is not fully merged.
+If you are sure you want to delete it, run 'git branch -D ブランチ名'.
+```
+
+```bash
+# 強制削除（注意！）
+git branch -D ブランチ名
+```
+
+**結果**:
+```
+Deleted branch ブランチ名 (was a1b2c3d).
+```
+
+```bash
+# リモートブランチを削除
+git push origin --delete ブランチ名
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+ - [deleted]         ブランチ名
+```
+
+```bash
+# すでに削除されたリモートブランチの参照をクリーンアップ
+git fetch --prune
+```
+
+**読み方**: ギット・フェッチ・プルーン
+
+**結果**:
+```
+From https://github.com/user/repo
+ - [deleted]         (none)     -> origin/old-branch
+ - [deleted]         (none)     -> origin/another-old-branch
+```
+
+---
+
+## 🗑️ 履歴削除・修正テクニック
+
+### 🎯 CASE 6: 直前のコミットを修正したい
+
+#### パターンA: コミットメッセージだけ変更
+
+```bash
+git commit --amend -m "新しいコミットメッセージ"
+```
+
+**読み方**: ギット・コミット・アメンド
+
+**結果**:
+```
+[feature/xxx a1b2c3d] 新しいコミットメッセージ
+ Date: Thu Oct 9 14:00:00 2025 +0900
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+```
+
+#### パターンB: ファイルを追加してコミット修正
+
+```bash
+# 忘れたファイルを追加
+git add forgotten_file.py
+
+# 直前のコミットに含める
+git commit --amend --no-edit
+```
+
+**読み方**: ノー・エディット（エディタを開かない）
+
+**結果**:
+```
+[feature/xxx e4f5g6h] feat: 新機能を追加
+ Date: Thu Oct 9 14:00:00 2025 +0900
+ 3 files changed, 15 insertions(+), 2 deletions(-)
+```
+→ 3ファイルに増えた！
+
+⚠️ **注意**: すでにpushしたコミットをamendすると、履歴が変わるため force push が必要
+
+```bash
+git push --force-with-lease origin feature/xxx
+```
+
+**読み方**: フォース・ウィズ・リース（安全な強制プッシュ）
+
+---
+
+### 🎯 CASE 7: 過去のコミットを削除したい
+
+```bash
+# コミット履歴を確認
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD -> feature/xxx) feat: 機能C
+e4f5g6h feat: 機能B  ← これを削除したい
+h7i8j9k feat: 機能A
+k0l1m2n Initial commit
+```
+
+#### 方法1: rebase -i（インタラクティブリベース）★推奨
+
+```bash
+git rebase -i HEAD~3
+```
+
+**読み方**: ギット・リベース・インタラクティブ
+
+**意味**: 直近3つのコミットを編集モードで表示
+
+**エディタが開く**:
+```
+pick h7i8j9k feat: 機能A
+pick e4f5g6h feat: 機能B  ← ここを drop に変更
+pick a1b2c3d feat: 機能C
+
+# Commands:
+# p, pick = use commit
+# r, reword = use commit, but edit the commit message
+# e, edit = use commit, but stop for amending
+# s, squash = use commit, but meld into previous commit
+# f, fixup = like "squash", but discard this commit's log message
+# x, exec = run command (the rest of the line) using shell
+# d, drop = remove commit
+```
+
+**編集して保存**:
+```
+pick h7i8j9k feat: 機能A
+drop e4f5g6h feat: 機能B  ← pick を drop に変更
+pick a1b2c3d feat: 機能C
+```
+
+**結果**:
+```
+Successfully rebased and updated refs/heads/feature/xxx.
+```
+
+```bash
+# 確認
+git log --oneline
+```
+
+**結果**:
+```
+x1y2z3a (HEAD -> feature/xxx) feat: 機能C
+h7i8j9k feat: 機能A
+k0l1m2n Initial commit
+```
+→ 機能Bのコミットが消えた！
+
+---
+
+### 🎯 CASE 8: 複数のコミットを1つにまとめたい（squash）
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD) fix: typo修正
+e4f5g6h fix: スタイル修正
+h7i8j9k feat: ログイン機能実装
+k0l1m2n Initial commit
+```
+→ 上3つをまとめたい
+
+```bash
+git rebase -i HEAD~3
+```
+
+**エディタ**:
+```
+pick h7i8j9k feat: ログイン機能実装
+pick e4f5g6h fix: スタイル修正
+pick a1b2c3d fix: typo修正
+```
+
+**編集**:
+```
+pick h7i8j9k feat: ログイン機能実装
+squash e4f5g6h fix: スタイル修正
+squash a1b2c3d fix: typo修正
+```
+
+**保存すると次のエディタが開く**:
+```
+# This is a combination of 3 commits.
+# The first commit's message is:
+feat: ログイン機能実装
+
+# This is the 2nd commit message:
+fix: スタイル修正
+
+# This is the 3rd commit message:
+fix: typo修正
+
+# 以下のように1つのメッセージに編集
+feat: ログイン機能を実装
+
+- メイン機能の実装
+- スタイルの調整
+- typo修正を含む
+```
+
+**結果**:
+```
+[detached HEAD x1y2z3a] feat: ログイン機能を実装
+ Date: Thu Oct 9 14:00:00 2025 +0900
+ 5 files changed, 100 insertions(+), 5 deletions(-)
+Successfully rebased and updated refs/heads/feature/xxx.
+```
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+x1y2z3a (HEAD) feat: ログイン機能を実装
+k0l1m2n Initial commit
+```
+→ 3つが1つにまとまった！
+
+---
+
+### 🎯 CASE 9: 機密情報をコミットしてしまった！
+
+**状況**: `.env` ファイルにパスワードが...
+
+```bash
+# 直前のコミットから削除
+git rm --cached .env
+git commit --amend --no-edit
+```
+
+**過去のコミットから完全削除（重要！）**:
+
+```bash
+# BFG Repo-Cleaner を使用（推奨）
+# まず https://rtyley.github.io/bfg-repo-cleaner/ からダウンロード
+
+# .envファイルを履歴から完全削除
+java -jar bfg.jar --delete-files .env
+
+# または filter-branch（Git標準だが遅い）
+git filter-branch --force --index-filter \
+  "git rm --cached --ignore-unmatch .env" \
+  --prune-empty --tag-name-filter cat -- --all
+```
+
+**結果**:
+```
+Rewrite a1b2c3d (5/5) (10 seconds passed, remaining 0 predicted)
+Ref 'refs/heads/main' was rewritten
+```
+
+```bash
+# 強制プッシュ（チーム全員に通知必須！）
+git push --force --all
+git push --force --tags
+```
+
+⚠️ **重要**: 
+1. チームメンバー全員に `git clone` し直してもらう
+2. GitHubの secrets も変更する
+3. 漏洩した認証情報は即座にリセット
+
+---
+
+### 🎯 CASE 10: 間違えてpushしたコミットを取り消したい
+
+#### 公開前（自分だけのブランチ）
+
+```bash
+# 1つ前に戻す
+git reset --hard HEAD~1
+
+# 強制プッシュ
+git push --force origin feature/xxx
+```
+
+#### 公開後（他の人も使っている）
+
+```bash
+# revertで打ち消しコミットを作る（★推奨）
+git revert HEAD
+```
+
+**エディタが開く**:
+```
+Revert "feat: 問題のある機能"
+
+This reverts commit a1b2c3d.
+```
+
+**結果**:
+```
+[feature/xxx x1y2z3a] Revert "feat: 問題のある機能"
+ 1 file changed, 5 insertions(+), 10 deletions(-)
+```
+
+```bash
+git push origin feature/xxx
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+   a1b2c3d..x1y2z3a  feature/xxx -> feature/xxx
+```
+
+---
+
+## 🔀 マージ問題と解決法
+
+### 🎯 CASE 11: マージコンフリクトが発生（基本）
+
+```bash
+git merge feature/other-branch
+```
+
+**エラー**:
+```
+Auto-merging app.py
+CONFLICT (content): Merge conflict in app.py
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+```bash
+git status
+```
+
+**結果**:
+```
+On branch main
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+        both modified:   app.py  ← ★コンフリクト発生
+```
+
+#### 解決ステップ
+
+**1. ファイルを開く**:
+```python
+def calculate(a, b):
+<<<<<<< HEAD
+    # 自分の変更
+    return a + b + 10
+=======
+    # 相手の変更
+    return a * b
+>>>>>>> feature/other-branch
+```
+
+**2. 修正**:
+```python
+def calculate(a, b):
+    # 両方の意図を組み込む
+    result = a * b
+    return result + 10
+```
+
+**3. マーカー削除を確認**:
+```bash
+# マーカーが残っていないか確認
+grep -n "<<<<<<< HEAD" app.py
+grep -n "=======" app.py
+grep -n ">>>>>>>" app.py
+```
+
+**結果**:
+```
+# 何も表示されなければOK（マーカーが残っていない）
+```
+
+**4. テスト実行**:
+```bash
+python -m pytest tests/
+```
+
+**5. コミット**:
+```bash
+git add app.py
+git commit -m "merge: feature/other-branch をマージ（コンフリクト解決）"
+```
+
+---
+
+### 🎯 CASE 12: マージコンフリクトが多すぎる！
+
+```bash
+git merge feature/long-running-branch
+```
+
+**結果**:
+```
+Auto-merging file1.py
+Auto-merging file2.py
+Auto-merging file3.py
+CONFLICT (content): Merge conflict in file1.py
+CONFLICT (content): Merge conflict in file2.py
+CONFLICT (content): Merge conflict in file3.py
+CONFLICT (content): Merge conflict in file4.py
+CONFLICT (content): Merge conflict in file5.py
+... (20個のコンフリクト)
+```
+
+#### 解決法A: 一旦中止して戦略を変える
+
+```bash
+# マージ中止
+git merge --abort
+```
+
+**結果**:
+```
+# 元の状態に戻る
+```
+
+```bash
+# 相手のブランチを自分のブランチに取り込む（逆マージ）
+git checkout feature/long-running-branch
+git pull origin feature/long-running-branch
+git merge main
+# コンフリクト解決
+git push origin feature/long-running-branch
+
+# その後、mainに戻ってマージ
+git checkout main
+git merge feature/long-running-branch  # 今度はスムーズ
+```
+
+#### 解決法B: mergetool を使う
+
+```bash
+# GUIツールで解決（VS Code, Meld, kdiff3など）
+git mergetool
+```
+
+**結果**:
+```
+Merging:
+file1.py
+file2.py
+
+Normal merge conflict for 'file1.py':
+  {local}: modified file
+  {remote}: modified file
+```
+→ 設定されたツールが起動してGUIで解決可能
+
+---
+
+### 🎯 CASE 13: マージを取り消したい
+
+#### パターンA: マージ直後（まだpushしていない）
+
+```bash
+git reset --hard HEAD~1
+```
+
+**結果**:
+```
+HEAD is now at a1b2c3d 前のコミット
+```
+
+#### パターンB: マージ後にpushしてしまった
+
+```bash
+# マージコミットのハッシュを確認
+git log --oneline
+```
+
+**結果**:
+```
+x1y2z3a (HEAD -> main) Merge branch 'feature/xxx'  ← これを取り消したい
+e4f5g6h feat: 機能B
+a1b2c3d feat: 機能A
+```
+
+```bash
+# revert でマージを打ち消す
+git revert -m 1 HEAD
+```
+
+**読み方**: リバート・マイナスエム・ワン
+
+**意味**: マージコミットを打ち消す（-m 1 は main側を保持）
+
+**エディタが開く**:
+```
+Revert "Merge branch 'feature/xxx'"
+
+This reverts commit x1y2z3a, reversing
+changes made to e4f5g6h.
+```
+
+**結果**:
+```
+[main b4c5d6e] Revert "Merge branch 'feature/xxx'"
+ 3 files changed, 15 insertions(+), 50 deletions(-)
+```
+
+```bash
+git push origin main
+```
+
+---
+
+### 🎯 CASE 14: Fast-forward マージを防ぎたい
+
+**状況**: マージの履歴を明示的に残したい
+
+```bash
+# 通常のマージ（Fast-forwardになる可能性）
+git merge feature/xxx
+```
+
+**結果（Fast-forward）**:
+```
+Updating a1b2c3d..e4f5g6h
+Fast-forward
+ file.py | 10 +++++++++++
+ 1 file changed, 10 insertions(+)
+```
+→ マージコミットが作られない
+
+#### 解決法: --no-ff オプション
+
+```bash
+git merge --no-ff feature/xxx
+```
+
+**読み方**: ノー・ファスト・フォワード
+
+**エディタが開く**:
+```
+Merge branch 'feature/xxx'
+
+# メッセージを編集可能
+```
+
+**結果**:
+```
+Merge made by the 'recursive' strategy.
+ file.py | 10 +++++++++++
+ 1 file changed, 10 insertions(+)
+```
+
+```bash
+git log --oneline --graph
+```
+
+**結果**:
+```
+*   h7i8j9k (HEAD -> main) Merge branch 'feature/xxx'
+|\
+| * e4f5g6h (feature/xxx) feat: 新機能
+|/
+* a1b2c3d Previous commit
+```
+→ マージの履歴が明確に残る！
+
+---
+
+## 🚨 実務でよくあるトラブル20選
+
+### トラブル1: push が拒否される
+
+```bash
+git push origin main
+```
+
+**エラー**:
+```
+To https://github.com/user/repo.git
+ ! [rejected]        main -> main (fetch first)
+error: failed to push some refs to 'https://github.com/user/repo.git'
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally.
+```
+
+**原因**: リモートに新しいコミットがある
+
+**解決法**:
+```bash
+git pull origin main
+# コンフリクトがあれば解決
+git push origin main
+```
+
+---
+
+### トラブル2: pull でコンフリクト
+
+```bash
+git pull origin main
+```
+
+**エラー**:
+```
+Auto-merging file.py
+CONFLICT (content): Merge conflict in file.py
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+**解決法**:
+```bash
+# コンフリクトを解決
+# ファイルを編集してマーカー削除
+git add file.py
+git commit -m "merge: コンフリクト解決"
+git push origin main
+```
+
+---
+
+### トラブル3: detached HEAD 状態になった
+
+```bash
+git checkout a1b2c3d  # 特定のコミットをチェックアウト
+```
+
+**警告**:
+```
+Note: switching to 'a1b2c3d'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+```
+
+**状態確認**:
+```bash
+git status
+```
+
+**結果**:
+```
+HEAD detached at a1b2c3d
+nothing to commit, working tree clean
+```
+
+**解決法**:
+```bash
+# ブランチに戻る
+git checkout main
+```
+
+**もし変更をコミットしてしまった場合**:
+```bash
+# 新しいブランチとして保存
+git branch temp-branch
+git checkout temp-branch
+```
+
+---
+
+### トラブル4: .gitignore が効かない
+
+```bash
+# .gitignore に *.pyc を追加したのに無視されない
+git status
+```
+
+**結果**:
+```
+Changes not staged for commit:
+        modified:   __pycache__/app.cpython-39.pyc
+```
+
+**原因**: すでに追跡されているファイルは .gitignore が効かない
+
+**解決法**:
+```bash
+# キャッシュから削除
+git rm -r --cached __pycache__/
+git rm --cached *.pyc
+
+git add .gitignore
+git commit -m "chore: .gitignore を適用"
+```
+
+**結果**:
+```
+rm '__pycache__/app.cpython-39.pyc'
+[main a1b2c3d] chore: .gitignore を適用
+ 2 files changed, 1 insertion(+), 0 deletions(-)
+ delete mode 100644 __pycache__/app.cpython-39.pyc
+```
+
+---
+
+### トラブル5: 巨大ファイルをコミットしてpushできない
+
+```bash
+git push origin main
+```
+
+**エラー**:
+```
+remote: error: GH001: Large files detected. You may want to try Git Large File Storage.
+remote: error: File large_file.zip is 150.00 MB; this exceeds GitHub's file size limit of 100.00 MB
+To https://github.com/user/repo.git
+ ! [remote rejected] main -> main (pre-receive hook declined)
+error: failed to push some refs to 'https://github.com/user/repo.git'
+```
+
+**解決法A: 最新のコミットから削除**
+
+```bash
+# ファイルを削除してコミット修正
+git rm --cached large_file.zip
+git commit --amend --no-edit
+git push origin main
+```
+
+**解決法B: 過去のコミットから削除**
+
+```bash
+# BFG Repo-Cleaner を使用
+java -jar bfg.jar --strip-blobs-bigger-than 100M
+
+# または
+git filter-branch --tree-filter 'rm -f large_file.zip' HEAD
+
+# 強制プッシュ
+git push --force origin main
+```
+
+**解決法C: Git LFS を使う**
+
+```bash
+# Git LFS をインストール
+git lfs install
+
+# 大きなファイルをLFS管理下に
+git lfs track "*.zip"
+git add .gitattributes
+git add large_file.zip
+git commit -m "chore: Git LFSを使用"
+git push origin main
+```
+
+---
+
+### トラブル6: コミットメッセージを間違えた（複数コミット前）
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD) feat: 最新のコミット
+e4f5g6h fix: バグ修正
+h7i8j9k feat: ログニ機能を追加  ← typo!「ログイン」のはず
+k0l1m2n Initial commit
+```
+
+**解決法**:
+
+```bash
+git rebase -i HEAD~3
+```
+
+**エディタ**:
+```
+pick h7i8j9k feat: ログニ機能を追加
+pick e4f5g6h fix: バグ修正
+pick a1b2c3d feat: 最新のコミット
+```
+
+**編集**:
+```
+reword h7i8j9k feat: ログニ機能を追加  ← pick を reword に変更
+pick e4f5g6h fix: バグ修正
+pick a1b2c3d feat: 最新のコミット
+```
+
+**保存すると次のエディタが開く**:
+```
+feat: ログニ機能を追加
+
+# ここで修正
+feat: ログイン機能を追加
+```
+
+**結果**:
+```
+[detached HEAD x1y2z3a] feat: ログイン機能を追加
+Successfully rebased and updated refs/heads/main.
+```
+
+---
+
+### トラブル7: 誤って force push してしまった！
+
+```bash
+git push --force origin main
+```
+
+**チームメンバーから連絡**: 「私の作業が消えました...」
+
+**原因**: force push で他人の作業を上書き
+
+**解決法**:
+
+```bash
+# GitHub上のReflogから復元
+# GitHub → Settings → Branches → Branch protection rules を確認
+
+# ローカルのreflogから探す
+git reflog
+```
+
+**結果**:
+```
+a1b2c3d HEAD@{0}: push --force: forced-update
+e4f5g6h HEAD@{1}: commit: 消えたコミット  ← これを復元したい
+h7i8j9k HEAD@{2}: commit: 前のコミット
+```
+
+```bash
+# 消えたコミットに戻す
+git reset --hard e4f5g6h
+git push --force origin main
+
+# チームメンバーに通知
+# 「git pull --rebase で同期してください」
+```
+
+**予防策**: `--force-with-lease` を使う
+
+```bash
+# 安全な強制プッシュ
+git push --force-with-lease origin main
+```
+
+**結果（他人の変更がある場合）**:
+```
+ ! [rejected]        main -> main (stale info)
+error: failed to push some refs to 'https://github.com/user/repo.git'
+```
+→ 他人の変更を上書きする前に止まる！
+
+---
+
+### トラブル8: stash した内容が見つからない
+
+```bash
+git stash list
+```
+
+**結果**:
+```
+stash@{0}: WIP on feature/A: a1b2c3d commit message
+stash@{1}: WIP on feature/B: e4f5g6h another commit
+stash@{2}: WIP on feature/C: h7i8j9k old work
+```
+
+**どれだか分からない！**
+
+**解決法**:
+
+```bash
+# 各stashの内容を確認
+git stash show -p stash@{0}
+```
+
+**結果**:
+```diff
+diff --git a/file.py b/file.py
+index a1b2c3d..e4f5g6h 100644
+--- a/file.py
++++ b/file.py
+@@ -1,3 +1,5 @@
++def new_function():
++    pass
+ def old_function():
+     pass
+```
+
+```bash
+# 特定のstashを復元
+git stash apply stash@{1}
+
+# 復元後、不要なstashを削除
+git stash drop stash@{1}
+```
+
+**すべてのstashを確認**:
+
+```bash
+# わかりやすい名前でstashする習慣をつける
+git stash save "feature/A: ログイン処理の途中"
+```
+
+---
+
+### トラブル9: リベース中にコンフリクトが発生
+
+```bash
+git rebase main
+```
+
+**エラー**:
+```
+Auto-merging file.py
+CONFLICT (content): Merge conflict in file.py
+error: could not apply e4f5g6h... feat: 新機能
+hint: Resolve all conflicts manually, mark them as resolved with
+hint: "git add/rm <conflicted_files>", then run "git rebase --continue".
+hint: You can instead skip this commit: run "git rebase --skip".
+hint: To abort and get back to the state before "git rebase", run "git rebase --abort".
+Could not apply e4f5g6h... feat: 新機能
+```
+
+**状態確認**:
+
+```bash
+git status
+```
+
+**結果**:
+```
+interactive rebase in progress; onto a1b2c3d
+Last command done (1 command done):
+   pick e4f5g6h feat: 新機能
+Next commands to do (2 remaining commands):
+   pick h7i8j9k feat: 別の機能
+   pick k0l1m2n fix: バグ修正
+  (use "git rebase --edit-todo" to view and edit)
+You are currently rebasing branch 'feature/xxx' on 'a1b2c3d'.
+  (fix conflicts and then run "git rebase --continue")
+  (use "git rebase --skip" to skip this patch)
+  (use "git rebase --abort" to check out the original branch)
+
+Unmerged paths:
+  (use "git restore --staged <file>..." to unstage)
+  (use "git add <file>..." to mark resolution)
+        both modified:   file.py
+```
+
+**解決法**:
+
+```bash
+# 1. コンフリクトを解決
+# ファイルを編集してマーカー削除
+
+# 2. 解決したファイルを追加
+git add file.py
+
+# 3. リベースを続行
+git rebase --continue
+```
+
+**結果**:
+```
+[detached HEAD x1y2z3a] feat: 新機能
+ 1 file changed, 10 insertions(+)
+Successfully rebased and updated refs/heads/feature/xxx.
+```
+
+**このコミットをスキップする場合**:
+
+```bash
+git rebase --skip
+```
+
+**リベースを中止する場合**:
+
+```bash
+git rebase --abort
+```
+
+---
+
+### トラブル10: cherry-pick でコンフリクト
+
+```bash
+# 特定のコミットだけを取り込む
+git cherry-pick a1b2c3d
+```
+
+**エラー**:
+```
+Auto-merging file.py
+CONFLICT (content): Merge conflict in file.py
+error: could not apply a1b2c3d... feat: 特定の機能
+hint: after resolving the conflicts, mark the corrected paths
+hint: with 'git add <paths>' or 'git rm <paths>'
+hint: and commit the result with 'git commit'
+```
+
+**解決法**:
+
+```bash
+# コンフリクト解決
+# ファイルを編集
+
+git add file.py
+git cherry-pick --continue
+```
+
+**中止する場合**:
+
+```bash
+git cherry-pick --abort
+```
+
+---
+
+### トラブル11: submodule の更新ができない
+
+```bash
+git submodule update
+```
+
+**エラー**:
+```
+fatal: Needed a single revision
+Unable to find current revision in submodule path 'lib/external'
+```
+
+**解決法**:
+
+```bash
+# サブモジュールを初期化
+git submodule init
+git submodule update --init --recursive
+
+# 最新に更新
+git submodule update --remote
+```
+
+**結果**:
+```
+Submodule path 'lib/external': checked out 'a1b2c3d...'
+```
+
+---
+
+### トラブル12: upstream が設定されていない
+
+```bash
+git pull
+```
+
+**エラー**:
+```
+There is no tracking information for the current branch.
+Please specify which branch you want to merge with.
+```
+
+**解決法**:
+
+```bash
+# upstream ブランチを設定
+git branch --set-upstream-to=origin/main main
+```
+
+**結果**:
+```
+Branch 'main' set up to track remote branch 'main' from 'origin'.
+```
+
+**または**:
+
+```bash
+git push -u origin main
+```
+
+**結果**:
+```
+Branch 'main' set up to track remote branch 'main' from 'origin'.
+```
+
+---
+
+### トラブル13: ファイル名の大文字小文字変更が認識されない
+
+```bash
+# File.py → file.py に変更したのに...
+git status
+```
+
+**結果**:
+```
+nothing to commit, working tree clean
+```
+
+**原因**: Windowsは大文字小文字を区別しない
+
+**解決法**:
+
+```bash
+# Git上で明示的に変更
+git mv File.py file.py
+git commit -m "refactor: ファイル名を小文字に変更"
+```
+
+**結果**:
+```
+[main a1b2c3d] refactor: ファイル名を小文字に変更
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ rename File.py => file.py (100%)
+```
+
+---
+
+### トラブル14: リモートリポジトリのURLが間違っている
+
+```bash
+git push origin main
+```
+
+**エラー**:
+```
+fatal: repository 'https://github.com/wrong-user/repo.git/' not found
+```
+
+**確認**:
+
+```bash
+git remote -v
+```
+
+**結果**:
+```
+origin  https://github.com/wrong-user/repo.git (fetch)
+origin  https://github.com/wrong-user/repo.git (push)
+```
+
+**解決法**:
+
+```bash
+# URLを変更
+git remote set-url origin https://github.com/correct-user/repo.git
+
+# 確認
+git remote -v
+```
+
+**結果**:
+```
+origin  https://github.com/correct-user/repo.git (fetch)
+origin  https://github.com/correct-user/repo.git (push)
+```
+
+---
+
+### トラブル15: 複数のリモートリポジトリを管理したい
+
+```bash
+# 現在のリモート確認
+git remote -v
+```
+
+**結果**:
+```
+origin  https://github.com/user/repo.git (fetch)
+origin  https://github.com/user/repo.git (push)
+```
+
+**解決法**:
+
+```bash
+# 新しいリモートを追加
+git remote add upstream https://github.com/original-author/repo.git
+
+# 確認
+git remote -v
+```
+
+**結果**:
+```
+origin    https://github.com/user/repo.git (fetch)
+origin    https://github.com/user/repo.git (push)
+upstream  https://github.com/original-author/repo.git (fetch)
+upstream  https://github.com/original-author/repo.git (push)
+```
+
+**使い方**:
+
+```bash
+# upstreamから最新を取得
+git fetch upstream
+
+# upstreamのmainを自分のmainにマージ
+git checkout main
+git merge upstream/main
+
+# 自分のリポジトリにプッシュ
+git push origin main
+```
+
+---
+
+### トラブル16: 誤ってバイナリファイルの差分を見ようとした
+
+```bash
+git diff image.png
+```
+
+**結果**:
+```
+diff --git a/image.png b/image.png
+index a1b2c3d..e4f5g6h 100644
+Binary files a/image.png and b/image.png differ
+```
+→ 内容は表示されない（バイナリなので）
+
+**画像の差分を見たい場合**:
+
+```bash
+# 外部ツールを設定
+git config --global diff.image.textconv "identify -verbose"
+
+# .gitattributes に追加
+echo "*.png diff=image" >> .gitattributes
+```
+
+---
+
+### トラブル17: 作業中にブランチを削除してしまった
+
+```bash
+git branch -D feature/important-work
+```
+
+**結果**:
+```
+Deleted branch feature/important-work (was a1b2c3d).
+```
+
+**あ、間違えた！**
+
+**解決法**:
+
+```bash
+# reflog から探す
+git reflog
+```
+
+**結果**:
+```
+e4f5g6h HEAD@{0}: checkout: moving from feature/important-work to main
+a1b2c3d HEAD@{1}: commit: 重要な作業  ← これ！
+h7i8j9k HEAD@{2}: commit: 前の作業
+```
+
+```bash
+# ブランチを復元
+git branch feature/important-work a1b2c3d
+```
+
+**結果**:
+```
+# ブランチが復活！
+git branch
+```
+```
+  main
+* feature/important-work
+```
+
+---
+
+### トラブル18: tag を間違えて作成した
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+**あ、バージョン番号間違えた！**
+
+**解決法**:
+
+```bash
+# ローカルのタグを削除
+git tag -d v1.0.0
+```
+
+**結果**:
+```
+Deleted tag 'v1.0.0' (was a1b2c3d)
+```
+
+```bash
+# リモートのタグを削除
+git push origin :refs/tags/v1.0.0
+# または
+git push origin --delete v1.0.0
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+ - [deleted]         v1.0.0
+```
+
+```bash
+# 正しいタグを作成
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+---
+
+### トラブル19: merge と rebase を間違えた
+
+```bash
+# rebase したかったのに merge してしまった
+git merge feature/xxx
+```
+
+**結果**:
+```
+Merge made by the 'recursive' strategy.
+```
+
+**取り消したい！**
+
+**解決法**:
+
+```bash
+# マージを取り消す
+git reset --hard ORIG_HEAD
+```
+
+**結果**:
+```
+HEAD is now at a1b2c3d マージ前の状態
+```
+
+```bash
+# 改めて rebase
+git rebase feature/xxx
+```
+
+---
+
+### トラブル20: commit の author が間違っている
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD) feat: 新機能  ← 作者が間違っている
+```
+
+**解決法A: 直前のコミットの場合**
+
+```bash
+git commit --amend --author="Correct Name <correct@email.com>" --no-edit
+```
+
+**解決法B: 過去のコミットの場合**
+
+```bash
+git rebase -i HEAD~3
+```
+
+**エディタ**:
+```
+pick h7i8j9k feat: 機能A
+edit a1b2c3d feat: 新機能  ← pick を edit に変更
+pick e4f5g6h feat: 機能B
+```
+
+**保存後**:
+
+```bash
+git commit --amend --author="Correct Name <correct@email.com>" --no-edit
+git rebase --continue
+```
+
+**解決法C: すべてのコミットを変更**
+
+```bash
+git filter-branch --env-filter '
+if [ "$GIT_AUTHOR_EMAIL" = "wrong@email.com" ]; then
+    export GIT_AUTHOR_NAME="Correct Name"
+    export GIT_AUTHOR_EMAIL="correct@email.com"
+fi
+' -- --all
+```
+
+---
+
+## 🚑 緊急時の対応フローチャート
+
+### 🔥 シナリオ1: 本番環境に問題のあるコードをデプロイしてしまった！
+
+```
+┌─────────────────────────────┐
+│  本番でエラー発生！         │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 1. 緊急: 前のバージョンに    │
+│    ロールバック              │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git revert HEAD
+    git push origin main
+           │
+           ▼
+┌─────────────────────────────┐
+│ 2. 問題のあるコミットを     │
+│    特定                      │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git log --oneline
+    git show <commit-hash>
+           │
+           ▼
+┌─────────────────────────────┐
+│ 3. 修正ブランチを作成       │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git checkout -b hotfix/fix-production-bug
+           │
+           ▼
+┌─────────────────────────────┐
+│ 4. 修正・テスト・デプロイ   │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git commit -m "hotfix: 本番バグ修正"
+    git push origin hotfix/fix-production-bug
+    # PR作成 → レビュー → マージ
+```
+
+**実行コマンド**:
+
+```bash
+# 1. 緊急ロールバック
+git revert HEAD
+git push origin main
+
+# 2. 問題特定
+git log --oneline -10
+git show a1b2c3d
+
+# 3. hotfixブランチ作成
+git checkout main
+git pull origin main
+git checkout -b hotfix/critical-bug-fix
+
+# 4. 修正
+# コードを修正
+git add .
+git commit -m "hotfix: 決済処理のクリティカルバグを修正"
+git push origin hotfix/critical-bug-fix
+
+# 5. GitHubでPR作成（緊急レビュー）
+# 6. マージ後、即座にデプロイ
+```
+
+---
+
+### 🔥 シナリオ2: 機密情報をコミットしてpushしてしまった！
+
+```
+┌─────────────────────────────┐
+│ パスワードをpushしてしまった！│
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 1. 即座にパスワード変更！   │
+│    (最優先)                  │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 2. チームに緊急連絡         │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 3. 履歴から完全削除         │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git filter-branch or BFG
+    git push --force --all
+           │
+           ▼
+┌─────────────────────────────┐
+│ 4. 全員に git clone し直し  │
+│    を依頼                    │
+└─────────────────────────────┘
+```
+
+**実行コマンド**:
+
+```bash
+# 1. パスワード変更（AWSコンソール、DBなど）
+
+# 2. Slackなどでチームに連絡
+# 「緊急: 機密情報をコミットしてしまいました。対応中です」
+
+# 3. BFGで履歴から削除
+git clone --mirror https://github.com/user/repo.git
+cd repo.git
+java -jar bfg.jar --replace-text passwords.txt
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+git push --force
+
+# 4. 通常のクローンで確認
+cd ..
+git clone https://github.com/user/repo.git
+cd repo
+git log --all -- .env  # ファイルが履歴にないことを確認
+
+# 5. チームに連絡
+# 「対応完了。全員 git clone し直してください」
+```
+
+---
+
+### 🔥 シナリオ3: force push で他人の作業を消してしまった！
+
+```
+┌─────────────────────────────┐
+│ force push してしまった！   │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 1. 即座にチームに連絡       │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 2. reflog から復元          │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git reflog
+    git reset --hard HEAD@{1}
+    git push --force origin main
+           │
+           ▼
+┌─────────────────────────────┐
+│ 3. 全員に pull --rebase     │
+│    を依頼                    │
+└─────────────────────────────┘
+```
+
+**実行コマンド**:
+
+```bash
+# 1. 状況確認
+git reflog
+```
+
+**結果**:
+```
+a1b2c3d HEAD@{0}: push --force: forced-update  ← これで消した
+e4f5g6h HEAD@{1}: commit: 他人の作業  ← これを復元したい
+```
+
+```bash
+# 2. 復元
+git reset --hard e4f5g6h
+git push --force-with-lease origin main
+
+# 3. チーム
+
+# 3. チームに連絡
+# 「作業を復元しました。以下のコマンドで同期してください」
+# git fetch origin
+# git reset --hard origin/main
+```
+
+---
+
+## 📊 よく使う確認コマンド集
+
+### 状態確認
+
+```bash
+# 現在の状態
+git status
+
+# 詳細な状態
+git status -v
+
+# 短縮表示
+git status -s
+```
+
+**結果の見方**:
+```
+ M file1.py    # 変更あり（ステージングされていない）
+M  file2.py    # 変更あり（ステージング済み）
+MM file3.py    # 両方に変更あり
+A  file4.py    # 新規追加
+D  file5.py    # 削除
+?? file6.py    # 追跡されていない
+```
+
+---
+
+### 履歴確認
+
+```bash
+# 基本
+git log
+
+# 1行表示
+git log --oneline
+
+# グラフ表示
+git log --oneline --graph --all
+
+# 特定ファイルの履歴
+git log -- file.py
+
+# 誰がいつ変更したか
+git log --pretty=format:"%h - %an, %ar : %s"
+
+# 統計付き
+git log --stat
+
+# 特定期間
+git log --since="2 weeks ago"
+git log --until="2025-10-01"
+
+# 作者で絞り込み
+git log --author="Taro"
+```
+
+---
+
+### 差分確認
+
+```bash
+# ワーキングツリーの変更
+git diff
+
+# ステージングエリアの変更
+git diff --staged
+
+# 特定のコミット間
+git diff a1b2c3d e4f5g6h
+
+# ブランチ間
+git diff main feature/xxx
+
+# 統計のみ
+git diff --stat
+
+# ファイル名のみ
+git diff --name-only
+
+# 単語単位の差分
+git diff --word-diff
+```
+
+---
+
+### ブランチ確認
+
+```bash
+# ローカルブランチ
+git branch
+
+# リモートブランチ
+git branch -r
+
+# すべてのブランチ
+git branch -a
+
+# 最新のコミットも表示
+git branch -v
+
+# マージ済みブランチ
+git branch --merged
+
+# 未マージブランチ
+git branch --no-merged
+```
+
+---
+
+### リモート確認
+
+```bash
+# リモートリポジトリ一覧
+git remote -v
+
+# リモートの詳細
+git remote show origin
+
+# リモートブランチ確認
+git ls-remote origin
+```
+
+---
+
+## 🛡️ 予防策・ベストプラクティス
+
+### 1. エイリアスを設定して効率化
+
+```bash
+# ~/.gitconfig に追加
+git config --global alias.st status
+git config --global alias.co checkout
+git config --global alias.br branch
+git config --global alias.ci commit
+git config --global alias.unstage 'reset HEAD --'
+git config --global alias.last 'log -1 HEAD'
+git config --global alias.lg "log --oneline --graph --all --decorate"
+git config --global alias.undo 'reset --soft HEAD~1'
+```
+
+**使い方**:
+```bash
+git st       # git status の代わり
+git co main  # git checkout main の代わり
+git lg       # きれいなログ表示
+git undo     # 直前のコミット取り消し
+```
+
+---
+
+### 2. グローバル .gitignore を設定
+
+```bash
+# グローバル設定ファイルを作成
+touch ~/.gitignore_global
+
+# 設定
+git config --global core.excludesfile ~/.gitignore_global
+```
+
+**~/.gitignore_global**:
+```
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.env
+venv/
+env/
+
+# Node
+node_modules/
+npm-debug.log
+
+# Logs
+*.log
+```
+
+---
+
+### 3. コミット前の自動チェック（pre-commit hook）
+
+```bash
+# .git/hooks/pre-commit を作成
+touch .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+**pre-commit**:
+```bash
+#!/bin/bash
+
+echo "Running pre-commit checks..."
+
+# Pythonの文法チェック
+python -m py_compile $(git diff --cached --name-only --diff-filter=ACM | grep ".py$")
+if [ $? -ne 0 ]; then
+    echo "Python syntax errors found. Commit aborted."
+    exit 1
+fi
+
+# テスト実行
+python -m pytest tests/ -q
+if [ $? -ne 0 ]; then
+    echo "Tests failed. Commit aborted."
+    exit 1
+fi
+
+# 機密情報チェック
+if git diff --cached | grep -i "password\|secret\|api_key"; then
+    echo "Warning: Possible sensitive information detected!"
+    read -p "Continue? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+echo "All checks passed!"
+exit 0
+```
+
+---
+
+### 4. Branch Protection Rules を設定（GitHub）
+
+GitHubの Settings → Branches → Add rule で:
+
+- ✅ Require pull request reviews before merging
+- ✅ Require status checks to pass before merging
+- ✅ Require branches to be up to date before merging
+- ✅ Include administrators
+- ✅ Restrict who can push to matching branches
+
+---
+
+### 5. 定期的なブランチクリーンアップ
+
+```bash
+# マージ済みのローカルブランチを削除
+git branch --merged | grep -v "\*\|main\|develop" | xargs -n 1 git branch -d
+
+# リモートで削除されたブランチの参照を削除
+git fetch --prune
+
+# 不要なリモートブランチを削除（要注意）
+git push origin --delete branch-name
+```
+
+---
+
+### 6. チーム開発ル# 🚨 Git実務トラブル完全解決ガイド
+**ブランチ操作・履歴修正・マージ問題の実践的解決法**
+
+---
+
+## 📋 目次
+1. [ブランチ切り替え・すげ替え完全ガイド](#ブランチ切り替えすげ替え完全ガイド)
+2. [履歴削除・修正テクニック](#履歴削除修正テクニック)
+3. [マージ問題と解決法](#マージ問題と解決法)
+4. [実務でよくあるトラブル20選](#実務でよくあるトラブル20選)
+5. [緊急時の対応フローチャート](#緊急時の対応フローチャート)
+
+---
+
+## 🔄 ブランチ切り替え・すげ替え完全ガイド
+
+### 🎯 CASE 1: ブランチを間違えて作業してしまった!
+
+**状況**: mainブランチで作業してしまった...
+
+```bash
+# 現在の状況を確認
+git status
+```
+
+**結果**:
+```
+On branch main
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+        modified:   app.py
+        modified:   config.py
+```
+
+#### 解決法A: まだコミットしていない場合
+
+```bash
+# 変更を一時保存
+git stash save "間違えてmainで作業した内容"
+```
+
+**結果の見方**:
+```
+Saved working directory and index state On main: 間違えてmainで作業した内容
+```
+→ 変更が一時保存された！
+
+```bash
+# 正しいブランチを作成・移動
+git checkout -b feature/正しいブランチ名
+```
+
+**結果**:
+```
+Switched to a new branch 'feature/正しいブランチ名'
+```
+
+```bash
+# 一時保存した変更を戻す
+git stash pop
+```
+
+**結果の見方**:
+```
+On branch feature/正しいブランチ名
+Changes not staged for commit:
+        modified:   app.py
+        modified:   config.py
+
+Dropped refs/stash@{0} (a1b2c3d4e5f6...)
+```
+→ `Dropped` と表示されれば成功！変更が戻った
+
+```bash
+# 通常通りコミット
+git add .
+git commit -m "feat: 新機能を追加"
+```
+
+---
+
+#### 解決法B: すでにコミットしてしまった場合
+
+```bash
+# コミット履歴を確認
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD -> main) feat: 新機能を追加  ← これを移動したい
+e4f5g6h fix: バグ修正
+h7i8j9k Initial commit
+```
+
+```bash
+# 新しいブランチを作成（コミットを保持したまま）
+git branch feature/正しいブランチ名
+```
+
+```bash
+# mainブランチを1つ前に戻す
+git reset --hard HEAD~1
+```
+
+**結果の見方**:
+```
+HEAD is now at e4f5g6h fix: バグ修正
+```
+→ mainが1つ前のコミットに戻った
+
+```bash
+# 新ブランチに移動して確認
+git checkout feature/正しいブランチ名
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD -> feature/正しいブランチ名) feat: 新機能を追加  ← ここにある！
+e4f5g6h fix: バグ修正
+h7i8j9k Initial commit
+```
+→ コミットが正しいブランチに移動完了！
+
+---
+
+### 🎯 CASE 2: 作業中のブランチを切り替えたい
+
+**状況**: feature/Aで作業中だが、緊急でhotfix/Bに切り替える必要がある
+
+```bash
+# 現在の状況
+git status
+```
+
+**結果**:
+```
+On branch feature/A
+Changes not staged for commit:
+        modified:   file1.py
+        modified:   file2.py
+Untracked files:
+        new_file.py
+```
+
+#### ❌ このままcheckoutすると...
+
+```bash
+git checkout hotfix/B
+```
+
+**エラー**:
+```
+error: Your local changes to the following files would be overwritten by checkout:
+        file1.py
+Please commit your changes or stash them before you switch branches.
+Aborting
+```
+→ 変更が失われる可能性があるため、Gitが拒否！
+
+#### ✅ 正しい対処法
+
+**方法1: stash（一時保存）を使う** ★推奨
+
+```bash
+# 作業を一時保存
+git stash save "feature/Aの途中作業"
+```
+
+**結果**:
+```
+Saved working directory and index state On feature/A: feature/Aの途中作業
+```
+
+```bash
+# ブランチ切り替え
+git checkout hotfix/B
+```
+
+**結果**:
+```
+Switched to branch 'hotfix/B'
+```
+→ クリーンな状態でhotfix作業可能！
+
+```bash
+# hotfix完了後、元のブランチに戻る
+git checkout feature/A
+git stash list  # 保存した作業一覧を確認
+```
+
+**結果**:
+```
+stash@{0}: On feature/A: feature/Aの途中作業
+stash@{1}: On feature/C: 別の作業
+```
+
+```bash
+# 作業を復元
+git stash pop
+```
+
+**結果**:
+```
+On branch feature/A
+Changes not staged for commit:
+        modified:   file1.py
+        modified:   file2.py
+Dropped refs/stash@{0} (...)
+```
+→ 作業が復元された！
+
+**方法2: WIP（Work In Progress）コミット**
+
+```bash
+# 途中だがコミット
+git add .
+git commit -m "WIP: 作業途中（後で修正）"
+
+# ブランチ切り替え
+git checkout hotfix/B
+
+# 後で戻ってきたら...
+git checkout feature/A
+
+# 最後のコミットを取り消して編集再開
+git reset --soft HEAD~1
+```
+
+**結果**:
+```
+# 変更はステージングエリアに残る
+git status
+```
+```
+On branch feature/A
+Changes to be committed:
+        modified:   file1.py
+        modified:   file2.py
+```
+
+---
+
+### 🎯 CASE 3: ブランチの分岐元（ベース）を変更したい
+
+**状況**: mainから切ったつもりが、間違えてdevelopから切ってしまった
+
+```
+develop ──●──●──●──●
+           \
+            ●──● feature/my-branch (間違い！)
+
+main ───────●──────● (ここから切りたかった)
+```
+
+#### 解決法: rebase でブランチをすげ替える
+
+```bash
+# 現在のブランチ構造を確認
+git log --oneline --graph --all
+```
+
+**結果**:
+```
+* a1b2c3d (HEAD -> feature/my-branch) feat: 新機能2
+* e4f5g6h feat: 新機能1
+* h7i8j9k (develop) develop上のコミット
+| * k0l1m2n (main) main上のコミット
+|/
+* n3o4p5q Initial commit
+```
+
+```bash
+# mainブランチの最新を取得
+git fetch origin main
+
+# feature/my-branchをmain基準に付け替える
+git rebase --onto main develop feature/my-branch
+```
+
+**読み方**: ギット・リベース・オントゥ
+
+**意味**: 「developから分岐したfeature/my-branchを、mainから分岐したように付け替える」
+
+**結果の見方**:
+```
+First, rewinding head to replay your work on top of it...
+Applying: feat: 新機能1
+Applying: feat: 新機能2
+```
+→ `Applying` が表示されれば成功！
+
+```bash
+# 結果を確認
+git log --oneline --graph --all
+```
+
+**結果**:
+```
+* x1y2z3a (HEAD -> feature/my-branch) feat: 新機能2
+* b4c5d6e feat: 新機能1
+* k0l1m2n (main) main上のコミット ← ★ここから分岐に変わった！
+| * h7i8j9k (develop) develop上のコミット
+|/
+* n3o4p5q Initial commit
+```
+
+---
+
+### 🎯 CASE 4: ブランチ名を変更したい
+
+```bash
+# ローカルブランチ名を変更（現在のブランチ）
+git branch -m 新しいブランチ名
+```
+
+**読み方**: ギット・ブランチ・マイナスエム（move の略）
+
+**結果**:
+```
+# 確認
+git branch
+```
+```
+* 新しいブランチ名
+  develop
+  main
+```
+
+```bash
+# 他のブランチ名を変更する場合
+git branch -m 古いブランチ名 新しいブランチ名
+```
+
+**リモートも変更する場合**:
+
+```bash
+# 古いブランチを削除
+git push origin --delete 古いブランチ名
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+ - [deleted]         古いブランチ名
+```
+
+```bash
+# 新しいブランチをプッシュ
+git push origin 新しいブランチ名
+
+# 上流ブランチを設定
+git push --set-upstream origin 新しいブランチ名
+```
+
+**結果**:
+```
+Branch '新しいブランチ名' set up to track remote branch '新しいブランチ名' from 'origin'.
+```
+
+---
+
+### 🎯 CASE 5: 不要なブランチを削除したい
+
+```bash
+# ローカルブランチを削除
+git branch -d ブランチ名
+```
+
+**読み方**: ギット・ブランチ・マイナスディー（delete の略）
+
+**結果**:
+```
+Deleted branch ブランチ名 (was a1b2c3d).
+```
+
+**マージ済みでない場合のエラー**:
+```
+error: The branch 'ブランチ名' is not fully merged.
+If you are sure you want to delete it, run 'git branch -D ブランチ名'.
+```
+
+```bash
+# 強制削除（注意！）
+git branch -D ブランチ名
+```
+
+**結果**:
+```
+Deleted branch ブランチ名 (was a1b2c3d).
+```
+
+```bash
+# リモートブランチを削除
+git push origin --delete ブランチ名
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+ - [deleted]         ブランチ名
+```
+
+```bash
+# すでに削除されたリモートブランチの参照をクリーンアップ
+git fetch --prune
+```
+
+**読み方**: ギット・フェッチ・プルーン
+
+**結果**:
+```
+From https://github.com/user/repo
+ - [deleted]         (none)     -> origin/old-branch
+ - [deleted]         (none)     -> origin/another-old-branch
+```
+
+---
+
+## 🗑️ 履歴削除・修正テクニック
+
+### 🎯 CASE 6: 直前のコミットを修正したい
+
+#### パターンA: コミットメッセージだけ変更
+
+```bash
+git commit --amend -m "新しいコミットメッセージ"
+```
+
+**読み方**: ギット・コミット・アメンド
+
+**結果**:
+```
+[feature/xxx a1b2c3d] 新しいコミットメッセージ
+ Date: Thu Oct 9 14:00:00 2025 +0900
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+```
+
+#### パターンB: ファイルを追加してコミット修正
+
+```bash
+# 忘れたファイルを追加
+git add forgotten_file.py
+
+# 直前のコミットに含める
+git commit --amend --no-edit
+```
+
+**読み方**: ノー・エディット（エディタを開かない）
+
+**結果**:
+```
+[feature/xxx e4f5g6h] feat: 新機能を追加
+ Date: Thu Oct 9 14:00:00 2025 +0900
+ 3 files changed, 15 insertions(+), 2 deletions(-)
+```
+→ 3ファイルに増えた！
+
+⚠️ **注意**: すでにpushしたコミットをamendすると、履歴が変わるため force push が必要
+
+```bash
+git push --force-with-lease origin feature/xxx
+```
+
+**読み方**: フォース・ウィズ・リース（安全な強制プッシュ）
+
+---
+
+### 🎯 CASE 7: 過去のコミットを削除したい
+
+```bash
+# コミット履歴を確認
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD -> feature/xxx) feat: 機能C
+e4f5g6h feat: 機能B  ← これを削除したい
+h7i8j9k feat: 機能A
+k0l1m2n Initial commit
+```
+
+#### 方法1: rebase -i（インタラクティブリベース）★推奨
+
+```bash
+git rebase -i HEAD~3
+```
+
+**読み方**: ギット・リベース・インタラクティブ
+
+**意味**: 直近3つのコミットを編集モードで表示
+
+**エディタが開く**:
+```
+pick h7i8j9k feat: 機能A
+pick e4f5g6h feat: 機能B  ← ここを drop に変更
+pick a1b2c3d feat: 機能C
+
+# Commands:
+# p, pick = use commit
+# r, reword = use commit, but edit the commit message
+# e, edit = use commit, but stop for amending
+# s, squash = use commit, but meld into previous commit
+# f, fixup = like "squash", but discard this commit's log message
+# x, exec = run command (the rest of the line) using shell
+# d, drop = remove commit
+```
+
+**編集して保存**:
+```
+pick h7i8j9k feat: 機能A
+drop e4f5g6h feat: 機能B  ← pick を drop に変更
+pick a1b2c3d feat: 機能C
+```
+
+**結果**:
+```
+Successfully rebased and updated refs/heads/feature/xxx.
+```
+
+```bash
+# 確認
+git log --oneline
+```
+
+**結果**:
+```
+x1y2z3a (HEAD -> feature/xxx) feat: 機能C
+h7i8j9k feat: 機能A
+k0l1m2n Initial commit
+```
+→ 機能Bのコミットが消えた！
+
+---
+
+### 🎯 CASE 8: 複数のコミットを1つにまとめたい（squash）
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD) fix: typo修正
+e4f5g6h fix: スタイル修正
+h7i8j9k feat: ログイン機能実装
+k0l1m2n Initial commit
+```
+→ 上3つをまとめたい
+
+```bash
+git rebase -i HEAD~3
+```
+
+**エディタ**:
+```
+pick h7i8j9k feat: ログイン機能実装
+pick e4f5g6h fix: スタイル修正
+pick a1b2c3d fix: typo修正
+```
+
+**編集**:
+```
+pick h7i8j9k feat: ログイン機能実装
+squash e4f5g6h fix: スタイル修正
+squash a1b2c3d fix: typo修正
+```
+
+**保存すると次のエディタが開く**:
+```
+# This is a combination of 3 commits.
+# The first commit's message is:
+feat: ログイン機能実装
+
+# This is the 2nd commit message:
+fix: スタイル修正
+
+# This is the 3rd commit message:
+fix: typo修正
+
+# 以下のように1つのメッセージに編集
+feat: ログイン機能を実装
+
+- メイン機能の実装
+- スタイルの調整
+- typo修正を含む
+```
+
+**結果**:
+```
+[detached HEAD x1y2z3a] feat: ログイン機能を実装
+ Date: Thu Oct 9 14:00:00 2025 +0900
+ 5 files changed, 100 insertions(+), 5 deletions(-)
+Successfully rebased and updated refs/heads/feature/xxx.
+```
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+x1y2z3a (HEAD) feat: ログイン機能を実装
+k0l1m2n Initial commit
+```
+→ 3つが1つにまとまった！
+
+---
+
+### 🎯 CASE 9: 機密情報をコミットしてしまった！
+
+**状況**: `.env` ファイルにパスワードが...
+
+```bash
+# 直前のコミットから削除
+git rm --cached .env
+git commit --amend --no-edit
+```
+
+**過去のコミットから完全削除（重要！）**:
+
+```bash
+# BFG Repo-Cleaner を使用（推奨）
+# まず https://rtyley.github.io/bfg-repo-cleaner/ からダウンロード
+
+# .envファイルを履歴から完全削除
+java -jar bfg.jar --delete-files .env
+
+# または filter-branch（Git標準だが遅い）
+git filter-branch --force --index-filter \
+  "git rm --cached --ignore-unmatch .env" \
+  --prune-empty --tag-name-filter cat -- --all
+```
+
+**結果**:
+```
+Rewrite a1b2c3d (5/5) (10 seconds passed, remaining 0 predicted)
+Ref 'refs/heads/main' was rewritten
+```
+
+```bash
+# 強制プッシュ（チーム全員に通知必須！）
+git push --force --all
+git push --force --tags
+```
+
+⚠️ **重要**: 
+1. チームメンバー全員に `git clone` し直してもらう
+2. GitHubの secrets も変更する
+3. 漏洩した認証情報は即座にリセット
+
+---
+
+### 🎯 CASE 10: 間違えてpushしたコミットを取り消したい
+
+#### 公開前（自分だけのブランチ）
+
+```bash
+# 1つ前に戻す
+git reset --hard HEAD~1
+
+# 強制プッシュ
+git push --force origin feature/xxx
+```
+
+#### 公開後（他の人も使っている）
+
+```bash
+# revertで打ち消しコミットを作る（★推奨）
+git revert HEAD
+```
+
+**エディタが開く**:
+```
+Revert "feat: 問題のある機能"
+
+This reverts commit a1b2c3d.
+```
+
+**結果**:
+```
+[feature/xxx x1y2z3a] Revert "feat: 問題のある機能"
+ 1 file changed, 5 insertions(+), 10 deletions(-)
+```
+
+```bash
+git push origin feature/xxx
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+   a1b2c3d..x1y2z3a  feature/xxx -> feature/xxx
+```
+
+---
+
+## 🔀 マージ問題と解決法
+
+### 🎯 CASE 11: マージコンフリクトが発生（基本）
+
+```bash
+git merge feature/other-branch
+```
+
+**エラー**:
+```
+Auto-merging app.py
+CONFLICT (content): Merge conflict in app.py
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+```bash
+git status
+```
+
+**結果**:
+```
+On branch main
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+        both modified:   app.py  ← ★コンフリクト発生
+```
+
+#### 解決ステップ
+
+**1. ファイルを開く**:
+```python
+def calculate(a, b):
+<<<<<<< HEAD
+    # 自分の変更
+    return a + b + 10
+=======
+    # 相手の変更
+    return a * b
+>>>>>>> feature/other-branch
+```
+
+**2. 修正**:
+```python
+def calculate(a, b):
+    # 両方の意図を組み込む
+    result = a * b
+    return result + 10
+```
+
+**3. マーカー削除を確認**:
+```bash
+# マーカーが残っていないか確認
+grep -n "<<<<<<< HEAD" app.py
+grep -n "=======" app.py
+grep -n ">>>>>>>" app.py
+```
+
+**結果**:
+```
+# 何も表示されなければOK（マーカーが残っていない）
+```
+
+**4. テスト実行**:
+```bash
+python -m pytest tests/
+```
+
+**5. コミット**:
+```bash
+git add app.py
+git commit -m "merge: feature/other-branch をマージ（コンフリクト解決）"
+```
+
+---
+
+### 🎯 CASE 12: マージコンフリクトが多すぎる！
+
+```bash
+git merge feature/long-running-branch
+```
+
+**結果**:
+```
+Auto-merging file1.py
+Auto-merging file2.py
+Auto-merging file3.py
+CONFLICT (content): Merge conflict in file1.py
+CONFLICT (content): Merge conflict in file2.py
+CONFLICT (content): Merge conflict in file3.py
+CONFLICT (content): Merge conflict in file4.py
+CONFLICT (content): Merge conflict in file5.py
+... (20個のコンフリクト)
+```
+
+#### 解決法A: 一旦中止して戦略を変える
+
+```bash
+# マージ中止
+git merge --abort
+```
+
+**結果**:
+```
+# 元の状態に戻る
+```
+
+```bash
+# 相手のブランチを自分のブランチに取り込む（逆マージ）
+git checkout feature/long-running-branch
+git pull origin feature/long-running-branch
+git merge main
+# コンフリクト解決
+git push origin feature/long-running-branch
+
+# その後、mainに戻ってマージ
+git checkout main
+git merge feature/long-running-branch  # 今度はスムーズ
+```
+
+#### 解決法B: mergetool を使う
+
+```bash
+# GUIツールで解決（VS Code, Meld, kdiff3など）
+git mergetool
+```
+
+**結果**:
+```
+Merging:
+file1.py
+file2.py
+
+Normal merge conflict for 'file1.py':
+  {local}: modified file
+  {remote}: modified file
+```
+→ 設定されたツールが起動してGUIで解決可能
+
+---
+
+### 🎯 CASE 13: マージを取り消したい
+
+#### パターンA: マージ直後（まだpushしていない）
+
+```bash
+git reset --hard HEAD~1
+```
+
+**結果**:
+```
+HEAD is now at a1b2c3d 前のコミット
+```
+
+#### パターンB: マージ後にpushしてしまった
+
+```bash
+# マージコミットのハッシュを確認
+git log --oneline
+```
+
+**結果**:
+```
+x1y2z3a (HEAD -> main) Merge branch 'feature/xxx'  ← これを取り消したい
+e4f5g6h feat: 機能B
+a1b2c3d feat: 機能A
+```
+
+```bash
+# revert でマージを打ち消す
+git revert -m 1 HEAD
+```
+
+**読み方**: リバート・マイナスエム・ワン
+
+**意味**: マージコミットを打ち消す（-m 1 は main側を保持）
+
+**エディタが開く**:
+```
+Revert "Merge branch 'feature/xxx'"
+
+This reverts commit x1y2z3a, reversing
+changes made to e4f5g6h.
+```
+
+**結果**:
+```
+[main b4c5d6e] Revert "Merge branch 'feature/xxx'"
+ 3 files changed, 15 insertions(+), 50 deletions(-)
+```
+
+```bash
+git push origin main
+```
+
+---
+
+### 🎯 CASE 14: Fast-forward マージを防ぎたい
+
+**状況**: マージの履歴を明示的に残したい
+
+```bash
+# 通常のマージ（Fast-forwardになる可能性）
+git merge feature/xxx
+```
+
+**結果（Fast-forward）**:
+```
+Updating a1b2c3d..e4f5g6h
+Fast-forward
+ file.py | 10 +++++++++++
+ 1 file changed, 10 insertions(+)
+```
+→ マージコミットが作られない
+
+#### 解決法: --no-ff オプション
+
+```bash
+git merge --no-ff feature/xxx
+```
+
+**読み方**: ノー・ファスト・フォワード
+
+**エディタが開く**:
+```
+Merge branch 'feature/xxx'
+
+# メッセージを編集可能
+```
+
+**結果**:
+```
+Merge made by the 'recursive' strategy.
+ file.py | 10 +++++++++++
+ 1 file changed, 10 insertions(+)
+```
+
+```bash
+git log --oneline --graph
+```
+
+**結果**:
+```
+*   h7i8j9k (HEAD -> main) Merge branch 'feature/xxx'
+|\
+| * e4f5g6h (feature/xxx) feat: 新機能
+|/
+* a1b2c3d Previous commit
+```
+→ マージの履歴が明確に残る！
+
+---
+
+## 🚨 実務でよくあるトラブル20選
+
+### トラブル1: push が拒否される
+
+```bash
+git push origin main
+```
+
+**エラー**:
+```
+To https://github.com/user/repo.git
+ ! [rejected]        main -> main (fetch first)
+error: failed to push some refs to 'https://github.com/user/repo.git'
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally.
+```
+
+**原因**: リモートに新しいコミットがある
+
+**解決法**:
+```bash
+git pull origin main
+# コンフリクトがあれば解決
+git push origin main
+```
+
+---
+
+### トラブル2: pull でコンフリクト
+
+```bash
+git pull origin main
+```
+
+**エラー**:
+```
+Auto-merging file.py
+CONFLICT (content): Merge conflict in file.py
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+**解決法**:
+```bash
+# コンフリクトを解決
+# ファイルを編集してマーカー削除
+git add file.py
+git commit -m "merge: コンフリクト解決"
+git push origin main
+```
+
+---
+
+### トラブル3: detached HEAD 状態になった
+
+```bash
+git checkout a1b2c3d  # 特定のコミットをチェックアウト
+```
+
+**警告**:
+```
+Note: switching to 'a1b2c3d'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+```
+
+**状態確認**:
+```bash
+git status
+```
+
+**結果**:
+```
+HEAD detached at a1b2c3d
+nothing to commit, working tree clean
+```
+
+**解決法**:
+```bash
+# ブランチに戻る
+git checkout main
+```
+
+**もし変更をコミットしてしまった場合**:
+```bash
+# 新しいブランチとして保存
+git branch temp-branch
+git checkout temp-branch
+```
+
+---
+
+### トラブル4: .gitignore が効かない
+
+```bash
+# .gitignore に *.pyc を追加したのに無視されない
+git status
+```
+
+**結果**:
+```
+Changes not staged for commit:
+        modified:   __pycache__/app.cpython-39.pyc
+```
+
+**原因**: すでに追跡されているファイルは .gitignore が効かない
+
+**解決法**:
+```bash
+# キャッシュから削除
+git rm -r --cached __pycache__/
+git rm --cached *.pyc
+
+git add .gitignore
+git commit -m "chore: .gitignore を適用"
+```
+
+**結果**:
+```
+rm '__pycache__/app.cpython-39.pyc'
+[main a1b2c3d] chore: .gitignore を適用
+ 2 files changed, 1 insertion(+), 0 deletions(-)
+ delete mode 100644 __pycache__/app.cpython-39.pyc
+```
+
+---
+
+### トラブル5: 巨大ファイルをコミットしてpushできない
+
+```bash
+git push origin main
+```
+
+**エラー**:
+```
+remote: error: GH001: Large files detected. You may want to try Git Large File Storage.
+remote: error: File large_file.zip is 150.00 MB; this exceeds GitHub's file size limit of 100.00 MB
+To https://github.com/user/repo.git
+ ! [remote rejected] main -> main (pre-receive hook declined)
+error: failed to push some refs to 'https://github.com/user/repo.git'
+```
+
+**解決法A: 最新のコミットから削除**
+
+```bash
+# ファイルを削除してコミット修正
+git rm --cached large_file.zip
+git commit --amend --no-edit
+git push origin main
+```
+
+**解決法B: 過去のコミットから削除**
+
+```bash
+# BFG Repo-Cleaner を使用
+java -jar bfg.jar --strip-blobs-bigger-than 100M
+
+# または
+git filter-branch --tree-filter 'rm -f large_file.zip' HEAD
+
+# 強制プッシュ
+git push --force origin main
+```
+
+**解決法C: Git LFS を使う**
+
+```bash
+# Git LFS をインストール
+git lfs install
+
+# 大きなファイルをLFS管理下に
+git lfs track "*.zip"
+git add .gitattributes
+git add large_file.zip
+git commit -m "chore: Git LFSを使用"
+git push origin main
+```
+
+---
+
+### トラブル6: コミットメッセージを間違えた（複数コミット前）
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD) feat: 最新のコミット
+e4f5g6h fix: バグ修正
+h7i8j9k feat: ログニ機能を追加  ← typo!「ログイン」のはず
+k0l1m2n Initial commit
+```
+
+**解決法**:
+
+```bash
+git rebase -i HEAD~3
+```
+
+**エディタ**:
+```
+pick h7i8j9k feat: ログニ機能を追加
+pick e4f5g6h fix: バグ修正
+pick a1b2c3d feat: 最新のコミット
+```
+
+**編集**:
+```
+reword h7i8j9k feat: ログニ機能を追加  ← pick を reword に変更
+pick e4f5g6h fix: バグ修正
+pick a1b2c3d feat: 最新のコミット
+```
+
+**保存すると次のエディタが開く**:
+```
+feat: ログニ機能を追加
+
+# ここで修正
+feat: ログイン機能を追加
+```
+
+**結果**:
+```
+[detached HEAD x1y2z3a] feat: ログイン機能を追加
+Successfully rebased and updated refs/heads/main.
+```
+
+---
+
+### トラブル7: 誤って force push してしまった！
+
+```bash
+git push --force origin main
+```
+
+**チームメンバーから連絡**: 「私の作業が消えました...」
+
+**原因**: force push で他人の作業を上書き
+
+**解決法**:
+
+```bash
+# GitHub上のReflogから復元
+# GitHub → Settings → Branches → Branch protection rules を確認
+
+# ローカルのreflogから探す
+git reflog
+```
+
+**結果**:
+```
+a1b2c3d HEAD@{0}: push --force: forced-update
+e4f5g6h HEAD@{1}: commit: 消えたコミット  ← これを復元したい
+h7i8j9k HEAD@{2}: commit: 前のコミット
+```
+
+```bash
+# 消えたコミットに戻す
+git reset --hard e4f5g6h
+git push --force origin main
+
+# チームメンバーに通知
+# 「git pull --rebase で同期してください」
+```
+
+**予防策**: `--force-with-lease` を使う
+
+```bash
+# 安全な強制プッシュ
+git push --force-with-lease origin main
+```
+
+**結果（他人の変更がある場合）**:
+```
+ ! [rejected]        main -> main (stale info)
+error: failed to push some refs to 'https://github.com/user/repo.git'
+```
+→ 他人の変更を上書きする前に止まる！
+
+---
+
+### トラブル8: stash した内容が見つからない
+
+```bash
+git stash list
+```
+
+**結果**:
+```
+stash@{0}: WIP on feature/A: a1b2c3d commit message
+stash@{1}: WIP on feature/B: e4f5g6h another commit
+stash@{2}: WIP on feature/C: h7i8j9k old work
+```
+
+**どれだか分からない！**
+
+**解決法**:
+
+```bash
+# 各stashの内容を確認
+git stash show -p stash@{0}
+```
+
+**結果**:
+```diff
+diff --git a/file.py b/file.py
+index a1b2c3d..e4f5g6h 100644
+--- a/file.py
++++ b/file.py
+@@ -1,3 +1,5 @@
++def new_function():
++    pass
+ def old_function():
+     pass
+```
+
+```bash
+# 特定のstashを復元
+git stash apply stash@{1}
+
+# 復元後、不要なstashを削除
+git stash drop stash@{1}
+```
+
+**すべてのstashを確認**:
+
+```bash
+# わかりやすい名前でstashする習慣をつける
+git stash save "feature/A: ログイン処理の途中"
+```
+
+---
+
+### トラブル9: リベース中にコンフリクトが発生
+
+```bash
+git rebase main
+```
+
+**エラー**:
+```
+Auto-merging file.py
+CONFLICT (content): Merge conflict in file.py
+error: could not apply e4f5g6h... feat: 新機能
+hint: Resolve all conflicts manually, mark them as resolved with
+hint: "git add/rm <conflicted_files>", then run "git rebase --continue".
+hint: You can instead skip this commit: run "git rebase --skip".
+hint: To abort and get back to the state before "git rebase", run "git rebase --abort".
+Could not apply e4f5g6h... feat: 新機能
+```
+
+**状態確認**:
+
+```bash
+git status
+```
+
+**結果**:
+```
+interactive rebase in progress; onto a1b2c3d
+Last command done (1 command done):
+   pick e4f5g6h feat: 新機能
+Next commands to do (2 remaining commands):
+   pick h7i8j9k feat: 別の機能
+   pick k0l1m2n fix: バグ修正
+  (use "git rebase --edit-todo" to view and edit)
+You are currently rebasing branch 'feature/xxx' on 'a1b2c3d'.
+  (fix conflicts and then run "git rebase --continue")
+  (use "git rebase --skip" to skip this patch)
+  (use "git rebase --abort" to check out the original branch)
+
+Unmerged paths:
+  (use "git restore --staged <file>..." to unstage)
+  (use "git add <file>..." to mark resolution)
+        both modified:   file.py
+```
+
+**解決法**:
+
+```bash
+# 1. コンフリクトを解決
+# ファイルを編集してマーカー削除
+
+# 2. 解決したファイルを追加
+git add file.py
+
+# 3. リベースを続行
+git rebase --continue
+```
+
+**結果**:
+```
+[detached HEAD x1y2z3a] feat: 新機能
+ 1 file changed, 10 insertions(+)
+Successfully rebased and updated refs/heads/feature/xxx.
+```
+
+**このコミットをスキップする場合**:
+
+```bash
+git rebase --skip
+```
+
+**リベースを中止する場合**:
+
+```bash
+git rebase --abort
+```
+
+---
+
+### トラブル10: cherry-pick でコンフリクト
+
+```bash
+# 特定のコミットだけを取り込む
+git cherry-pick a1b2c3d
+```
+
+**エラー**:
+```
+Auto-merging file.py
+CONFLICT (content): Merge conflict in file.py
+error: could not apply a1b2c3d... feat: 特定の機能
+hint: after resolving the conflicts, mark the corrected paths
+hint: with 'git add <paths>' or 'git rm <paths>'
+hint: and commit the result with 'git commit'
+```
+
+**解決法**:
+
+```bash
+# コンフリクト解決
+# ファイルを編集
+
+git add file.py
+git cherry-pick --continue
+```
+
+**中止する場合**:
+
+```bash
+git cherry-pick --abort
+```
+
+---
+
+### トラブル11: submodule の更新ができない
+
+```bash
+git submodule update
+```
+
+**エラー**:
+```
+fatal: Needed a single revision
+Unable to find current revision in submodule path 'lib/external'
+```
+
+**解決法**:
+
+```bash
+# サブモジュールを初期化
+git submodule init
+git submodule update --init --recursive
+
+# 最新に更新
+git submodule update --remote
+```
+
+**結果**:
+```
+Submodule path 'lib/external': checked out 'a1b2c3d...'
+```
+
+---
+
+### トラブル12: upstream が設定されていない
+
+```bash
+git pull
+```
+
+**エラー**:
+```
+There is no tracking information for the current branch.
+Please specify which branch you want to merge with.
+```
+
+**解決法**:
+
+```bash
+# upstream ブランチを設定
+git branch --set-upstream-to=origin/main main
+```
+
+**結果**:
+```
+Branch 'main' set up to track remote branch 'main' from 'origin'.
+```
+
+**または**:
+
+```bash
+git push -u origin main
+```
+
+**結果**:
+```
+Branch 'main' set up to track remote branch 'main' from 'origin'.
+```
+
+---
+
+### トラブル13: ファイル名の大文字小文字変更が認識されない
+
+```bash
+# File.py → file.py に変更したのに...
+git status
+```
+
+**結果**:
+```
+nothing to commit, working tree clean
+```
+
+**原因**: Windowsは大文字小文字を区別しない
+
+**解決法**:
+
+```bash
+# Git上で明示的に変更
+git mv File.py file.py
+git commit -m "refactor: ファイル名を小文字に変更"
+```
+
+**結果**:
+```
+[main a1b2c3d] refactor: ファイル名を小文字に変更
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ rename File.py => file.py (100%)
+```
+
+---
+
+### トラブル14: リモートリポジトリのURLが間違っている
+
+```bash
+git push origin main
+```
+
+**エラー**:
+```
+fatal: repository 'https://github.com/wrong-user/repo.git/' not found
+```
+
+**確認**:
+
+```bash
+git remote -v
+```
+
+**結果**:
+```
+origin  https://github.com/wrong-user/repo.git (fetch)
+origin  https://github.com/wrong-user/repo.git (push)
+```
+
+**解決法**:
+
+```bash
+# URLを変更
+git remote set-url origin https://github.com/correct-user/repo.git
+
+# 確認
+git remote -v
+```
+
+**結果**:
+```
+origin  https://github.com/correct-user/repo.git (fetch)
+origin  https://github.com/correct-user/repo.git (push)
+```
+
+---
+
+### トラブル15: 複数のリモートリポジトリを管理したい
+
+```bash
+# 現在のリモート確認
+git remote -v
+```
+
+**結果**:
+```
+origin  https://github.com/user/repo.git (fetch)
+origin  https://github.com/user/repo.git (push)
+```
+
+**解決法**:
+
+```bash
+# 新しいリモートを追加
+git remote add upstream https://github.com/original-author/repo.git
+
+# 確認
+git remote -v
+```
+
+**結果**:
+```
+origin    https://github.com/user/repo.git (fetch)
+origin    https://github.com/user/repo.git (push)
+upstream  https://github.com/original-author/repo.git (fetch)
+upstream  https://github.com/original-author/repo.git (push)
+```
+
+**使い方**:
+
+```bash
+# upstreamから最新を取得
+git fetch upstream
+
+# upstreamのmainを自分のmainにマージ
+git checkout main
+git merge upstream/main
+
+# 自分のリポジトリにプッシュ
+git push origin main
+```
+
+---
+
+### トラブル16: 誤ってバイナリファイルの差分を見ようとした
+
+```bash
+git diff image.png
+```
+
+**結果**:
+```
+diff --git a/image.png b/image.png
+index a1b2c3d..e4f5g6h 100644
+Binary files a/image.png and b/image.png differ
+```
+→ 内容は表示されない（バイナリなので）
+
+**画像の差分を見たい場合**:
+
+```bash
+# 外部ツールを設定
+git config --global diff.image.textconv "identify -verbose"
+
+# .gitattributes に追加
+echo "*.png diff=image" >> .gitattributes
+```
+
+---
+
+### トラブル17: 作業中にブランチを削除してしまった
+
+```bash
+git branch -D feature/important-work
+```
+
+**結果**:
+```
+Deleted branch feature/important-work (was a1b2c3d).
+```
+
+**あ、間違えた！**
+
+**解決法**:
+
+```bash
+# reflog から探す
+git reflog
+```
+
+**結果**:
+```
+e4f5g6h HEAD@{0}: checkout: moving from feature/important-work to main
+a1b2c3d HEAD@{1}: commit: 重要な作業  ← これ！
+h7i8j9k HEAD@{2}: commit: 前の作業
+```
+
+```bash
+# ブランチを復元
+git branch feature/important-work a1b2c3d
+```
+
+**結果**:
+```
+# ブランチが復活！
+git branch
+```
+```
+  main
+* feature/important-work
+```
+
+---
+
+### トラブル18: tag を間違えて作成した
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+**あ、バージョン番号間違えた！**
+
+**解決法**:
+
+```bash
+# ローカルのタグを削除
+git tag -d v1.0.0
+```
+
+**結果**:
+```
+Deleted tag 'v1.0.0' (was a1b2c3d)
+```
+
+```bash
+# リモートのタグを削除
+git push origin :refs/tags/v1.0.0
+# または
+git push origin --delete v1.0.0
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+ - [deleted]         v1.0.0
+```
+
+```bash
+# 正しいタグを作成
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+---
+
+### トラブル19: merge と rebase を間違えた
+
+```bash
+# rebase したかったのに merge してしまった
+git merge feature/xxx
+```
+
+**結果**:
+```
+Merge made by the 'recursive' strategy.
+```
+
+**取り消したい！**
+
+**解決法**:
+
+```bash
+# マージを取り消す
+git reset --hard ORIG_HEAD
+```
+
+**結果**:
+```
+HEAD is now at a1b2c3d マージ前の状態
+```
+
+```bash
+# 改めて rebase
+git rebase feature/xxx
+```
+
+---
+
+### トラブル20: commit の author が間違っている
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD) feat: 新機能  ← 作者が間違っている
+```
+
+**解決法A: 直前のコミットの場合**
+
+```bash
+git commit --amend --author="Correct Name <correct@email.com>" --no-edit
+```
+
+**解決法B: 過去のコミットの場合**
+
+```bash
+git rebase -i HEAD~3
+```
+
+**エディタ**:
+```
+pick h7i8j9k feat: 機能A
+edit a1b2c3d feat: 新機能  ← pick を edit に変更
+pick e4f5g6h feat: 機能B
+```
+
+**保存後**:
+
+```bash
+git commit --amend --author="Correct Name <correct@email.com>" --no-edit
+git rebase --continue
+```
+
+**解決法C: すべてのコミットを変更**
+
+```bash
+git filter-branch --env-filter '
+if [ "$GIT_AUTHOR_EMAIL" = "wrong@email.com" ]; then
+    export GIT_AUTHOR_NAME="Correct Name"
+    export GIT_AUTHOR_EMAIL="correct@email.com"
+fi
+' -- --all
+```
+
+---
+
+## 🚑 緊急時の対応フローチャート
+
+### 🔥 シナリオ1: 本番環境に問題のあるコードをデプロイしてしまった！
+
+```
+┌─────────────────────────────┐
+│  本番でエラー発生！         │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 1. 緊急: 前のバージョンに    │
+│    ロールバック              │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git revert HEAD
+    git push origin main
+           │
+           ▼
+┌─────────────────────────────┐
+│ 2. 問題のあるコミットを     │
+│    特定                      │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git log --oneline
+    git show <commit-hash>
+           │
+           ▼
+┌─────────────────────────────┐
+│ 3. 修正ブランチを作成       │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git checkout -b hotfix/fix-production-bug
+           │
+           ▼
+┌─────────────────────────────┐
+│ 4. 修正・テスト・デプロイ   │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git commit -m "hotfix: 本番バグ修正"
+    git push origin hotfix/fix-production-bug
+    # PR作成 → レビュー → マージ
+```
+
+**実行コマンド**:
+
+```bash
+# 1. 緊急ロールバック
+git revert HEAD
+git push origin main
+
+# 2. 問題特定
+git log --oneline -10
+git show a1b2c3d
+
+# 3. hotfixブランチ作成
+git checkout main
+git pull origin main
+git checkout -b hotfix/critical-bug-fix
+
+# 4. 修正
+# コードを修正
+git add .
+git commit -m "hotfix: 決済処理のクリティカルバグを修正"
+git push origin hotfix/critical-bug-fix
+
+# 5. GitHubでPR作成（緊急レビュー）
+# 6. マージ後、即座にデプロイ
+```
+
+---
+
+### 🔥 シナリオ2: 機密情報をコミットしてpushしてしまった！
+
+```
+┌─────────────────────────────┐
+│ パスワードをpushしてしまった！│
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 1. 即座にパスワード変更！   │
+│    (最優先)                  │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 2. チームに緊急連絡         │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 3. 履歴から完全削除         │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git filter-branch or BFG
+    git push --force --all
+           │
+           ▼
+┌─────────────────────────────┐
+│ 4. 全員に git clone し直し  │
+│    を依頼                    │
+└─────────────────────────────┘
+```
+
+**実行コマンド**:
+
+```bash
+# 1. パスワード変更（AWSコンソール、DBなど）
+
+# 2. Slackなどでチームに連絡
+# 「緊急: 機密情報をコミットしてしまいました。対応中です」
+
+# 3. BFGで履歴から削除
+git clone --mirror https://github.com/user/repo.git
+cd repo.git
+java -jar bfg.jar --replace-text passwords.txt
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+git push --force
+
+# 4. 通常のクローンで確認
+cd ..
+git clone https://github.com/user/repo.git
+cd repo
+git log --all -- .env  # ファイルが履歴にないことを確認
+
+# 5. チームに連絡
+# 「対応完了。全員 git clone し直してください」
+```
+
+---
+
+### 🔥 シナリオ3: force push で他人の作業を消してしまった！
+
+```
+┌─────────────────────────────┐
+│ force push してしまった！   │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 1. 即座にチームに連絡       │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 2. reflog から復元          │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git reflog
+    git reset --hard HEAD@{1}
+    git push --force origin main
+           │
+           ▼
+┌─────────────────────────────┐
+│ 3. 全員に pull --rebase     │
+│    を依頼                    │
+└─────────────────────────────┘
+```
+
+**実行コマンド**:
+
+```bash
+# 1. 状況確認
+git reflog
+```
+
+**結果**:
+```
+a1b2c3d HEAD@{0}: push --force: forced-update  ← これで消した
+e4f5g6h HEAD@{1}: commit: 他人の作業  ← これを復元したい
+```
+
+```bash
+# 2. 復元
+git reset --hard e4f5g6h
+git push --force-with-lease origin main
+
+# 3. チーム# 3. チームに連絡
+# 「作業を復元しました。以下のコマンドで同期してください」
+# git fetch origin
+# git reset --hard origin/main
+```
+
+---
+
+## 📊 よく使う確認コマンド集
+
+### 状態確認
+
+```bash
+# 現在の状態
+git status
+
+# 詳細な状態
+git status -v
+
+# 短縮表示
+git status -s
+```
+
+**結果の見方**:
+```
+ M file1.py    # 変更あり（ステージングされていない）
+M  file2.py    # 変更あり（ステージング済み）
+MM file3.py    # 両方に変更あり
+A  file4.py    # 新規追加
+D  file5.py    # 削除
+?? file6.py    # 追跡されていない
+```
+
+---
+
+### 履歴確認
+
+```bash
+# 基本
+git log
+
+# 1行表示
+git log --oneline
+
+# グラフ表示
+git log --oneline --graph --all
+
+# 特定ファイルの履歴
+git log -- file.py
+
+# 誰がいつ変更したか
+git log --pretty=format:"%h - %an, %ar : %s"
+
+# 統計付き
+git log --stat
+
+# 特定期間
+git log --since="2 weeks ago"
+git log --until="2025-10-01"
+
+# 作者で絞り込み
+git log --author="Taro"
+```
+
+---
+
+### 差分確認
+
+```bash
+# ワーキングツリーの変更
+git diff
+
+# ステージングエリアの変更
+git diff --staged
+
+# 特定のコミット間
+git diff a1b2c3d e4f5g6h
+
+# ブランチ間
+git diff main feature/xxx
+
+# 統計のみ
+git diff --stat
+
+# ファイル名のみ
+git diff --name-only
+
+# 単語単位の差分
+git diff --word-diff
+```
+
+---
+
+### ブランチ確認
+
+```bash
+# ローカルブランチ
+git branch
+
+# リモートブランチ
+git branch -r
+
+# すべてのブランチ
+git branch -a
+
+# 最新のコミットも表示
+git branch -v
+
+# マージ済みブランチ
+git branch --merged
+
+# 未マージブランチ
+git branch --no-merged
+```
+
+---
+
+### リモート確認
+
+```bash
+# リモートリポジトリ一覧
+git remote -v
+
+# リモートの詳細
+git remote show origin
+
+# リモートブランチ確認
+git ls-remote origin
+```
+
+---
+
+## 🛡️ 予防策・ベストプラクティス
+
+### 1. エイリアスを設定して効率化
+
+```bash
+# ~/.gitconfig に追加
+git config --global alias.st status
+git config --global alias.co checkout
+git config --global alias.br branch
+git config --global alias.ci commit
+git config --global alias.unstage 'reset HEAD --'
+git config --global alias.last 'log -1 HEAD'
+git config --global alias.lg "log --oneline --graph --all --decorate"
+git config --global alias.undo 'reset --soft HEAD~1'
+```
+
+**使い方**:
+```bash
+git st       # git status の代わり
+git co main  # git checkout main の代わり
+git lg       # きれいなログ表示
+git undo     # 直前のコミット取り消し
+```
+
+---
+
+### 2. グローバル .gitignore を設定
+
+```bash
+# グローバル設定ファイルを作成
+touch ~/.gitignore_global
+
+# 設定
+git config --global core.excludesfile ~/.gitignore_global
+```
+
+**~/.gitignore_global**:
+```
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.env
+venv/
+env/
+
+# Node
+node_modules/
+npm-debug.log
+
+# Logs
+*.log
+```
+
+---
+
+### 3. コミット前の自動チェック（pre-commit hook）
+
+```bash
+# .git/hooks/pre-commit を作成
+touch .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+**pre-commit**:
+```bash
+#!/bin/bash
+
+echo "Running pre-commit checks..."
+
+# Pythonの文法チェック
+python -m py_compile $(git diff --cached --name-only --diff-filter=ACM | grep ".py$")
+if [ $? -ne 0 ]; then
+    echo "Python syntax errors found. Commit aborted."
+    exit 1
+fi
+
+# テスト実行
+python -m pytest tests/ -q
+if [ $? -ne 0 ]; then
+    echo "Tests failed. Commit aborted."
+    exit 1
+fi
+
+# 機密情報チェック
+if git diff --cached | grep -i "password\|secret\|api_key"; then
+    echo "Warning: Possible sensitive information detected!"
+    read -p "Continue? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+echo "All checks passed!"
+exit 0
+```
+
+---
+
+### 4. Branch Protection Rules を設定（GitHub）
+
+GitHubの Settings → Branches → Add rule で:
+
+- ✅ Require pull request reviews before merging
+- ✅ Require status checks to pass before merging
+- ✅ Require branches to be up to date before merging
+- ✅ Include administrators
+- ✅ Restrict who can push to matching branches
+
+---
+
+### 5. 定期的なブランチクリーンアップ
+
+```bash
+# マージ済みのローカルブランチを削除
+git branch --merged | grep -v "\*\|main\|develop" | xargs -n 1 git branch -d
+
+# リモートで削除されたブランチの参照を削除
+git fetch --prune
+
+# 不要なリモートブランチを削除（要注意）
+git push origin --delete branch-name
+```
+
+---
+
+### 6. チーム開発ル# 🚨 Git実務トラブル完全解決ガイド
+**ブランチ操作・履歴修正・マージ問題の実践的解決法**
+
+---
+
+## 📋 目次
+1. [ブランチ切り替え・すげ替え完全ガイド](#ブランチ切り替えすげ替え完全ガイド)
+2. [履歴削除・修正テクニック](#履歴削除修正テクニック)
+3. [マージ問題と解決法](#マージ問題と解決法)
+4. [実務でよくあるトラブル20選](#実務でよくあるトラブル20選)
+5. [緊急時の対応フローチャート](#緊急時の対応フローチャート)
+
+---
+
+## 🔄 ブランチ切り替え・すげ替え完全ガイド
+
+### 🎯 CASE 1: ブランチを間違えて作業してしまった!
+
+**状況**: mainブランチで作業してしまった...
+
+```bash
+# 現在の状況を確認
+git status
+```
+
+**結果**:
+```
+On branch main
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+        modified:   app.py
+        modified:   config.py
+```
+
+#### 解決法A: まだコミットしていない場合
+
+```bash
+# 変更を一時保存
+git stash save "間違えてmainで作業した内容"
+```
+
+**結果の見方**:
+```
+Saved working directory and index state On main: 間違えてmainで作業した内容
+```
+→ 変更が一時保存された！
+
+```bash
+# 正しいブランチを作成・移動
+git checkout -b feature/正しいブランチ名
+```
+
+**結果**:
+```
+Switched to a new branch 'feature/正しいブランチ名'
+```
+
+```bash
+# 一時保存した変更を戻す
+git stash pop
+```
+
+**結果の見方**:
+```
+On branch feature/正しいブランチ名
+Changes not staged for commit:
+        modified:   app.py
+        modified:   config.py
+
+Dropped refs/stash@{0} (a1b2c3d4e5f6...)
+```
+→ `Dropped` と表示されれば成功！変更が戻った
+
+```bash
+# 通常通りコミット
+git add .
+git commit -m "feat: 新機能を追加"
+```
+
+---
+
+#### 解決法B: すでにコミットしてしまった場合
+
+```bash
+# コミット履歴を確認
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD -> main) feat: 新機能を追加  ← これを移動したい
+e4f5g6h fix: バグ修正
+h7i8j9k Initial commit
+```
+
+```bash
+# 新しいブランチを作成（コミットを保持したまま）
+git branch feature/正しいブランチ名
+```
+
+```bash
+# mainブランチを1つ前に戻す
+git reset --hard HEAD~1
+```
+
+**結果の見方**:
+```
+HEAD is now at e4f5g6h fix: バグ修正
+```
+→ mainが1つ前のコミットに戻った
+
+```bash
+# 新ブランチに移動して確認
+git checkout feature/正しいブランチ名
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD -> feature/正しいブランチ名) feat: 新機能を追加  ← ここにある！
+e4f5g6h fix: バグ修正
+h7i8j9k Initial commit
+```
+→ コミットが正しいブランチに移動完了！
+
+---
+
+### 🎯 CASE 2: 作業中のブランチを切り替えたい
+
+**状況**: feature/Aで作業中だが、緊急でhotfix/Bに切り替える必要がある
+
+```bash
+# 現在の状況
+git status
+```
+
+**結果**:
+```
+On branch feature/A
+Changes not staged for commit:
+        modified:   file1.py
+        modified:   file2.py
+Untracked files:
+        new_file.py
+```
+
+#### ❌ このままcheckoutすると...
+
+```bash
+git checkout hotfix/B
+```
+
+**エラー**:
+```
+error: Your local changes to the following files would be overwritten by checkout:
+        file1.py
+Please commit your changes or stash them before you switch branches.
+Aborting
+```
+→ 変更が失われる可能性があるため、Gitが拒否！
+
+#### ✅ 正しい対処法
+
+**方法1: stash（一時保存）を使う** ★推奨
+
+```bash
+# 作業を一時保存
+git stash save "feature/Aの途中作業"
+```
+
+**結果**:
+```
+Saved working directory and index state On feature/A: feature/Aの途中作業
+```
+
+```bash
+# ブランチ切り替え
+git checkout hotfix/B
+```
+
+**結果**:
+```
+Switched to branch 'hotfix/B'
+```
+→ クリーンな状態でhotfix作業可能！
+
+```bash
+# hotfix完了後、元のブランチに戻る
+git checkout feature/A
+git stash list  # 保存した作業一覧を確認
+```
+
+**結果**:
+```
+stash@{0}: On feature/A: feature/Aの途中作業
+stash@{1}: On feature/C: 別の作業
+```
+
+```bash
+# 作業を復元
+git stash pop
+```
+
+**結果**:
+```
+On branch feature/A
+Changes not staged for commit:
+        modified:   file1.py
+        modified:   file2.py
+Dropped refs/stash@{0} (...)
+```
+→ 作業が復元された！
+
+**方法2: WIP（Work In Progress）コミット**
+
+```bash
+# 途中だがコミット
+git add .
+git commit -m "WIP: 作業途中（後で修正）"
+
+# ブランチ切り替え
+git checkout hotfix/B
+
+# 後で戻ってきたら...
+git checkout feature/A
+
+# 最後のコミットを取り消して編集再開
+git reset --soft HEAD~1
+```
+
+**結果**:
+```
+# 変更はステージングエリアに残る
+git status
+```
+```
+On branch feature/A
+Changes to be committed:
+        modified:   file1.py
+        modified:   file2.py
+```
+
+---
+
+### 🎯 CASE 3: ブランチの分岐元（ベース）を変更したい
+
+**状況**: mainから切ったつもりが、間違えてdevelopから切ってしまった
+
+```
+develop ──●──●──●──●
+           \
+            ●──● feature/my-branch (間違い！)
+
+main ───────●──────● (ここから切りたかった)
+```
+
+#### 解決法: rebase でブランチをすげ替える
+
+```bash
+# 現在のブランチ構造を確認
+git log --oneline --graph --all
+```
+
+**結果**:
+```
+* a1b2c3d (HEAD -> feature/my-branch) feat: 新機能2
+* e4f5g6h feat: 新機能1
+* h7i8j9k (develop) develop上のコミット
+| * k0l1m2n (main) main上のコミット
+|/
+* n3o4p5q Initial commit
+```
+
+```bash
+# mainブランチの最新を取得
+git fetch origin main
+
+# feature/my-branchをmain基準に付け替える
+git rebase --onto main develop feature/my-branch
+```
+
+**読み方**: ギット・リベース・オントゥ
+
+**意味**: 「developから分岐したfeature/my-branchを、mainから分岐したように付け替える」
+
+**結果の見方**:
+```
+First, rewinding head to replay your work on top of it...
+Applying: feat: 新機能1
+Applying: feat: 新機能2
+```
+→ `Applying` が表示されれば成功！
+
+```bash
+# 結果を確認
+git log --oneline --graph --all
+```
+
+**結果**:
+```
+* x1y2z3a (HEAD -> feature/my-branch) feat: 新機能2
+* b4c5d6e feat: 新機能1
+* k0l1m2n (main) main上のコミット ← ★ここから分岐に変わった！
+| * h7i8j9k (develop) develop上のコミット
+|/
+* n3o4p5q Initial commit
+```
+
+---
+
+### 🎯 CASE 4: ブランチ名を変更したい
+
+```bash
+# ローカルブランチ名を変更（現在のブランチ）
+git branch -m 新しいブランチ名
+```
+
+**読み方**: ギット・ブランチ・マイナスエム（move の略）
+
+**結果**:
+```
+# 確認
+git branch
+```
+```
+* 新しいブランチ名
+  develop
+  main
+```
+
+```bash
+# 他のブランチ名を変更する場合
+git branch -m 古いブランチ名 新しいブランチ名
+```
+
+**リモートも変更する場合**:
+
+```bash
+# 古いブランチを削除
+git push origin --delete 古いブランチ名
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+ - [deleted]         古いブランチ名
+```
+
+```bash
+# 新しいブランチをプッシュ
+git push origin 新しいブランチ名
+
+# 上流ブランチを設定
+git push --set-upstream origin 新しいブランチ名
+```
+
+**結果**:
+```
+Branch '新しいブランチ名' set up to track remote branch '新しいブランチ名' from 'origin'.
+```
+
+---
+
+### 🎯 CASE 5: 不要なブランチを削除したい
+
+```bash
+# ローカルブランチを削除
+git branch -d ブランチ名
+```
+
+**読み方**: ギット・ブランチ・マイナスディー（delete の略）
+
+**結果**:
+```
+Deleted branch ブランチ名 (was a1b2c3d).
+```
+
+**マージ済みでない場合のエラー**:
+```
+error: The branch 'ブランチ名' is not fully merged.
+If you are sure you want to delete it, run 'git branch -D ブランチ名'.
+```
+
+```bash
+# 強制削除（注意！）
+git branch -D ブランチ名
+```
+
+**結果**:
+```
+Deleted branch ブランチ名 (was a1b2c3d).
+```
+
+```bash
+# リモートブランチを削除
+git push origin --delete ブランチ名
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+ - [deleted]         ブランチ名
+```
+
+```bash
+# すでに削除されたリモートブランチの参照をクリーンアップ
+git fetch --prune
+```
+
+**読み方**: ギット・フェッチ・プルーン
+
+**結果**:
+```
+From https://github.com/user/repo
+ - [deleted]         (none)     -> origin/old-branch
+ - [deleted]         (none)     -> origin/another-old-branch
+```
+
+---
+
+## 🗑️ 履歴削除・修正テクニック
+
+### 🎯 CASE 6: 直前のコミットを修正したい
+
+#### パターンA: コミットメッセージだけ変更
+
+```bash
+git commit --amend -m "新しいコミットメッセージ"
+```
+
+**読み方**: ギット・コミット・アメンド
+
+**結果**:
+```
+[feature/xxx a1b2c3d] 新しいコミットメッセージ
+ Date: Thu Oct 9 14:00:00 2025 +0900
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+```
+
+#### パターンB: ファイルを追加してコミット修正
+
+```bash
+# 忘れたファイルを追加
+git add forgotten_file.py
+
+# 直前のコミットに含める
+git commit --amend --no-edit
+```
+
+**読み方**: ノー・エディット（エディタを開かない）
+
+**結果**:
+```
+[feature/xxx e4f5g6h] feat: 新機能を追加
+ Date: Thu Oct 9 14:00:00 2025 +0900
+ 3 files changed, 15 insertions(+), 2 deletions(-)
+```
+→ 3ファイルに増えた！
+
+⚠️ **注意**: すでにpushしたコミットをamendすると、履歴が変わるため force push が必要
+
+```bash
+git push --force-with-lease origin feature/xxx
+```
+
+**読み方**: フォース・ウィズ・リース（安全な強制プッシュ）
+
+---
+
+### 🎯 CASE 7: 過去のコミットを削除したい
+
+```bash
+# コミット履歴を確認
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD -> feature/xxx) feat: 機能C
+e4f5g6h feat: 機能B  ← これを削除したい
+h7i8j9k feat: 機能A
+k0l1m2n Initial commit
+```
+
+#### 方法1: rebase -i（インタラクティブリベース）★推奨
+
+```bash
+git rebase -i HEAD~3
+```
+
+**読み方**: ギット・リベース・インタラクティブ
+
+**意味**: 直近3つのコミットを編集モードで表示
+
+**エディタが開く**:
+```
+pick h7i8j9k feat: 機能A
+pick e4f5g6h feat: 機能B  ← ここを drop に変更
+pick a1b2c3d feat: 機能C
+
+# Commands:
+# p, pick = use commit
+# r, reword = use commit, but edit the commit message
+# e, edit = use commit, but stop for amending
+# s, squash = use commit, but meld into previous commit
+# f, fixup = like "squash", but discard this commit's log message
+# x, exec = run command (the rest of the line) using shell
+# d, drop = remove commit
+```
+
+**編集して保存**:
+```
+pick h7i8j9k feat: 機能A
+drop e4f5g6h feat: 機能B  ← pick を drop に変更
+pick a1b2c3d feat: 機能C
+```
+
+**結果**:
+```
+Successfully rebased and updated refs/heads/feature/xxx.
+```
+
+```bash
+# 確認
+git log --oneline
+```
+
+**結果**:
+```
+x1y2z3a (HEAD -> feature/xxx) feat: 機能C
+h7i8j9k feat: 機能A
+k0l1m2n Initial commit
+```
+→ 機能Bのコミットが消えた！
+
+---
+
+### 🎯 CASE 8: 複数のコミットを1つにまとめたい（squash）
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD) fix: typo修正
+e4f5g6h fix: スタイル修正
+h7i8j9k feat: ログイン機能実装
+k0l1m2n Initial commit
+```
+→ 上3つをまとめたい
+
+```bash
+git rebase -i HEAD~3
+```
+
+**エディタ**:
+```
+pick h7i8j9k feat: ログイン機能実装
+pick e4f5g6h fix: スタイル修正
+pick a1b2c3d fix: typo修正
+```
+
+**編集**:
+```
+pick h7i8j9k feat: ログイン機能実装
+squash e4f5g6h fix: スタイル修正
+squash a1b2c3d fix: typo修正
+```
+
+**保存すると次のエディタが開く**:
+```
+# This is a combination of 3 commits.
+# The first commit's message is:
+feat: ログイン機能実装
+
+# This is the 2nd commit message:
+fix: スタイル修正
+
+# This is the 3rd commit message:
+fix: typo修正
+
+# 以下のように1つのメッセージに編集
+feat: ログイン機能を実装
+
+- メイン機能の実装
+- スタイルの調整
+- typo修正を含む
+```
+
+**結果**:
+```
+[detached HEAD x1y2z3a] feat: ログイン機能を実装
+ Date: Thu Oct 9 14:00:00 2025 +0900
+ 5 files changed, 100 insertions(+), 5 deletions(-)
+Successfully rebased and updated refs/heads/feature/xxx.
+```
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+x1y2z3a (HEAD) feat: ログイン機能を実装
+k0l1m2n Initial commit
+```
+→ 3つが1つにまとまった！
+
+---
+
+### 🎯 CASE 9: 機密情報をコミットしてしまった！
+
+**状況**: `.env` ファイルにパスワードが...
+
+```bash
+# 直前のコミットから削除
+git rm --cached .env
+git commit --amend --no-edit
+```
+
+**過去のコミットから完全削除（重要！）**:
+
+```bash
+# BFG Repo-Cleaner を使用（推奨）
+# まず https://rtyley.github.io/bfg-repo-cleaner/ からダウンロード
+
+# .envファイルを履歴から完全削除
+java -jar bfg.jar --delete-files .env
+
+# または filter-branch（Git標準だが遅い）
+git filter-branch --force --index-filter \
+  "git rm --cached --ignore-unmatch .env" \
+  --prune-empty --tag-name-filter cat -- --all
+```
+
+**結果**:
+```
+Rewrite a1b2c3d (5/5) (10 seconds passed, remaining 0 predicted)
+Ref 'refs/heads/main' was rewritten
+```
+
+```bash
+# 強制プッシュ（チーム全員に通知必須！）
+git push --force --all
+git push --force --tags
+```
+
+⚠️ **重要**: 
+1. チームメンバー全員に `git clone` し直してもらう
+2. GitHubの secrets も変更する
+3. 漏洩した認証情報は即座にリセット
+
+---
+
+### 🎯 CASE 10: 間違えてpushしたコミットを取り消したい
+
+#### 公開前（自分だけのブランチ）
+
+```bash
+# 1つ前に戻す
+git reset --hard HEAD~1
+
+# 強制プッシュ
+git push --force origin feature/xxx
+```
+
+#### 公開後（他の人も使っている）
+
+```bash
+# revertで打ち消しコミットを作る（★推奨）
+git revert HEAD
+```
+
+**エディタが開く**:
+```
+Revert "feat: 問題のある機能"
+
+This reverts commit a1b2c3d.
+```
+
+**結果**:
+```
+[feature/xxx x1y2z3a] Revert "feat: 問題のある機能"
+ 1 file changed, 5 insertions(+), 10 deletions(-)
+```
+
+```bash
+git push origin feature/xxx
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+   a1b2c3d..x1y2z3a  feature/xxx -> feature/xxx
+```
+
+---
+
+## 🔀 マージ問題と解決法
+
+### 🎯 CASE 11: マージコンフリクトが発生（基本）
+
+```bash
+git merge feature/other-branch
+```
+
+**エラー**:
+```
+Auto-merging app.py
+CONFLICT (content): Merge conflict in app.py
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+```bash
+git status
+```
+
+**結果**:
+```
+On branch main
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+        both modified:   app.py  ← ★コンフリクト発生
+```
+
+#### 解決ステップ
+
+**1. ファイルを開く**:
+```python
+def calculate(a, b):
+<<<<<<< HEAD
+    # 自分の変更
+    return a + b + 10
+=======
+    # 相手の変更
+    return a * b
+>>>>>>> feature/other-branch
+```
+
+**2. 修正**:
+```python
+def calculate(a, b):
+    # 両方の意図を組み込む
+    result = a * b
+    return result + 10
+```
+
+**3. マーカー削除を確認**:
+```bash
+# マーカーが残っていないか確認
+grep -n "<<<<<<< HEAD" app.py
+grep -n "=======" app.py
+grep -n ">>>>>>>" app.py
+```
+
+**結果**:
+```
+# 何も表示されなければOK（マーカーが残っていない）
+```
+
+**4. テスト実行**:
+```bash
+python -m pytest tests/
+```
+
+**5. コミット**:
+```bash
+git add app.py
+git commit -m "merge: feature/other-branch をマージ（コンフリクト解決）"
+```
+
+---
+
+### 🎯 CASE 12: マージコンフリクトが多すぎる！
+
+```bash
+git merge feature/long-running-branch
+```
+
+**結果**:
+```
+Auto-merging file1.py
+Auto-merging file2.py
+Auto-merging file3.py
+CONFLICT (content): Merge conflict in file1.py
+CONFLICT (content): Merge conflict in file2.py
+CONFLICT (content): Merge conflict in file3.py
+CONFLICT (content): Merge conflict in file4.py
+CONFLICT (content): Merge conflict in file5.py
+... (20個のコンフリクト)
+```
+
+#### 解決法A: 一旦中止して戦略を変える
+
+```bash
+# マージ中止
+git merge --abort
+```
+
+**結果**:
+```
+# 元の状態に戻る
+```
+
+```bash
+# 相手のブランチを自分のブランチに取り込む（逆マージ）
+git checkout feature/long-running-branch
+git pull origin feature/long-running-branch
+git merge main
+# コンフリクト解決
+git push origin feature/long-running-branch
+
+# その後、mainに戻ってマージ
+git checkout main
+git merge feature/long-running-branch  # 今度はスムーズ
+```
+
+#### 解決法B: mergetool を使う
+
+```bash
+# GUIツールで解決（VS Code, Meld, kdiff3など）
+git mergetool
+```
+
+**結果**:
+```
+Merging:
+file1.py
+file2.py
+
+Normal merge conflict for 'file1.py':
+  {local}: modified file
+  {remote}: modified file
+```
+→ 設定されたツールが起動してGUIで解決可能
+
+---
+
+### 🎯 CASE 13: マージを取り消したい
+
+#### パターンA: マージ直後（まだpushしていない）
+
+```bash
+git reset --hard HEAD~1
+```
+
+**結果**:
+```
+HEAD is now at a1b2c3d 前のコミット
+```
+
+#### パターンB: マージ後にpushしてしまった
+
+```bash
+# マージコミットのハッシュを確認
+git log --oneline
+```
+
+**結果**:
+```
+x1y2z3a (HEAD -> main) Merge branch 'feature/xxx'  ← これを取り消したい
+e4f5g6h feat: 機能B
+a1b2c3d feat: 機能A
+```
+
+```bash
+# revert でマージを打ち消す
+git revert -m 1 HEAD
+```
+
+**読み方**: リバート・マイナスエム・ワン
+
+**意味**: マージコミットを打ち消す（-m 1 は main側を保持）
+
+**エディタが開く**:
+```
+Revert "Merge branch 'feature/xxx'"
+
+This reverts commit x1y2z3a, reversing
+changes made to e4f5g6h.
+```
+
+**結果**:
+```
+[main b4c5d6e] Revert "Merge branch 'feature/xxx'"
+ 3 files changed, 15 insertions(+), 50 deletions(-)
+```
+
+```bash
+git push origin main
+```
+
+---
+
+### 🎯 CASE 14: Fast-forward マージを防ぎたい
+
+**状況**: マージの履歴を明示的に残したい
+
+```bash
+# 通常のマージ（Fast-forwardになる可能性）
+git merge feature/xxx
+```
+
+**結果（Fast-forward）**:
+```
+Updating a1b2c3d..e4f5g6h
+Fast-forward
+ file.py | 10 +++++++++++
+ 1 file changed, 10 insertions(+)
+```
+→ マージコミットが作られない
+
+#### 解決法: --no-ff オプション
+
+```bash
+git merge --no-ff feature/xxx
+```
+
+**読み方**: ノー・ファスト・フォワード
+
+**エディタが開く**:
+```
+Merge branch 'feature/xxx'
+
+# メッセージを編集可能
+```
+
+**結果**:
+```
+Merge made by the 'recursive' strategy.
+ file.py | 10 +++++++++++
+ 1 file changed, 10 insertions(+)
+```
+
+```bash
+git log --oneline --graph
+```
+
+**結果**:
+```
+*   h7i8j9k (HEAD -> main) Merge branch 'feature/xxx'
+|\
+| * e4f5g6h (feature/xxx) feat: 新機能
+|/
+* a1b2c3d Previous commit
+```
+→ マージの履歴が明確に残る！
+
+---
+
+## 🚨 実務でよくあるトラブル20選
+
+### トラブル1: push が拒否される
+
+```bash
+git push origin main
+```
+
+**エラー**:
+```
+To https://github.com/user/repo.git
+ ! [rejected]        main -> main (fetch first)
+error: failed to push some refs to 'https://github.com/user/repo.git'
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally.
+```
+
+**原因**: リモートに新しいコミットがある
+
+**解決法**:
+```bash
+git pull origin main
+# コンフリクトがあれば解決
+git push origin main
+```
+
+---
+
+### トラブル2: pull でコンフリクト
+
+```bash
+git pull origin main
+```
+
+**エラー**:
+```
+Auto-merging file.py
+CONFLICT (content): Merge conflict in file.py
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+**解決法**:
+```bash
+# コンフリクトを解決
+# ファイルを編集してマーカー削除
+git add file.py
+git commit -m "merge: コンフリクト解決"
+git push origin main
+```
+
+---
+
+### トラブル3: detached HEAD 状態になった
+
+```bash
+git checkout a1b2c3d  # 特定のコミットをチェックアウト
+```
+
+**警告**:
+```
+Note: switching to 'a1b2c3d'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+```
+
+**状態確認**:
+```bash
+git status
+```
+
+**結果**:
+```
+HEAD detached at a1b2c3d
+nothing to commit, working tree clean
+```
+
+**解決法**:
+```bash
+# ブランチに戻る
+git checkout main
+```
+
+**もし変更をコミットしてしまった場合**:
+```bash
+# 新しいブランチとして保存
+git branch temp-branch
+git checkout temp-branch
+```
+
+---
+
+### トラブル4: .gitignore が効かない
+
+```bash
+# .gitignore に *.pyc を追加したのに無視されない
+git status
+```
+
+**結果**:
+```
+Changes not staged for commit:
+        modified:   __pycache__/app.cpython-39.pyc
+```
+
+**原因**: すでに追跡されているファイルは .gitignore が効かない
+
+**解決法**:
+```bash
+# キャッシュから削除
+git rm -r --cached __pycache__/
+git rm --cached *.pyc
+
+git add .gitignore
+git commit -m "chore: .gitignore を適用"
+```
+
+**結果**:
+```
+rm '__pycache__/app.cpython-39.pyc'
+[main a1b2c3d] chore: .gitignore を適用
+ 2 files changed, 1 insertion(+), 0 deletions(-)
+ delete mode 100644 __pycache__/app.cpython-39.pyc
+```
+
+---
+
+### トラブル5: 巨大ファイルをコミットしてpushできない
+
+```bash
+git push origin main
+```
+
+**エラー**:
+```
+remote: error: GH001: Large files detected. You may want to try Git Large File Storage.
+remote: error: File large_file.zip is 150.00 MB; this exceeds GitHub's file size limit of 100.00 MB
+To https://github.com/user/repo.git
+ ! [remote rejected] main -> main (pre-receive hook declined)
+error: failed to push some refs to 'https://github.com/user/repo.git'
+```
+
+**解決法A: 最新のコミットから削除**
+
+```bash
+# ファイルを削除してコミット修正
+git rm --cached large_file.zip
+git commit --amend --no-edit
+git push origin main
+```
+
+**解決法B: 過去のコミットから削除**
+
+```bash
+# BFG Repo-Cleaner を使用
+java -jar bfg.jar --strip-blobs-bigger-than 100M
+
+# または
+git filter-branch --tree-filter 'rm -f large_file.zip' HEAD
+
+# 強制プッシュ
+git push --force origin main
+```
+
+**解決法C: Git LFS を使う**
+
+```bash
+# Git LFS をインストール
+git lfs install
+
+# 大きなファイルをLFS管理下に
+git lfs track "*.zip"
+git add .gitattributes
+git add large_file.zip
+git commit -m "chore: Git LFSを使用"
+git push origin main
+```
+
+---
+
+### トラブル6: コミットメッセージを間違えた（複数コミット前）
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD) feat: 最新のコミット
+e4f5g6h fix: バグ修正
+h7i8j9k feat: ログニ機能を追加  ← typo!「ログイン」のはず
+k0l1m2n Initial commit
+```
+
+**解決法**:
+
+```bash
+git rebase -i HEAD~3
+```
+
+**エディタ**:
+```
+pick h7i8j9k feat: ログニ機能を追加
+pick e4f5g6h fix: バグ修正
+pick a1b2c3d feat: 最新のコミット
+```
+
+**編集**:
+```
+reword h7i8j9k feat: ログニ機能を追加  ← pick を reword に変更
+pick e4f5g6h fix: バグ修正
+pick a1b2c3d feat: 最新のコミット
+```
+
+**保存すると次のエディタが開く**:
+```
+feat: ログニ機能を追加
+
+# ここで修正
+feat: ログイン機能を追加
+```
+
+**結果**:
+```
+[detached HEAD x1y2z3a] feat: ログイン機能を追加
+Successfully rebased and updated refs/heads/main.
+```
+
+---
+
+### トラブル7: 誤って force push してしまった！
+
+```bash
+git push --force origin main
+```
+
+**チームメンバーから連絡**: 「私の作業が消えました...」
+
+**原因**: force push で他人の作業を上書き
+
+**解決法**:
+
+```bash
+# GitHub上のReflogから復元
+# GitHub → Settings → Branches → Branch protection rules を確認
+
+# ローカルのreflogから探す
+git reflog
+```
+
+**結果**:
+```
+a1b2c3d HEAD@{0}: push --force: forced-update
+e4f5g6h HEAD@{1}: commit: 消えたコミット  ← これを復元したい
+h7i8j9k HEAD@{2}: commit: 前のコミット
+```
+
+```bash
+# 消えたコミットに戻す
+git reset --hard e4f5g6h
+git push --force origin main
+
+# チームメンバーに通知
+# 「git pull --rebase で同期してください」
+```
+
+**予防策**: `--force-with-lease` を使う
+
+```bash
+# 安全な強制プッシュ
+git push --force-with-lease origin main
+```
+
+**結果（他人の変更がある場合）**:
+```
+ ! [rejected]        main -> main (stale info)
+error: failed to push some refs to 'https://github.com/user/repo.git'
+```
+→ 他人の変更を上書きする前に止まる！
+
+---
+
+### トラブル8: stash した内容が見つからない
+
+```bash
+git stash list
+```
+
+**結果**:
+```
+stash@{0}: WIP on feature/A: a1b2c3d commit message
+stash@{1}: WIP on feature/B: e4f5g6h another commit
+stash@{2}: WIP on feature/C: h7i8j9k old work
+```
+
+**どれだか分からない！**
+
+**解決法**:
+
+```bash
+# 各stashの内容を確認
+git stash show -p stash@{0}
+```
+
+**結果**:
+```diff
+diff --git a/file.py b/file.py
+index a1b2c3d..e4f5g6h 100644
+--- a/file.py
++++ b/file.py
+@@ -1,3 +1,5 @@
++def new_function():
++    pass
+ def old_function():
+     pass
+```
+
+```bash
+# 特定のstashを復元
+git stash apply stash@{1}
+
+# 復元後、不要なstashを削除
+git stash drop stash@{1}
+```
+
+**すべてのstashを確認**:
+
+```bash
+# わかりやすい名前でstashする習慣をつける
+git stash save "feature/A: ログイン処理の途中"
+```
+
+---
+
+### トラブル9: リベース中にコンフリクトが発生
+
+```bash
+git rebase main
+```
+
+**エラー**:
+```
+Auto-merging file.py
+CONFLICT (content): Merge conflict in file.py
+error: could not apply e4f5g6h... feat: 新機能
+hint: Resolve all conflicts manually, mark them as resolved with
+hint: "git add/rm <conflicted_files>", then run "git rebase --continue".
+hint: You can instead skip this commit: run "git rebase --skip".
+hint: To abort and get back to the state before "git rebase", run "git rebase --abort".
+Could not apply e4f5g6h... feat: 新機能
+```
+
+**状態確認**:
+
+```bash
+git status
+```
+
+**結果**:
+```
+interactive rebase in progress; onto a1b2c3d
+Last command done (1 command done):
+   pick e4f5g6h feat: 新機能
+Next commands to do (2 remaining commands):
+   pick h7i8j9k feat: 別の機能
+   pick k0l1m2n fix: バグ修正
+  (use "git rebase --edit-todo" to view and edit)
+You are currently rebasing branch 'feature/xxx' on 'a1b2c3d'.
+  (fix conflicts and then run "git rebase --continue")
+  (use "git rebase --skip" to skip this patch)
+  (use "git rebase --abort" to check out the original branch)
+
+Unmerged paths:
+  (use "git restore --staged <file>..." to unstage)
+  (use "git add <file>..." to mark resolution)
+        both modified:   file.py
+```
+
+**解決法**:
+
+```bash
+# 1. コンフリクトを解決
+# ファイルを編集してマーカー削除
+
+# 2. 解決したファイルを追加
+git add file.py
+
+# 3. リベースを続行
+git rebase --continue
+```
+
+**結果**:
+```
+[detached HEAD x1y2z3a] feat: 新機能
+ 1 file changed, 10 insertions(+)
+Successfully rebased and updated refs/heads/feature/xxx.
+```
+
+**このコミットをスキップする場合**:
+
+```bash
+git rebase --skip
+```
+
+**リベースを中止する場合**:
+
+```bash
+git rebase --abort
+```
+
+---
+
+### トラブル10: cherry-pick でコンフリクト
+
+```bash
+# 特定のコミットだけを取り込む
+git cherry-pick a1b2c3d
+```
+
+**エラー**:
+```
+Auto-merging file.py
+CONFLICT (content): Merge conflict in file.py
+error: could not apply a1b2c3d... feat: 特定の機能
+hint: after resolving the conflicts, mark the corrected paths
+hint: with 'git add <paths>' or 'git rm <paths>'
+hint: and commit the result with 'git commit'
+```
+
+**解決法**:
+
+```bash
+# コンフリクト解決
+# ファイルを編集
+
+git add file.py
+git cherry-pick --continue
+```
+
+**中止する場合**:
+
+```bash
+git cherry-pick --abort
+```
+
+---
+
+### トラブル11: submodule の更新ができない
+
+```bash
+git submodule update
+```
+
+**エラー**:
+```
+fatal: Needed a single revision
+Unable to find current revision in submodule path 'lib/external'
+```
+
+**解決法**:
+
+```bash
+# サブモジュールを初期化
+git submodule init
+git submodule update --init --recursive
+
+# 最新に更新
+git submodule update --remote
+```
+
+**結果**:
+```
+Submodule path 'lib/external': checked out 'a1b2c3d...'
+```
+
+---
+
+### トラブル12: upstream が設定されていない
+
+```bash
+git pull
+```
+
+**エラー**:
+```
+There is no tracking information for the current branch.
+Please specify which branch you want to merge with.
+```
+
+**解決法**:
+
+```bash
+# upstream ブランチを設定
+git branch --set-upstream-to=origin/main main
+```
+
+**結果**:
+```
+Branch 'main' set up to track remote branch 'main' from 'origin'.
+```
+
+**または**:
+
+```bash
+git push -u origin main
+```
+
+**結果**:
+```
+Branch 'main' set up to track remote branch 'main' from 'origin'.
+```
+
+---
+
+### トラブル13: ファイル名の大文字小文字変更が認識されない
+
+```bash
+# File.py → file.py に変更したのに...
+git status
+```
+
+**結果**:
+```
+nothing to commit, working tree clean
+```
+
+**原因**: Windowsは大文字小文字を区別しない
+
+**解決法**:
+
+```bash
+# Git上で明示的に変更
+git mv File.py file.py
+git commit -m "refactor: ファイル名を小文字に変更"
+```
+
+**結果**:
+```
+[main a1b2c3d] refactor: ファイル名を小文字に変更
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ rename File.py => file.py (100%)
+```
+
+---
+
+### トラブル14: リモートリポジトリのURLが間違っている
+
+```bash
+git push origin main
+```
+
+**エラー**:
+```
+fatal: repository 'https://github.com/wrong-user/repo.git/' not found
+```
+
+**確認**:
+
+```bash
+git remote -v
+```
+
+**結果**:
+```
+origin  https://github.com/wrong-user/repo.git (fetch)
+origin  https://github.com/wrong-user/repo.git (push)
+```
+
+**解決法**:
+
+```bash
+# URLを変更
+git remote set-url origin https://github.com/correct-user/repo.git
+
+# 確認
+git remote -v
+```
+
+**結果**:
+```
+origin  https://github.com/correct-user/repo.git (fetch)
+origin  https://github.com/correct-user/repo.git (push)
+```
+
+---
+
+### トラブル15: 複数のリモートリポジトリを管理したい
+
+```bash
+# 現在のリモート確認
+git remote -v
+```
+
+**結果**:
+```
+origin  https://github.com/user/repo.git (fetch)
+origin  https://github.com/user/repo.git (push)
+```
+
+**解決法**:
+
+```bash
+# 新しいリモートを追加
+git remote add upstream https://github.com/original-author/repo.git
+
+# 確認
+git remote -v
+```
+
+**結果**:
+```
+origin    https://github.com/user/repo.git (fetch)
+origin    https://github.com/user/repo.git (push)
+upstream  https://github.com/original-author/repo.git (fetch)
+upstream  https://github.com/original-author/repo.git (push)
+```
+
+**使い方**:
+
+```bash
+# upstreamから最新を取得
+git fetch upstream
+
+# upstreamのmainを自分のmainにマージ
+git checkout main
+git merge upstream/main
+
+# 自分のリポジトリにプッシュ
+git push origin main
+```
+
+---
+
+### トラブル16: 誤ってバイナリファイルの差分を見ようとした
+
+```bash
+git diff image.png
+```
+
+**結果**:
+```
+diff --git a/image.png b/image.png
+index a1b2c3d..e4f5g6h 100644
+Binary files a/image.png and b/image.png differ
+```
+→ 内容は表示されない（バイナリなので）
+
+**画像の差分を見たい場合**:
+
+```bash
+# 外部ツールを設定
+git config --global diff.image.textconv "identify -verbose"
+
+# .gitattributes に追加
+echo "*.png diff=image" >> .gitattributes
+```
+
+---
+
+### トラブル17: 作業中にブランチを削除してしまった
+
+```bash
+git branch -D feature/important-work
+```
+
+**結果**:
+```
+Deleted branch feature/important-work (was a1b2c3d).
+```
+
+**あ、間違えた！**
+
+**解決法**:
+
+```bash
+# reflog から探す
+git reflog
+```
+
+**結果**:
+```
+e4f5g6h HEAD@{0}: checkout: moving from feature/important-work to main
+a1b2c3d HEAD@{1}: commit: 重要な作業  ← これ！
+h7i8j9k HEAD@{2}: commit: 前の作業
+```
+
+```bash
+# ブランチを復元
+git branch feature/important-work a1b2c3d
+```
+
+**結果**:
+```
+# ブランチが復活！
+git branch
+```
+```
+  main
+* feature/important-work
+```
+
+---
+
+### トラブル18: tag を間違えて作成した
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+**あ、バージョン番号間違えた！**
+
+**解決法**:
+
+```bash
+# ローカルのタグを削除
+git tag -d v1.0.0
+```
+
+**結果**:
+```
+Deleted tag 'v1.0.0' (was a1b2c3d)
+```
+
+```bash
+# リモートのタグを削除
+git push origin :refs/tags/v1.0.0
+# または
+git push origin --delete v1.0.0
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+ - [deleted]         v1.0.0
+```
+
+```bash
+# 正しいタグを作成
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+---
+
+### トラブル19: merge と rebase を間違えた
+
+```bash
+# rebase したかったのに merge してしまった
+git merge feature/xxx
+```
+
+**結果**:
+```
+Merge made by the 'recursive' strategy.
+```
+
+**取り消したい！**
+
+**解決法**:
+
+```bash
+# マージを取り消す
+git reset --hard ORIG_HEAD
+```
+
+**結果**:
+```
+HEAD is now at a1b2c3d マージ前の状態
+```
+
+```bash
+# 改めて rebase
+git rebase feature/xxx
+```
+
+---
+
+### トラブル20: commit の author が間違っている
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD) feat: 新機能  ← 作者が間違っている
+```
+
+**解決法A: 直前のコミットの場合**
+
+```bash
+git commit --amend --author="Correct Name <correct@email.com>" --no-edit
+```
+
+**解決法B: 過去のコミットの場合**
+
+```bash
+git rebase -i HEAD~3
+```
+
+**エディタ**:
+```
+pick h7i8j9k feat: 機能A
+edit a1b2c3d feat: 新機能  ← pick を edit に変更
+pick e4f5g6h feat: 機能B
+```
+
+**保存後**:
+
+```bash
+git commit --amend --author="Correct Name <correct@email.com>" --no-edit
+git rebase --continue
+```
+
+**解決法C: すべてのコミットを変更**
+
+```bash
+git filter-branch --env-filter '
+if [ "$GIT_AUTHOR_EMAIL" = "wrong@email.com" ]; then
+    export GIT_AUTHOR_NAME="Correct Name"
+    export GIT_AUTHOR_EMAIL="correct@email.com"
+fi
+' -- --all
+```
+
+---
+
+## 🚑 緊急時の対応フローチャート
+
+### 🔥 シナリオ1: 本番環境に問題のあるコードをデプロイしてしまった！
+
+```
+┌─────────────────────────────┐
+│  本番でエラー発生！         │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 1. 緊急: 前のバージョンに    │
+│    ロールバック              │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git revert HEAD
+    git push origin main
+           │
+           ▼
+┌─────────────────────────────┐
+│ 2. 問題のあるコミットを     │
+│    特定                      │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git log --oneline
+    git show <commit-hash>
+           │
+           ▼
+┌─────────────────────────────┐
+│ 3. 修正ブランチを作成       │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git checkout -b hotfix/fix-production-bug
+           │
+           ▼
+┌─────────────────────────────┐
+│ 4. 修正・テスト・デプロイ   │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git commit -m "hotfix: 本番バグ修正"
+    git push origin hotfix/fix-production-bug
+    # PR作成 → レビュー → マージ
+```
+
+**実行コマンド**:
+
+```bash
+# 1. 緊急ロールバック
+git revert HEAD
+git push origin main
+
+# 2. 問題特定
+git log --oneline -10
+git show a1b2c3d
+
+# 3. hotfixブランチ作成
+git checkout main
+git pull origin main
+git checkout -b hotfix/critical-bug-fix
+
+# 4. 修正
+# コードを修正
+git add .
+git commit -m "hotfix: 決済処理のクリティカルバグを修正"
+git push origin hotfix/critical-bug-fix
+
+# 5. GitHubでPR作成（緊急レビュー）
+# 6. マージ後、即座にデプロイ
+```
+
+---
+
+### 🔥 シナリオ2: 機密情報をコミットしてpushしてしまった！
+
+```
+┌─────────────────────────────┐
+│ パスワードをpushしてしまった！│
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 1. 即座にパスワード変更！   │
+│    (最優先)                  │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 2. チームに緊急連絡         │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 3. 履歴から完全削除         │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git filter-branch or BFG
+    git push --force --all
+           │
+           ▼
+┌─────────────────────────────┐
+│ 4. 全員に git clone し直し  │
+│    を依頼                    │
+└─────────────────────────────┘
+```
+
+**実行コマンド**:
+
+```bash
+# 1. パスワード変更（AWSコンソール、DBなど）
+
+# 2. Slackなどでチームに連絡
+# 「緊急: 機密情報をコミットしてしまいました。対応中です」
+
+# 3. BFGで履歴から削除
+git clone --mirror https://github.com/user/repo.git
+cd repo.git
+java -jar bfg.jar --replace-text passwords.txt
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+git push --force
+
+# 4. 通常のクローンで確認
+cd ..
+git clone https://github.com/user/repo.git
+cd repo
+git log --all -- .env  # ファイルが履歴にないことを確認
+
+# 5. チームに連絡
+# 「対応完了。全員 git clone し直してください」
+```
+
+---
+
+### 🔥 シナリオ3: force push で他人の作業を消してしまった！
+
+```
+┌─────────────────────────────┐
+│ force push してしまった！   │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 1. 即座にチームに連絡       │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 2. reflog から復元          │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git reflog
+    git reset --hard HEAD@{1}
+    git push --force origin main
+           │
+           ▼
+┌─────────────────────────────┐
+│ 3. 全員に pull --rebase     │
+│    を依頼                    │
+└─────────────────────────────┘
+```
+
+**実行コマンド**:
+
+```bash
+# 1. 状況確認
+git reflog
+```
+
+**結果**:
+```
+a1b2c3d HEAD@{0}: push --force: forced-update  ← これで消した
+e4f5g6h HEAD@{1}: commit: 他人の作業  ← これを復元したい
+```
+
+```bash
+# 2. 復元
+git reset --hard e4f5g6h
+git push --force-with-lease origin main
+
+# 3. チーム
+
+# 3. チームに連絡
+# 「作業を復元しました。以下のコマンドで同期してください」
+# git fetch origin
+# git reset --hard origin/main
+```
+
+---
+
+## 📊 よく使う確認コマンド集
+
+### 状態確認
+
+```bash
+# 現在の状態
+git status
+
+# 詳細な状態
+git status -v
+
+# 短縮表示
+git status -s
+```
+
+**結果の見方**:
+```
+ M file1.py    # 変更あり（ステージングされていない）
+M  file2.py    # 変更あり（ステージング済み）
+MM file3.py    # 両方に変更あり
+A  file4.py    # 新規追加
+D  file5.py    # 削除
+?? file6.py    # 追跡されていない
+```
+
+---
+
+### 履歴確認
+
+```bash
+# 基本
+git log
+
+# 1行表示
+git log --oneline
+
+# グラフ表示
+git log --oneline --graph --all
+
+# 特定ファイルの履歴
+git log -- file.py
+
+# 誰がいつ変更したか
+git log --pretty=format:"%h - %an, %ar : %s"
+
+# 統計付き
+git log --stat
+
+# 特定期間
+git log --since="2 weeks ago"
+git log --until="2025-10-01"
+
+# 作者で絞り込み
+git log --author="Taro"
+```
+
+---
+
+### 差分確認
+
+```bash
+# ワーキングツリーの変更
+git diff
+
+# ステージングエリアの変更
+git diff --staged
+
+# 特定のコミット間
+git diff a1b2c3d e4f5g6h
+
+# ブランチ間
+git diff main feature/xxx
+
+# 統計のみ
+git diff --stat
+
+# ファイル名のみ
+git diff --name-only
+
+# 単語単位の差分
+git diff --word-diff
+```
+
+---
+
+### ブランチ確認
+
+```bash
+# ローカルブランチ
+git branch
+
+# リモートブランチ
+git branch -r
+
+# すべてのブランチ
+git branch -a
+
+# 最新のコミットも表示
+git branch -v
+
+# マージ済みブランチ
+git branch --merged
+
+# 未マージブランチ
+git branch --no-merged
+```
+
+---
+
+### リモート確認
+
+```bash
+# リモートリポジトリ一覧
+git remote -v
+
+# リモートの詳細
+git remote show origin
+
+# リモートブランチ確認
+git ls-remote origin
+```
+
+---
+
+## 🛡️ 予防策・ベストプラクティス
+
+### 1. エイリアスを設定して効率化
+
+```bash
+# ~/.gitconfig に追加
+git config --global alias.st status
+git config --global alias.co checkout
+git config --global alias.br branch
+git config --global alias.ci commit
+git config --global alias.unstage 'reset HEAD --'
+git config --global alias.last 'log -1 HEAD'
+git config --global alias.lg "log --oneline --graph --all --decorate"
+git config --global alias.undo 'reset --soft HEAD~1'
+```
+
+**使い方**:
+```bash
+git st       # git status の代わり
+git co main  # git checkout main の代わり
+git lg       # きれいなログ表示
+git undo     # 直前のコミット取り消し
+```
+
+---
+
+### 2. グローバル .gitignore を設定
+
+```bash
+# グローバル設定ファイルを作成
+touch ~/.gitignore_global
+
+# 設定
+git config --global core.excludesfile ~/.gitignore_global
+```
+
+**~/.gitignore_global**:
+```
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.env
+venv/
+env/
+
+# Node
+node_modules/
+npm-debug.log
+
+# Logs
+*.log
+```
+
+---
+
+### 3. コミット前の自動チェック（pre-commit hook）
+
+```bash
+# .git/hooks/pre-commit を作成
+touch .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+**pre-commit**:
+```bash
+#!/bin/bash
+
+echo "Running pre-commit checks..."
+
+# Pythonの文法チェック
+python -m py_compile $(git diff --cached --name-only --diff-filter=ACM | grep ".py$")
+if [ $? -ne 0 ]; then
+    echo "Python syntax errors found. Commit aborted."
+    exit 1
+fi
+
+# テスト実行
+python -m pytest tests/ -q
+if [ $? -ne 0 ]; then
+    echo "Tests failed. Commit aborted."
+    exit 1
+fi
+
+# 機密情報チェック
+if git diff --cached | grep -i "password\|secret\|api_key"; then
+    echo "Warning: Possible sensitive information detected!"
+    read -p "Continue? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+echo "All checks passed!"
+exit 0
+```
+
+---
+
+### 4. Branch Protection Rules を設定（GitHub）
+
+GitHubの Settings → Branches → Add rule で:
+
+- ✅ Require pull request reviews before merging
+- ✅ Require status checks to pass before merging
+- ✅ Require branches to be up to date before merging
+- ✅ Include administrators
+- ✅ Restrict who can push to matching branches
+
+---
+
+### 5. 定期的なブランチクリーンアップ
+
+```bash
+# マージ済みのローカルブランチを削除
+git branch --merged | grep -v "\*\|main\|develop" | xargs -n 1 git branch -d
+
+# リモートで削除されたブランチの参照を削除
+git fetch --prune
+
+# 不要なリモートブランチを削除（要注意）
+git push origin --delete branch-name
+```
+
+---
+
+### 6. チーム開発ル# 🚨 Git実務トラブル完全解決ガイド
+**ブランチ操作・履歴修正・マージ問題の実践的解決法**
+
+---
+
+## 📋 目次
+1. [ブランチ切り替え・すげ替え完全ガイド](#ブランチ切り替えすげ替え完全ガイド)
+2. [履歴削除・修正テクニック](#履歴削除修正テクニック)
+3. [マージ問題と解決法](#マージ問題と解決法)
+4. [実務でよくあるトラブル20選](#実務でよくあるトラブル20選)
+5. [緊急時の対応フローチャート](#緊急時の対応フローチャート)
+
+---
+
+## 🔄 ブランチ切り替え・すげ替え完全ガイド
+
+### 🎯 CASE 1: ブランチを間違えて作業してしまった!
+
+**状況**: mainブランチで作業してしまった...
+
+```bash
+# 現在の状況を確認
+git status
+```
+
+**結果**:
+```
+On branch main
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+        modified:   app.py
+        modified:   config.py
+```
+
+#### 解決法A: まだコミットしていない場合
+
+```bash
+# 変更を一時保存
+git stash save "間違えてmainで作業した内容"
+```
+
+**結果の見方**:
+```
+Saved working directory and index state On main: 間違えてmainで作業した内容
+```
+→ 変更が一時保存された！
+
+```bash
+# 正しいブランチを作成・移動
+git checkout -b feature/正しいブランチ名
+```
+
+**結果**:
+```
+Switched to a new branch 'feature/正しいブランチ名'
+```
+
+```bash
+# 一時保存した変更を戻す
+git stash pop
+```
+
+**結果の見方**:
+```
+On branch feature/正しいブランチ名
+Changes not staged for commit:
+        modified:   app.py
+        modified:   config.py
+
+Dropped refs/stash@{0} (a1b2c3d4e5f6...)
+```
+→ `Dropped` と表示されれば成功！変更が戻った
+
+```bash
+# 通常通りコミット
+git add .
+git commit -m "feat: 新機能を追加"
+```
+
+---
+
+#### 解決法B: すでにコミットしてしまった場合
+
+```bash
+# コミット履歴を確認
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD -> main) feat: 新機能を追加  ← これを移動したい
+e4f5g6h fix: バグ修正
+h7i8j9k Initial commit
+```
+
+```bash
+# 新しいブランチを作成（コミットを保持したまま）
+git branch feature/正しいブランチ名
+```
+
+```bash
+# mainブランチを1つ前に戻す
+git reset --hard HEAD~1
+```
+
+**結果の見方**:
+```
+HEAD is now at e4f5g6h fix: バグ修正
+```
+→ mainが1つ前のコミットに戻った
+
+```bash
+# 新ブランチに移動して確認
+git checkout feature/正しいブランチ名
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD -> feature/正しいブランチ名) feat: 新機能を追加  ← ここにある！
+e4f5g6h fix: バグ修正
+h7i8j9k Initial commit
+```
+→ コミットが正しいブランチに移動完了！
+
+---
+
+### 🎯 CASE 2: 作業中のブランチを切り替えたい
+
+**状況**: feature/Aで作業中だが、緊急でhotfix/Bに切り替える必要がある
+
+```bash
+# 現在の状況
+git status
+```
+
+**結果**:
+```
+On branch feature/A
+Changes not staged for commit:
+        modified:   file1.py
+        modified:   file2.py
+Untracked files:
+        new_file.py
+```
+
+#### ❌ このままcheckoutすると...
+
+```bash
+git checkout hotfix/B
+```
+
+**エラー**:
+```
+error: Your local changes to the following files would be overwritten by checkout:
+        file1.py
+Please commit your changes or stash them before you switch branches.
+Aborting
+```
+→ 変更が失われる可能性があるため、Gitが拒否！
+
+#### ✅ 正しい対処法
+
+**方法1: stash（一時保存）を使う** ★推奨
+
+```bash
+# 作業を一時保存
+git stash save "feature/Aの途中作業"
+```
+
+**結果**:
+```
+Saved working directory and index state On feature/A: feature/Aの途中作業
+```
+
+```bash
+# ブランチ切り替え
+git checkout hotfix/B
+```
+
+**結果**:
+```
+Switched to branch 'hotfix/B'
+```
+→ クリーンな状態でhotfix作業可能！
+
+```bash
+# hotfix完了後、元のブランチに戻る
+git checkout feature/A
+git stash list  # 保存した作業一覧を確認
+```
+
+**結果**:
+```
+stash@{0}: On feature/A: feature/Aの途中作業
+stash@{1}: On feature/C: 別の作業
+```
+
+```bash
+# 作業を復元
+git stash pop
+```
+
+**結果**:
+```
+On branch feature/A
+Changes not staged for commit:
+        modified:   file1.py
+        modified:   file2.py
+Dropped refs/stash@{0} (...)
+```
+→ 作業が復元された！
+
+**方法2: WIP（Work In Progress）コミット**
+
+```bash
+# 途中だがコミット
+git add .
+git commit -m "WIP: 作業途中（後で修正）"
+
+# ブランチ切り替え
+git checkout hotfix/B
+
+# 後で戻ってきたら...
+git checkout feature/A
+
+# 最後のコミットを取り消して編集再開
+git reset --soft HEAD~1
+```
+
+**結果**:
+```
+# 変更はステージングエリアに残る
+git status
+```
+```
+On branch feature/A
+Changes to be committed:
+        modified:   file1.py
+        modified:   file2.py
+```
+
+---
+
+### 🎯 CASE 3: ブランチの分岐元（ベース）を変更したい
+
+**状況**: mainから切ったつもりが、間違えてdevelopから切ってしまった
+
+```
+develop ──●──●──●──●
+           \
+            ●──● feature/my-branch (間違い！)
+
+main ───────●──────● (ここから切りたかった)
+```
+
+#### 解決法: rebase でブランチをすげ替える
+
+```bash
+# 現在のブランチ構造を確認
+git log --oneline --graph --all
+```
+
+**結果**:
+```
+* a1b2c3d (HEAD -> feature/my-branch) feat: 新機能2
+* e4f5g6h feat: 新機能1
+* h7i8j9k (develop) develop上のコミット
+| * k0l1m2n (main) main上のコミット
+|/
+* n3o4p5q Initial commit
+```
+
+```bash
+# mainブランチの最新を取得
+git fetch origin main
+
+# feature/my-branchをmain基準に付け替える
+git rebase --onto main develop feature/my-branch
+```
+
+**読み方**: ギット・リベース・オントゥ
+
+**意味**: 「developから分岐したfeature/my-branchを、mainから分岐したように付け替える」
+
+**結果の見方**:
+```
+First, rewinding head to replay your work on top of it...
+Applying: feat: 新機能1
+Applying: feat: 新機能2
+```
+→ `Applying` が表示されれば成功！
+
+```bash
+# 結果を確認
+git log --oneline --graph --all
+```
+
+**結果**:
+```
+* x1y2z3a (HEAD -> feature/my-branch) feat: 新機能2
+* b4c5d6e feat: 新機能1
+* k0l1m2n (main) main上のコミット ← ★ここから分岐に変わった！
+| * h7i8j9k (develop) develop上のコミット
+|/
+* n3o4p5q Initial commit
+```
+
+---
+
+### 🎯 CASE 4: ブランチ名を変更したい
+
+```bash
+# ローカルブランチ名を変更（現在のブランチ）
+git branch -m 新しいブランチ名
+```
+
+**読み方**: ギット・ブランチ・マイナスエム（move の略）
+
+**結果**:
+```
+# 確認
+git branch
+```
+```
+* 新しいブランチ名
+  develop
+  main
+```
+
+```bash
+# 他のブランチ名を変更する場合
+git branch -m 古いブランチ名 新しいブランチ名
+```
+
+**リモートも変更する場合**:
+
+```bash
+# 古いブランチを削除
+git push origin --delete 古いブランチ名
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+ - [deleted]         古いブランチ名
+```
+
+```bash
+# 新しいブランチをプッシュ
+git push origin 新しいブランチ名
+
+# 上流ブランチを設定
+git push --set-upstream origin 新しいブランチ名
+```
+
+**結果**:
+```
+Branch '新しいブランチ名' set up to track remote branch '新しいブランチ名' from 'origin'.
+```
+
+---
+
+### 🎯 CASE 5: 不要なブランチを削除したい
+
+```bash
+# ローカルブランチを削除
+git branch -d ブランチ名
+```
+
+**読み方**: ギット・ブランチ・マイナスディー（delete の略）
+
+**結果**:
+```
+Deleted branch ブランチ名 (was a1b2c3d).
+```
+
+**マージ済みでない場合のエラー**:
+```
+error: The branch 'ブランチ名' is not fully merged.
+If you are sure you want to delete it, run 'git branch -D ブランチ名'.
+```
+
+```bash
+# 強制削除（注意！）
+git branch -D ブランチ名
+```
+
+**結果**:
+```
+Deleted branch ブランチ名 (was a1b2c3d).
+```
+
+```bash
+# リモートブランチを削除
+git push origin --delete ブランチ名
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+ - [deleted]         ブランチ名
+```
+
+```bash
+# すでに削除されたリモートブランチの参照をクリーンアップ
+git fetch --prune
+```
+
+**読み方**: ギット・フェッチ・プルーン
+
+**結果**:
+```
+From https://github.com/user/repo
+ - [deleted]         (none)     -> origin/old-branch
+ - [deleted]         (none)     -> origin/another-old-branch
+```
+
+---
+
+## 🗑️ 履歴削除・修正テクニック
+
+### 🎯 CASE 6: 直前のコミットを修正したい
+
+#### パターンA: コミットメッセージだけ変更
+
+```bash
+git commit --amend -m "新しいコミットメッセージ"
+```
+
+**読み方**: ギット・コミット・アメンド
+
+**結果**:
+```
+[feature/xxx a1b2c3d] 新しいコミットメッセージ
+ Date: Thu Oct 9 14:00:00 2025 +0900
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+```
+
+#### パターンB: ファイルを追加してコミット修正
+
+```bash
+# 忘れたファイルを追加
+git add forgotten_file.py
+
+# 直前のコミットに含める
+git commit --amend --no-edit
+```
+
+**読み方**: ノー・エディット（エディタを開かない）
+
+**結果**:
+```
+[feature/xxx e4f5g6h] feat: 新機能を追加
+ Date: Thu Oct 9 14:00:00 2025 +0900
+ 3 files changed, 15 insertions(+), 2 deletions(-)
+```
+→ 3ファイルに増えた！
+
+⚠️ **注意**: すでにpushしたコミットをamendすると、履歴が変わるため force push が必要
+
+```bash
+git push --force-with-lease origin feature/xxx
+```
+
+**読み方**: フォース・ウィズ・リース（安全な強制プッシュ）
+
+---
+
+### 🎯 CASE 7: 過去のコミットを削除したい
+
+```bash
+# コミット履歴を確認
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD -> feature/xxx) feat: 機能C
+e4f5g6h feat: 機能B  ← これを削除したい
+h7i8j9k feat: 機能A
+k0l1m2n Initial commit
+```
+
+#### 方法1: rebase -i（インタラクティブリベース）★推奨
+
+```bash
+git rebase -i HEAD~3
+```
+
+**読み方**: ギット・リベース・インタラクティブ
+
+**意味**: 直近3つのコミットを編集モードで表示
+
+**エディタが開く**:
+```
+pick h7i8j9k feat: 機能A
+pick e4f5g6h feat: 機能B  ← ここを drop に変更
+pick a1b2c3d feat: 機能C
+
+# Commands:
+# p, pick = use commit
+# r, reword = use commit, but edit the commit message
+# e, edit = use commit, but stop for amending
+# s, squash = use commit, but meld into previous commit
+# f, fixup = like "squash", but discard this commit's log message
+# x, exec = run command (the rest of the line) using shell
+# d, drop = remove commit
+```
+
+**編集して保存**:
+```
+pick h7i8j9k feat: 機能A
+drop e4f5g6h feat: 機能B  ← pick を drop に変更
+pick a1b2c3d feat: 機能C
+```
+
+**結果**:
+```
+Successfully rebased and updated refs/heads/feature/xxx.
+```
+
+```bash
+# 確認
+git log --oneline
+```
+
+**結果**:
+```
+x1y2z3a (HEAD -> feature/xxx) feat: 機能C
+h7i8j9k feat: 機能A
+k0l1m2n Initial commit
+```
+→ 機能Bのコミットが消えた！
+
+---
+
+### 🎯 CASE 8: 複数のコミットを1つにまとめたい（squash）
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD) fix: typo修正
+e4f5g6h fix: スタイル修正
+h7i8j9k feat: ログイン機能実装
+k0l1m2n Initial commit
+```
+→ 上3つをまとめたい
+
+```bash
+git rebase -i HEAD~3
+```
+
+**エディタ**:
+```
+pick h7i8j9k feat: ログイン機能実装
+pick e4f5g6h fix: スタイル修正
+pick a1b2c3d fix: typo修正
+```
+
+**編集**:
+```
+pick h7i8j9k feat: ログイン機能実装
+squash e4f5g6h fix: スタイル修正
+squash a1b2c3d fix: typo修正
+```
+
+**保存すると次のエディタが開く**:
+```
+# This is a combination of 3 commits.
+# The first commit's message is:
+feat: ログイン機能実装
+
+# This is the 2nd commit message:
+fix: スタイル修正
+
+# This is the 3rd commit message:
+fix: typo修正
+
+# 以下のように1つのメッセージに編集
+feat: ログイン機能を実装
+
+- メイン機能の実装
+- スタイルの調整
+- typo修正を含む
+```
+
+**結果**:
+```
+[detached HEAD x1y2z3a] feat: ログイン機能を実装
+ Date: Thu Oct 9 14:00:00 2025 +0900
+ 5 files changed, 100 insertions(+), 5 deletions(-)
+Successfully rebased and updated refs/heads/feature/xxx.
+```
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+x1y2z3a (HEAD) feat: ログイン機能を実装
+k0l1m2n Initial commit
+```
+→ 3つが1つにまとまった！
+
+---
+
+### 🎯 CASE 9: 機密情報をコミットしてしまった！
+
+**状況**: `.env` ファイルにパスワードが...
+
+```bash
+# 直前のコミットから削除
+git rm --cached .env
+git commit --amend --no-edit
+```
+
+**過去のコミットから完全削除（重要！）**:
+
+```bash
+# BFG Repo-Cleaner を使用（推奨）
+# まず https://rtyley.github.io/bfg-repo-cleaner/ からダウンロード
+
+# .envファイルを履歴から完全削除
+java -jar bfg.jar --delete-files .env
+
+# または filter-branch（Git標準だが遅い）
+git filter-branch --force --index-filter \
+  "git rm --cached --ignore-unmatch .env" \
+  --prune-empty --tag-name-filter cat -- --all
+```
+
+**結果**:
+```
+Rewrite a1b2c3d (5/5) (10 seconds passed, remaining 0 predicted)
+Ref 'refs/heads/main' was rewritten
+```
+
+```bash
+# 強制プッシュ（チーム全員に通知必須！）
+git push --force --all
+git push --force --tags
+```
+
+⚠️ **重要**: 
+1. チームメンバー全員に `git clone` し直してもらう
+2. GitHubの secrets も変更する
+3. 漏洩した認証情報は即座にリセット
+
+---
+
+### 🎯 CASE 10: 間違えてpushしたコミットを取り消したい
+
+#### 公開前（自分だけのブランチ）
+
+```bash
+# 1つ前に戻す
+git reset --hard HEAD~1
+
+# 強制プッシュ
+git push --force origin feature/xxx
+```
+
+#### 公開後（他の人も使っている）
+
+```bash
+# revertで打ち消しコミットを作る（★推奨）
+git revert HEAD
+```
+
+**エディタが開く**:
+```
+Revert "feat: 問題のある機能"
+
+This reverts commit a1b2c3d.
+```
+
+**結果**:
+```
+[feature/xxx x1y2z3a] Revert "feat: 問題のある機能"
+ 1 file changed, 5 insertions(+), 10 deletions(-)
+```
+
+```bash
+git push origin feature/xxx
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+   a1b2c3d..x1y2z3a  feature/xxx -> feature/xxx
+```
+
+---
+
+## 🔀 マージ問題と解決法
+
+### 🎯 CASE 11: マージコンフリクトが発生（基本）
+
+```bash
+git merge feature/other-branch
+```
+
+**エラー**:
+```
+Auto-merging app.py
+CONFLICT (content): Merge conflict in app.py
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+```bash
+git status
+```
+
+**結果**:
+```
+On branch main
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+Unmerged paths:
+  (use "git add <file>..." to mark resolution)
+        both modified:   app.py  ← ★コンフリクト発生
+```
+
+#### 解決ステップ
+
+**1. ファイルを開く**:
+```python
+def calculate(a, b):
+<<<<<<< HEAD
+    # 自分の変更
+    return a + b + 10
+=======
+    # 相手の変更
+    return a * b
+>>>>>>> feature/other-branch
+```
+
+**2. 修正**:
+```python
+def calculate(a, b):
+    # 両方の意図を組み込む
+    result = a * b
+    return result + 10
+```
+
+**3. マーカー削除を確認**:
+```bash
+# マーカーが残っていないか確認
+grep -n "<<<<<<< HEAD" app.py
+grep -n "=======" app.py
+grep -n ">>>>>>>" app.py
+```
+
+**結果**:
+```
+# 何も表示されなければOK（マーカーが残っていない）
+```
+
+**4. テスト実行**:
+```bash
+python -m pytest tests/
+```
+
+**5. コミット**:
+```bash
+git add app.py
+git commit -m "merge: feature/other-branch をマージ（コンフリクト解決）"
+```
+
+---
+
+### 🎯 CASE 12: マージコンフリクトが多すぎる！
+
+```bash
+git merge feature/long-running-branch
+```
+
+**結果**:
+```
+Auto-merging file1.py
+Auto-merging file2.py
+Auto-merging file3.py
+CONFLICT (content): Merge conflict in file1.py
+CONFLICT (content): Merge conflict in file2.py
+CONFLICT (content): Merge conflict in file3.py
+CONFLICT (content): Merge conflict in file4.py
+CONFLICT (content): Merge conflict in file5.py
+... (20個のコンフリクト)
+```
+
+#### 解決法A: 一旦中止して戦略を変える
+
+```bash
+# マージ中止
+git merge --abort
+```
+
+**結果**:
+```
+# 元の状態に戻る
+```
+
+```bash
+# 相手のブランチを自分のブランチに取り込む（逆マージ）
+git checkout feature/long-running-branch
+git pull origin feature/long-running-branch
+git merge main
+# コンフリクト解決
+git push origin feature/long-running-branch
+
+# その後、mainに戻ってマージ
+git checkout main
+git merge feature/long-running-branch  # 今度はスムーズ
+```
+
+#### 解決法B: mergetool を使う
+
+```bash
+# GUIツールで解決（VS Code, Meld, kdiff3など）
+git mergetool
+```
+
+**結果**:
+```
+Merging:
+file1.py
+file2.py
+
+Normal merge conflict for 'file1.py':
+  {local}: modified file
+  {remote}: modified file
+```
+→ 設定されたツールが起動してGUIで解決可能
+
+---
+
+### 🎯 CASE 13: マージを取り消したい
+
+#### パターンA: マージ直後（まだpushしていない）
+
+```bash
+git reset --hard HEAD~1
+```
+
+**結果**:
+```
+HEAD is now at a1b2c3d 前のコミット
+```
+
+#### パターンB: マージ後にpushしてしまった
+
+```bash
+# マージコミットのハッシュを確認
+git log --oneline
+```
+
+**結果**:
+```
+x1y2z3a (HEAD -> main) Merge branch 'feature/xxx'  ← これを取り消したい
+e4f5g6h feat: 機能B
+a1b2c3d feat: 機能A
+```
+
+```bash
+# revert でマージを打ち消す
+git revert -m 1 HEAD
+```
+
+**読み方**: リバート・マイナスエム・ワン
+
+**意味**: マージコミットを打ち消す（-m 1 は main側を保持）
+
+**エディタが開く**:
+```
+Revert "Merge branch 'feature/xxx'"
+
+This reverts commit x1y2z3a, reversing
+changes made to e4f5g6h.
+```
+
+**結果**:
+```
+[main b4c5d6e] Revert "Merge branch 'feature/xxx'"
+ 3 files changed, 15 insertions(+), 50 deletions(-)
+```
+
+```bash
+git push origin main
+```
+
+---
+
+### 🎯 CASE 14: Fast-forward マージを防ぎたい
+
+**状況**: マージの履歴を明示的に残したい
+
+```bash
+# 通常のマージ（Fast-forwardになる可能性）
+git merge feature/xxx
+```
+
+**結果（Fast-forward）**:
+```
+Updating a1b2c3d..e4f5g6h
+Fast-forward
+ file.py | 10 +++++++++++
+ 1 file changed, 10 insertions(+)
+```
+→ マージコミットが作られない
+
+#### 解決法: --no-ff オプション
+
+```bash
+git merge --no-ff feature/xxx
+```
+
+**読み方**: ノー・ファスト・フォワード
+
+**エディタが開く**:
+```
+Merge branch 'feature/xxx'
+
+# メッセージを編集可能
+```
+
+**結果**:
+```
+Merge made by the 'recursive' strategy.
+ file.py | 10 +++++++++++
+ 1 file changed, 10 insertions(+)
+```
+
+```bash
+git log --oneline --graph
+```
+
+**結果**:
+```
+*   h7i8j9k (HEAD -> main) Merge branch 'feature/xxx'
+|\
+| * e4f5g6h (feature/xxx) feat: 新機能
+|/
+* a1b2c3d Previous commit
+```
+→ マージの履歴が明確に残る！
+
+---
+
+## 🚨 実務でよくあるトラブル20選
+
+### トラブル1: push が拒否される
+
+```bash
+git push origin main
+```
+
+**エラー**:
+```
+To https://github.com/user/repo.git
+ ! [rejected]        main -> main (fetch first)
+error: failed to push some refs to 'https://github.com/user/repo.git'
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally.
+```
+
+**原因**: リモートに新しいコミットがある
+
+**解決法**:
+```bash
+git pull origin main
+# コンフリクトがあれば解決
+git push origin main
+```
+
+---
+
+### トラブル2: pull でコンフリクト
+
+```bash
+git pull origin main
+```
+
+**エラー**:
+```
+Auto-merging file.py
+CONFLICT (content): Merge conflict in file.py
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+**解決法**:
+```bash
+# コンフリクトを解決
+# ファイルを編集してマーカー削除
+git add file.py
+git commit -m "merge: コンフリクト解決"
+git push origin main
+```
+
+---
+
+### トラブル3: detached HEAD 状態になった
+
+```bash
+git checkout a1b2c3d  # 特定のコミットをチェックアウト
+```
+
+**警告**:
+```
+Note: switching to 'a1b2c3d'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+```
+
+**状態確認**:
+```bash
+git status
+```
+
+**結果**:
+```
+HEAD detached at a1b2c3d
+nothing to commit, working tree clean
+```
+
+**解決法**:
+```bash
+# ブランチに戻る
+git checkout main
+```
+
+**もし変更をコミットしてしまった場合**:
+```bash
+# 新しいブランチとして保存
+git branch temp-branch
+git checkout temp-branch
+```
+
+---
+
+### トラブル4: .gitignore が効かない
+
+```bash
+# .gitignore に *.pyc を追加したのに無視されない
+git status
+```
+
+**結果**:
+```
+Changes not staged for commit:
+        modified:   __pycache__/app.cpython-39.pyc
+```
+
+**原因**: すでに追跡されているファイルは .gitignore が効かない
+
+**解決法**:
+```bash
+# キャッシュから削除
+git rm -r --cached __pycache__/
+git rm --cached *.pyc
+
+git add .gitignore
+git commit -m "chore: .gitignore を適用"
+```
+
+**結果**:
+```
+rm '__pycache__/app.cpython-39.pyc'
+[main a1b2c3d] chore: .gitignore を適用
+ 2 files changed, 1 insertion(+), 0 deletions(-)
+ delete mode 100644 __pycache__/app.cpython-39.pyc
+```
+
+---
+
+### トラブル5: 巨大ファイルをコミットしてpushできない
+
+```bash
+git push origin main
+```
+
+**エラー**:
+```
+remote: error: GH001: Large files detected. You may want to try Git Large File Storage.
+remote: error: File large_file.zip is 150.00 MB; this exceeds GitHub's file size limit of 100.00 MB
+To https://github.com/user/repo.git
+ ! [remote rejected] main -> main (pre-receive hook declined)
+error: failed to push some refs to 'https://github.com/user/repo.git'
+```
+
+**解決法A: 最新のコミットから削除**
+
+```bash
+# ファイルを削除してコミット修正
+git rm --cached large_file.zip
+git commit --amend --no-edit
+git push origin main
+```
+
+**解決法B: 過去のコミットから削除**
+
+```bash
+# BFG Repo-Cleaner を使用
+java -jar bfg.jar --strip-blobs-bigger-than 100M
+
+# または
+git filter-branch --tree-filter 'rm -f large_file.zip' HEAD
+
+# 強制プッシュ
+git push --force origin main
+```
+
+**解決法C: Git LFS を使う**
+
+```bash
+# Git LFS をインストール
+git lfs install
+
+# 大きなファイルをLFS管理下に
+git lfs track "*.zip"
+git add .gitattributes
+git add large_file.zip
+git commit -m "chore: Git LFSを使用"
+git push origin main
+```
+
+---
+
+### トラブル6: コミットメッセージを間違えた（複数コミット前）
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD) feat: 最新のコミット
+e4f5g6h fix: バグ修正
+h7i8j9k feat: ログニ機能を追加  ← typo!「ログイン」のはず
+k0l1m2n Initial commit
+```
+
+**解決法**:
+
+```bash
+git rebase -i HEAD~3
+```
+
+**エディタ**:
+```
+pick h7i8j9k feat: ログニ機能を追加
+pick e4f5g6h fix: バグ修正
+pick a1b2c3d feat: 最新のコミット
+```
+
+**編集**:
+```
+reword h7i8j9k feat: ログニ機能を追加  ← pick を reword に変更
+pick e4f5g6h fix: バグ修正
+pick a1b2c3d feat: 最新のコミット
+```
+
+**保存すると次のエディタが開く**:
+```
+feat: ログニ機能を追加
+
+# ここで修正
+feat: ログイン機能を追加
+```
+
+**結果**:
+```
+[detached HEAD x1y2z3a] feat: ログイン機能を追加
+Successfully rebased and updated refs/heads/main.
+```
+
+---
+
+### トラブル7: 誤って force push してしまった！
+
+```bash
+git push --force origin main
+```
+
+**チームメンバーから連絡**: 「私の作業が消えました...」
+
+**原因**: force push で他人の作業を上書き
+
+**解決法**:
+
+```bash
+# GitHub上のReflogから復元
+# GitHub → Settings → Branches → Branch protection rules を確認
+
+# ローカルのreflogから探す
+git reflog
+```
+
+**結果**:
+```
+a1b2c3d HEAD@{0}: push --force: forced-update
+e4f5g6h HEAD@{1}: commit: 消えたコミット  ← これを復元したい
+h7i8j9k HEAD@{2}: commit: 前のコミット
+```
+
+```bash
+# 消えたコミットに戻す
+git reset --hard e4f5g6h
+git push --force origin main
+
+# チームメンバーに通知
+# 「git pull --rebase で同期してください」
+```
+
+**予防策**: `--force-with-lease` を使う
+
+```bash
+# 安全な強制プッシュ
+git push --force-with-lease origin main
+```
+
+**結果（他人の変更がある場合）**:
+```
+ ! [rejected]        main -> main (stale info)
+error: failed to push some refs to 'https://github.com/user/repo.git'
+```
+→ 他人の変更を上書きする前に止まる！
+
+---
+
+### トラブル8: stash した内容が見つからない
+
+```bash
+git stash list
+```
+
+**結果**:
+```
+stash@{0}: WIP on feature/A: a1b2c3d commit message
+stash@{1}: WIP on feature/B: e4f5g6h another commit
+stash@{2}: WIP on feature/C: h7i8j9k old work
+```
+
+**どれだか分からない！**
+
+**解決法**:
+
+```bash
+# 各stashの内容を確認
+git stash show -p stash@{0}
+```
+
+**結果**:
+```diff
+diff --git a/file.py b/file.py
+index a1b2c3d..e4f5g6h 100644
+--- a/file.py
++++ b/file.py
+@@ -1,3 +1,5 @@
++def new_function():
++    pass
+ def old_function():
+     pass
+```
+
+```bash
+# 特定のstashを復元
+git stash apply stash@{1}
+
+# 復元後、不要なstashを削除
+git stash drop stash@{1}
+```
+
+**すべてのstashを確認**:
+
+```bash
+# わかりやすい名前でstashする習慣をつける
+git stash save "feature/A: ログイン処理の途中"
+```
+
+---
+
+### トラブル9: リベース中にコンフリクトが発生
+
+```bash
+git rebase main
+```
+
+**エラー**:
+```
+Auto-merging file.py
+CONFLICT (content): Merge conflict in file.py
+error: could not apply e4f5g6h... feat: 新機能
+hint: Resolve all conflicts manually, mark them as resolved with
+hint: "git add/rm <conflicted_files>", then run "git rebase --continue".
+hint: You can instead skip this commit: run "git rebase --skip".
+hint: To abort and get back to the state before "git rebase", run "git rebase --abort".
+Could not apply e4f5g6h... feat: 新機能
+```
+
+**状態確認**:
+
+```bash
+git status
+```
+
+**結果**:
+```
+interactive rebase in progress; onto a1b2c3d
+Last command done (1 command done):
+   pick e4f5g6h feat: 新機能
+Next commands to do (2 remaining commands):
+   pick h7i8j9k feat: 別の機能
+   pick k0l1m2n fix: バグ修正
+  (use "git rebase --edit-todo" to view and edit)
+You are currently rebasing branch 'feature/xxx' on 'a1b2c3d'.
+  (fix conflicts and then run "git rebase --continue")
+  (use "git rebase --skip" to skip this patch)
+  (use "git rebase --abort" to check out the original branch)
+
+Unmerged paths:
+  (use "git restore --staged <file>..." to unstage)
+  (use "git add <file>..." to mark resolution)
+        both modified:   file.py
+```
+
+**解決法**:
+
+```bash
+# 1. コンフリクトを解決
+# ファイルを編集してマーカー削除
+
+# 2. 解決したファイルを追加
+git add file.py
+
+# 3. リベースを続行
+git rebase --continue
+```
+
+**結果**:
+```
+[detached HEAD x1y2z3a] feat: 新機能
+ 1 file changed, 10 insertions(+)
+Successfully rebased and updated refs/heads/feature/xxx.
+```
+
+**このコミットをスキップする場合**:
+
+```bash
+git rebase --skip
+```
+
+**リベースを中止する場合**:
+
+```bash
+git rebase --abort
+```
+
+---
+
+### トラブル10: cherry-pick でコンフリクト
+
+```bash
+# 特定のコミットだけを取り込む
+git cherry-pick a1b2c3d
+```
+
+**エラー**:
+```
+Auto-merging file.py
+CONFLICT (content): Merge conflict in file.py
+error: could not apply a1b2c3d... feat: 特定の機能
+hint: after resolving the conflicts, mark the corrected paths
+hint: with 'git add <paths>' or 'git rm <paths>'
+hint: and commit the result with 'git commit'
+```
+
+**解決法**:
+
+```bash
+# コンフリクト解決
+# ファイルを編集
+
+git add file.py
+git cherry-pick --continue
+```
+
+**中止する場合**:
+
+```bash
+git cherry-pick --abort
+```
+
+---
+
+### トラブル11: submodule の更新ができない
+
+```bash
+git submodule update
+```
+
+**エラー**:
+```
+fatal: Needed a single revision
+Unable to find current revision in submodule path 'lib/external'
+```
+
+**解決法**:
+
+```bash
+# サブモジュールを初期化
+git submodule init
+git submodule update --init --recursive
+
+# 最新に更新
+git submodule update --remote
+```
+
+**結果**:
+```
+Submodule path 'lib/external': checked out 'a1b2c3d...'
+```
+
+---
+
+### トラブル12: upstream が設定されていない
+
+```bash
+git pull
+```
+
+**エラー**:
+```
+There is no tracking information for the current branch.
+Please specify which branch you want to merge with.
+```
+
+**解決法**:
+
+```bash
+# upstream ブランチを設定
+git branch --set-upstream-to=origin/main main
+```
+
+**結果**:
+```
+Branch 'main' set up to track remote branch 'main' from 'origin'.
+```
+
+**または**:
+
+```bash
+git push -u origin main
+```
+
+**結果**:
+```
+Branch 'main' set up to track remote branch 'main' from 'origin'.
+```
+
+---
+
+### トラブル13: ファイル名の大文字小文字変更が認識されない
+
+```bash
+# File.py → file.py に変更したのに...
+git status
+```
+
+**結果**:
+```
+nothing to commit, working tree clean
+```
+
+**原因**: Windowsは大文字小文字を区別しない
+
+**解決法**:
+
+```bash
+# Git上で明示的に変更
+git mv File.py file.py
+git commit -m "refactor: ファイル名を小文字に変更"
+```
+
+**結果**:
+```
+[main a1b2c3d] refactor: ファイル名を小文字に変更
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ rename File.py => file.py (100%)
+```
+
+---
+
+### トラブル14: リモートリポジトリのURLが間違っている
+
+```bash
+git push origin main
+```
+
+**エラー**:
+```
+fatal: repository 'https://github.com/wrong-user/repo.git/' not found
+```
+
+**確認**:
+
+```bash
+git remote -v
+```
+
+**結果**:
+```
+origin  https://github.com/wrong-user/repo.git (fetch)
+origin  https://github.com/wrong-user/repo.git (push)
+```
+
+**解決法**:
+
+```bash
+# URLを変更
+git remote set-url origin https://github.com/correct-user/repo.git
+
+# 確認
+git remote -v
+```
+
+**結果**:
+```
+origin  https://github.com/correct-user/repo.git (fetch)
+origin  https://github.com/correct-user/repo.git (push)
+```
+
+---
+
+### トラブル15: 複数のリモートリポジトリを管理したい
+
+```bash
+# 現在のリモート確認
+git remote -v
+```
+
+**結果**:
+```
+origin  https://github.com/user/repo.git (fetch)
+origin  https://github.com/user/repo.git (push)
+```
+
+**解決法**:
+
+```bash
+# 新しいリモートを追加
+git remote add upstream https://github.com/original-author/repo.git
+
+# 確認
+git remote -v
+```
+
+**結果**:
+```
+origin    https://github.com/user/repo.git (fetch)
+origin    https://github.com/user/repo.git (push)
+upstream  https://github.com/original-author/repo.git (fetch)
+upstream  https://github.com/original-author/repo.git (push)
+```
+
+**使い方**:
+
+```bash
+# upstreamから最新を取得
+git fetch upstream
+
+# upstreamのmainを自分のmainにマージ
+git checkout main
+git merge upstream/main
+
+# 自分のリポジトリにプッシュ
+git push origin main
+```
+
+---
+
+### トラブル16: 誤ってバイナリファイルの差分を見ようとした
+
+```bash
+git diff image.png
+```
+
+**結果**:
+```
+diff --git a/image.png b/image.png
+index a1b2c3d..e4f5g6h 100644
+Binary files a/image.png and b/image.png differ
+```
+→ 内容は表示されない（バイナリなので）
+
+**画像の差分を見たい場合**:
+
+```bash
+# 外部ツールを設定
+git config --global diff.image.textconv "identify -verbose"
+
+# .gitattributes に追加
+echo "*.png diff=image" >> .gitattributes
+```
+
+---
+
+### トラブル17: 作業中にブランチを削除してしまった
+
+```bash
+git branch -D feature/important-work
+```
+
+**結果**:
+```
+Deleted branch feature/important-work (was a1b2c3d).
+```
+
+**あ、間違えた！**
+
+**解決法**:
+
+```bash
+# reflog から探す
+git reflog
+```
+
+**結果**:
+```
+e4f5g6h HEAD@{0}: checkout: moving from feature/important-work to main
+a1b2c3d HEAD@{1}: commit: 重要な作業  ← これ！
+h7i8j9k HEAD@{2}: commit: 前の作業
+```
+
+```bash
+# ブランチを復元
+git branch feature/important-work a1b2c3d
+```
+
+**結果**:
+```
+# ブランチが復活！
+git branch
+```
+```
+  main
+* feature/important-work
+```
+
+---
+
+### トラブル18: tag を間違えて作成した
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+**あ、バージョン番号間違えた！**
+
+**解決法**:
+
+```bash
+# ローカルのタグを削除
+git tag -d v1.0.0
+```
+
+**結果**:
+```
+Deleted tag 'v1.0.0' (was a1b2c3d)
+```
+
+```bash
+# リモートのタグを削除
+git push origin :refs/tags/v1.0.0
+# または
+git push origin --delete v1.0.0
+```
+
+**結果**:
+```
+To https://github.com/user/repo.git
+ - [deleted]         v1.0.0
+```
+
+```bash
+# 正しいタグを作成
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+---
+
+### トラブル19: merge と rebase を間違えた
+
+```bash
+# rebase したかったのに merge してしまった
+git merge feature/xxx
+```
+
+**結果**:
+```
+Merge made by the 'recursive' strategy.
+```
+
+**取り消したい！**
+
+**解決法**:
+
+```bash
+# マージを取り消す
+git reset --hard ORIG_HEAD
+```
+
+**結果**:
+```
+HEAD is now at a1b2c3d マージ前の状態
+```
+
+```bash
+# 改めて rebase
+git rebase feature/xxx
+```
+
+---
+
+### トラブル20: commit の author が間違っている
+
+```bash
+git log --oneline
+```
+
+**結果**:
+```
+a1b2c3d (HEAD) feat: 新機能  ← 作者が間違っている
+```
+
+**解決法A: 直前のコミットの場合**
+
+```bash
+git commit --amend --author="Correct Name <correct@email.com>" --no-edit
+```
+
+**解決法B: 過去のコミットの場合**
+
+```bash
+git rebase -i HEAD~3
+```
+
+**エディタ**:
+```
+pick h7i8j9k feat: 機能A
+edit a1b2c3d feat: 新機能  ← pick を edit に変更
+pick e4f5g6h feat: 機能B
+```
+
+**保存後**:
+
+```bash
+git commit --amend --author="Correct Name <correct@email.com>" --no-edit
+git rebase --continue
+```
+
+**解決法C: すべてのコミットを変更**
+
+```bash
+git filter-branch --env-filter '
+if [ "$GIT_AUTHOR_EMAIL" = "wrong@email.com" ]; then
+    export GIT_AUTHOR_NAME="Correct Name"
+    export GIT_AUTHOR_EMAIL="correct@email.com"
+fi
+' -- --all
+```
+
+---
+
+## 🚑 緊急時の対応フローチャート
+
+### 🔥 シナリオ1: 本番環境に問題のあるコードをデプロイしてしまった！
+
+```
+┌─────────────────────────────┐
+│  本番でエラー発生！         │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 1. 緊急: 前のバージョンに    │
+│    ロールバック              │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git revert HEAD
+    git push origin main
+           │
+           ▼
+┌─────────────────────────────┐
+│ 2. 問題のあるコミットを     │
+│    特定                      │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git log --oneline
+    git show <commit-hash>
+           │
+           ▼
+┌─────────────────────────────┐
+│ 3. 修正ブランチを作成       │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git checkout -b hotfix/fix-production-bug
+           │
+           ▼
+┌─────────────────────────────┐
+│ 4. 修正・テスト・デプロイ   │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git commit -m "hotfix: 本番バグ修正"
+    git push origin hotfix/fix-production-bug
+    # PR作成 → レビュー → マージ
+```
+
+**実行コマンド**:
+
+```bash
+# 1. 緊急ロールバック
+git revert HEAD
+git push origin main
+
+# 2. 問題特定
+git log --oneline -10
+git show a1b2c3d
+
+# 3. hotfixブランチ作成
+git checkout main
+git pull origin main
+git checkout -b hotfix/critical-bug-fix
+
+# 4. 修正
+# コードを修正
+git add .
+git commit -m "hotfix: 決済処理のクリティカルバグを修正"
+git push origin hotfix/critical-bug-fix
+
+# 5. GitHubでPR作成（緊急レビュー）
+# 6. マージ後、即座にデプロイ
+```
+
+---
+
+### 🔥 シナリオ2: 機密情報をコミットしてpushしてしまった！
+
+```
+┌─────────────────────────────┐
+│ パスワードをpushしてしまった！│
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 1. 即座にパスワード変更！   │
+│    (最優先)                  │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 2. チームに緊急連絡         │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 3. 履歴から完全削除         │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git filter-branch or BFG
+    git push --force --all
+           │
+           ▼
+┌─────────────────────────────┐
+│ 4. 全員に git clone し直し  │
+│    を依頼                    │
+└─────────────────────────────┘
+```
+
+**実行コマンド**:
+
+```bash
+# 1. パスワード変更（AWSコンソール、DBなど）
+
+# 2. Slackなどでチームに連絡
+# 「緊急: 機密情報をコミットしてしまいました。対応中です」
+
+# 3. BFGで履歴から削除
+git clone --mirror https://github.com/user/repo.git
+cd repo.git
+java -jar bfg.jar --replace-text passwords.txt
+git reflog expire --expire=now --all
+git gc --prune=now --aggressive
+git push --force
+
+# 4. 通常のクローンで確認
+cd ..
+git clone https://github.com/user/repo.git
+cd repo
+git log --all -- .env  # ファイルが履歴にないことを確認
+
+# 5. チームに連絡
+# 「対応完了。全員 git clone し直してください」
+```
+
+---
+
+### 🔥 シナリオ3: force push で他人の作業を消してしまった！
+
+```
+┌─────────────────────────────┐
+│ force push してしまった！   │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 1. 即座にチームに連絡       │
+└──────────┬──────────────────┘
+           │
+           ▼
+┌─────────────────────────────┐
+│ 2. reflog から復元          │
+└──────────┬──────────────────┘
+           │
+           ▼
+    git reflog
+    git reset --hard HEAD@{1}
+    git push --force origin main
+           │
+           ▼
+┌─────────────────────────────┐
+│ 3. 全員に pull --rebase     │
+│    を依頼                    │
+└─────────────────────────────┘
+```
+
+**実行コマンド**:
+
+```bash
+# 1. 状況確認
+git reflog
+```
+
+**結果**:
+```
+a1b2c3d HEAD@{0}: push --force: forced-update  ← これで消した
+e4f5g6h HEAD@{1}: commit: 他人の作業  ← これを復元したい
+```
+
+```bash
+# 2. 復元
+git reset --hard e4f5g6h
+git push --force-with-lease origin main
+
+# 3. チーム
