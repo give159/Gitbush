@@ -1,0 +1,290 @@
+最高です！✨
+ではあなたのリクエストどおり、**「Git × GitHub を使ったブランチ作業確認とデバッグチートシート」**を
+✅ **新人〜中級エンジニア向け**に、
+✅ **MECE（モレなくダブりなく）構成**で、
+✅ **Qiita風・コピペして投稿できる完全記事**
+として丁寧にまとめました。
+
+---
+
+# 🧭 【保存版】Git Bashでブランチ作業を安全に確認する方法
+
+### 〜 Git/GitHubで「どのリポジトリ」「どのブランチ」に push したか迷わない！〜
+
+---
+
+## 🎯 はじめに
+
+Git を使っていると、こんな経験ありませんか？
+
+> 💭「今どのブランチで作業してたっけ？」
+> 💭「GitHubにpushしたけど、どこに行ったか分からない！」
+
+特に新人〜中級エンジニアのうちは、`add` → `commit` → `push` → `merge` の流れの中で「現在地」を見失いがち。
+
+この記事では、**Git Bash** で行える
+👉「自分が今どのリポジトリのどのブランチで作業しているのか」
+👉「どこにpush・mergeされたのか」
+を**MECE（漏れなく・ダブりなく）**整理して解説します。
+
+---
+
+## 🧩 目次（MECE構成）
+
+1. 🧱 【環境確認】今いるリポジトリとブランチを知る
+2. 📦 【add/commit段階】ローカル変更を安全に確認する
+3. 🚀 【push段階】どこに送っているのか確認する
+4. 🔀 【merge段階】GitHub上で反映状況を確認する
+5. 🔍 【デバッグTips】よくあるトラブルと対処法
+6. 🧰 【まとめ】確認コマンド一覧＆習慣化ポイント
+
+---
+
+## 🧱 1. 【環境確認】今いるリポジトリとブランチを知る
+
+### ▶ 1-1 現在のブランチを確認
+
+```bash
+git branch
+```
+
+📘 出力例：
+
+```
+* feature/add-login
+  main
+  develop
+```
+
+👉 `*` がついているのが今のブランチ。
+
+---
+
+### ▶ 1-2 現在の状態を詳細表示
+
+```bash
+git status
+```
+
+📘 出力例：
+
+```
+On branch feature/add-login
+Your branch is up to date with 'origin/feature/add-login'.
+```
+
+✅ ブランチとリモート追跡状態が一目でわかる。
+
+---
+
+### ▶ 1-3 現在のリポジトリ（GitHub URL）を確認
+
+```bash
+git remote -v
+```
+
+📘 出力例：
+
+```
+origin  https://github.com/yourname/sample-app.git (fetch)
+origin  https://github.com/yourname/sample-app.git (push)
+```
+
+✅ 自分が操作している **GitHubリポジトリ** がこれ。
+
+---
+
+## 📦 2. 【add/commit段階】ローカル変更を安全に確認する
+
+### ▶ 2-1 変更されたファイルを確認
+
+```bash
+git status
+```
+
+📘 出力例：
+
+```
+Changes not staged for commit:
+  modified: app/views.py
+```
+
+---
+
+### ▶ 2-2 ステージング（add）
+
+```bash
+git add .
+```
+
+or
+
+```bash
+git add ファイル名
+```
+
+---
+
+### ▶ 2-3 コミット履歴を確認
+
+```bash
+git log --oneline -5
+```
+
+📘 出力例：
+
+```
+b7d9c9d (HEAD -> feature/add-login) ログイン機能追加
+a4e7b1d main から merge
+```
+
+✅ `(HEAD -> feature/add-login)` が今のブランチ。
+
+---
+
+## 🚀 3. 【push段階】どこに送っているのか確認する
+
+### ▶ 3-1 リモートブランチとの対応を確認
+
+```bash
+git remote show origin
+```
+
+📘 出力例：
+
+```
+* remote origin
+  Fetch URL: https://github.com/yourname/sample-app.git
+  Push  URL: https://github.com/yourname/sample-app.git
+  HEAD branch: main
+  Remote branches:
+    develop           tracked
+    feature/add-login tracked
+```
+
+✅ 自分のブランチ (`feature/add-login`) がリモート追跡されていることが分かる。
+
+---
+
+### ▶ 3-2 push時に確認を出す
+
+```bash
+git push -v
+```
+
+📘 出力例：
+
+```
+Pushing to https://github.com/yourname/sample-app.git
+To https://github.com/yourname/sample-app.git
+   5d2a8c4..b7d9c9d  feature/add-login -> feature/add-login
+```
+
+✅ 左：ローカルブランチ → 右：リモートブランチ
+
+---
+
+## 🔀 4. 【merge段階】GitHub上で反映状況を確認する
+
+### ▶ 4-1 GitHub Web UI で確認
+
+1. GitHubリポジトリへアクセス
+2. 「Pull requests」→「Closed」タブ
+3. 自分のPRが `Merged` 状態ならOK。
+
+---
+
+### ▶ 4-2 Git からローカルで確認
+
+```bash
+git fetch origin
+git log --oneline origin/main -5
+```
+
+📘 出力例：
+
+```
+c1f2b3e Merge branch 'feature/add-login'
+b7d9c9d ログイン機能追加
+```
+
+✅ `Merge branch` の記録があれば、merge 済み！
+
+---
+
+## 🔍 5. 【デバッグTips】よくあるトラブルと対処法
+
+| トラブル                  | 原因                | 解決コマンド                               |
+| --------------------- | ----------------- | ------------------------------------ |
+| pushしたのにGitHubに反映されない | ブランチ違い / リモート指定ミス | `git branch`, `git push -v`          |
+| push時にエラー "rejected"  | 他人の更新が先に入った       | `git pull origin main --rebase`      |
+| merge後に反映されない         | ローカル未更新           | `git fetch origin && git pull`       |
+| リモートURL間違えた           | リポジトリ指定ミス         | `git remote set-url origin <正しいURL>` |
+| PR作り忘れ                | pushはしたが未マージ      | GitHub上で「New Pull Request」           |
+
+---
+
+## 🧰 6. 【まとめ】確認コマンド一覧＆習慣化ポイント
+
+| フェーズ    | 目的       | コマンド                            | 出力で見るポイント       |
+| ------- | -------- | ------------------------------- | --------------- |
+| 状況確認    | 今のブランチ   | `git branch`                    | `*` の行が現在のブランチ  |
+| 状況確認    | 状態全体     | `git status`                    | リモート追跡や差分       |
+| リポジトリ確認 | push先URL | `git remote -v`                 | GitHubのURL      |
+| 詳細確認    | ブランチ追跡   | `git remote show origin`        | tracked 表示      |
+| push確認  | 実際の送信先   | `git push -v`                   | どのブランチにpushされたか |
+| マージ確認   | 反映済みか    | `git log --oneline origin/main` | merge履歴ありか      |
+
+---
+
+## 💡 習慣化ポイント（新人〜中級者向け）
+
+1. ✅ **commit前に必ず `git branch` と `git status` を見る**
+   → 「どのブランチ」で作業しているか確認。
+
+2. ✅ **push後に `git push -v` で送信先を確認**
+   → 「どこに送られたか」を確実に見る。
+
+3. ✅ **1日の終わりに `git log --oneline` を見る**
+   → 「何を」「どのブランチに」残したか整理。
+
+4. ✅ **merge後は `git fetch origin` で最新反映**
+   → ローカルとの差異を防ぐ。
+
+---
+
+## 👨‍🏫 まとめ：Gitは「今どこで何をしているか」を意識せよ
+
+Git/GitHub のトラブルの8割は、「**どこにいるか分からない**」が原因です。
+コマンドで“今の自分の立ち位置”を確認する癖をつければ、
+チーム開発でも安全・確実に作業できます。
+
+---
+
+### 🧑‍💻 Django先生（Git先生）からのメッセージ
+
+> 💬「ブランチ迷子は誰でもなる。
+> でも、`git branch` と `git remote -v` を打てば、
+> 迷子からエンジニアに戻れる。」
+
+---
+
+### 📘 次に読むと良い関連記事
+
+* 🔰 [Git事故対応マニュアル（ケース別解決策）](#)
+* 🧠 [中級者向け Git リベース実践練習帳（失敗例つき）](#)
+* 🚀 [上級者向け Git 戦略パターン（squash / merge / rebase の使い分け）](#)
+
+---
+
+💾 **保存推奨！**
+このチートシートを手元に置いて、今日から安全な Git ライフを始めましょう。
+
+---
+
+🟩 ご希望あれば、このQiita風記事を
+→ Markdown形式（Qiitaコピペ用）
+→ PDF配布用レイアウト
+にしてお渡しできます。
+
+どちらの形式をご希望ですか？
