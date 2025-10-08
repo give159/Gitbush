@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git中級・上級者向け完全ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Yu Gothic', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 20px;
+            line-height: 1.8;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        header p {
+            font-size: 1.3em;
+            opacity: 0.95;
+        }
+        
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 3px solid #1e3c72;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background: #1e3c72;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 0.95em;
+        }
+        
+        .btn:hover {
+            background: #2a5298;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 60, 114, 0.3);
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 60px;
+        }
+        
+        .section h2 {
+            color: #1e3c72;
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #1e3c72;
+        }
+        
+        .section h3 {
+            color: #2a5298;
+            font-size: 1.6em;
+            margin: 30px 0 15px 0;
+            padding-left: 15px;
+            border-left: 5px solid #2a5298;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+        
+        th {
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 1.05em;
+        }
+        
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        tbody tr:hover {
+            background: #f1f3f5;
+        }
+        
+        tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        tbody tr:nth-child(even):hover {
+            background: #e9ecef;
+        }
+        
+        .code {
+            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #4ec9b0;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.92em;
+            display: inline-block;
+        }
+        
+        .command-box {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            border-left: 5px solid #4ec9b0;
+        }
+        
+        .command-box .prompt {
+            color: #858585;
+        }
+        
+        .command-box .command {
+            color: #4ec9b0;
+            font-weight: bold;
+        }
+        
+        .command-box .output {
+            color: #ce9178;
+        }
+        
+        .command-box .success {
+            color: #4ec9b0;
+        }
+        
+        .command-box .error {
+            color: #f48771;
+        }
+        
+        .command-box .warning {
+            color: #dcdcaa;
+        }
+        
+        .level-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-left: 10px;
+        }
+        
+        .level-intermediate {
+            background: #ffd93d;
+            color: #000;
+        }
+        
+        .level-advanced {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .level-expert {
+            background: #a05195;
+            color: white;
+        }
+        
+        .tip-box {
+            background: #e3f2fd;
+            border-left: 6px solid #2196f3;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        
+        .tip-box h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border-left: 6px solid #ffc107;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        
+        .warning-box h4 {
+            color: #856404;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .danger-box {
+            background: #f8d7da;
+            border-left: 6px solid #dc3545;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        
+        .danger-box h4 {
+            color: #721c24;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+        
+        .copy-btn:hover {
+            background: #218838;
+            transform: scale(1.05);
+        }
+        
+        .diagram {
+            background: #f8f9fa;
+            border: 3px solid #dee2e6;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            font-size: 0.95em;
+        }
+        
+        .flow-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .flow-step {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .flow-step strong {
+            display: block;
+            font-size: 1.4em;
+            margin-bottom: 10px;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .controls {
+                display: none;
+            }
+            
+            .copy-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Git 中級・上級者向け完全ガイド</h1>
+            <p>add/stage/push/merge操作 | 差分管理 | コンフリクト解決特化版</p>
+        </header>
+        
+        <div class="controls">
+            <button class="btn" onclick="window.print()">🖨️ 印刷 / PDF保存</button>
+            <button class="btn" onclick="exportToCSV()">💾 CSV出力</button>
+            <button class="btn" onclick="scrollToSection('staging')">📦 ステージング</button>
+            <button class="btn" onclick="scrollToSection('branch')">🌿 ブランチ</button>
+            <button class="btn" onclick="scrollToSection('diff')">🔍 差分比較</button>
+            <button class="btn" onclick="scrollToSection('conflict')">⚔️ コンフリクト</button>
+        </div>
+        
+        <div class="content">
+            <!-- ステージング操作 -->
+            <div class="section" id="staging">
+                <h2>📦 ステージング操作完全マスター</h2>
+                
+                <h3>1. add の基本から応用まで <span class="level-badge level-intermediate">中級</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <td><span class="code">git push origin --delete old-name</span></td>
+                            <td>リモートの古いブランチを削除</td>
+                            <td><button class="copy-btn" onclick="copyText('git push origin --delete ')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="command-box">
+<span class="comment"># ブランチ名変更の完全手順</span>
+
+<span class="comment"># 1. ローカルでブランチ名変更</span>
+<span class="prompt">$</span> <span class="command">git branch -m old-feature new-feature</span>
+
+<span class="comment"># 2. 新しい名前でプッシュ</span>
+<span class="prompt">$</span> <span class="command">git push origin new-feature</span>
+
+<span class="comment"># 3. 上流ブランチを設定</span>
+<span class="prompt">$</span> <span class="command">git push origin -u new-feature</span>
+
+<span class="comment"># 4. リモートの古いブランチを削除</span>
+<span class="prompt">$</span> <span class="command">git push origin --delete old-feature</span>
+                </div>
+                
+                <h3>4. ブランチの削除 <span class="level-badge level-intermediate">中級</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">コマンド</th>
+                            <th style="width: 40%;">動作</th>
+                            <th style="width: 10%;">危険度</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git branch -d feature/old</span></td>
+                            <td>マージ済みブランチを削除</td>
+                            <td>🟢 安全</td>
+                            <td><button class="copy-btn" onclick="copyText('git branch -d ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git branch -D feature/old</span></td>
+                            <td>未マージでも強制削除</td>
+                            <td>🔴 危険</td>
+                            <td><button class="copy-btn" onclick="copyText('git branch -D ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git push origin --delete feature/old</span></td>
+                            <td>リモートブランチを削除</td>
+                            <td>🟡 注意</td>
+                            <td><button class="copy-btn" onclick="copyText('git push origin --delete ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git push origin :feature/old</span></td>
+                            <td>リモートブランチを削除(旧)</td>
+                            <td>🟡 注意</td>
+                            <td><button class="copy-btn" onclick="copyText('git push origin :')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="warning-box">
+                    <h4>⚠️ -d と -D の違い</h4>
+                    <p><strong>-d</strong> = マージ済みのみ削除(安全装置付き)</p>
+                    <p><strong>-D</strong> = 強制削除(未マージでも削除、作業が失われる可能性)</p>
+                    <p>→ 基本は <strong>-d</strong> を使い、確実に削除したい時だけ <strong>-D</strong></p>
+                </div>
+            </div>
+            
+            <!-- 差分比較 -->
+            <div class="section" id="diff">
+                <h2>🔍 差分比較完全マスター</h2>
+                
+                <h3>1. 基本的な差分表示 <span class="level-badge level-intermediate">中級</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">コマンド</th>
+                            <th style="width: 45%;">表示内容</th>
+                            <th style="width: 10%;">頻度</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git diff</span></td>
+                            <td>作業ディレクトリ vs ステージング</td>
+                            <td>⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff --staged</span></td>
+                            <td>ステージング vs 最新コミット</td>
+                            <td>⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff --staged')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff --cached</span></td>
+                            <td>--stagedと同じ(別名)</td>
+                            <td>⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff --cached')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff HEAD</span></td>
+                            <td>作業ディレクトリ vs 最新コミット</td>
+                            <td>⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff HEAD')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff file.py</span></td>
+                            <td>特定ファイルの差分のみ</td>
+                            <td>⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff ')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="diagram">
+<strong>diff の比較対象</strong>
+
+Working Directory  →  git diff  →  Staging Area  →  git diff --staged  →  Repository (HEAD)
+   (作業中)                         (add済み)                                 (commit済み)
+
+git diff HEAD = Working Directory vs Repository
+                </div>
+                
+                <h3>2. ブランチ間・コミット間の差分 <span class="level-badge level-advanced">上級</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">コマンド</th>
+                            <th style="width: 50%;">比較内容</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git diff main feature</span></td>
+                            <td>mainブランチ vs featureブランチ</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff main feature')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff main..feature</span></td>
+                            <td>上と同じ(2ドット記法)</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff main..feature')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff main...feature</span></td>
+                            <td>共通祖先 vs feature(3ドット記法)</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff main...feature')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff abc1234 def5678</span></td>
+                            <td>コミットハッシュ同士を比較</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff HEAD~1 HEAD</span></td>
+                            <td>1つ前のコミット vs 最新</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff HEAD~1 HEAD')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff HEAD~3 HEAD</span></td>
+                            <td>3つ前のコミット vs 最新</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff HEAD~3 HEAD')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="tip-box">
+                    <h4>💡 2ドット vs 3ドット</h4>
+                    <p><strong>main..feature</strong> = mainの最新 vs featureの最新</p>
+                    <p><strong>main...feature</strong> = 共通祖先 vs featureの最新(featureでの変更のみ)</p>
+                    <p>→ マージ前の確認には <strong>3ドット</strong> が便利!</p>
+                </div>
+                
+                <h3>3. 差分の見やすい表示 <span class="level-badge level-advanced">上級</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">コマンド</th>
+                            <th style="width: 50%;">表示方法</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git diff --stat</span></td>
+                            <td>統計情報のみ(ファイル名と行数)</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff --stat')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff --numstat</span></td>
+                            <td>数値のみの統計</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff --numstat')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff --name-only</span></td>
+                            <td>変更されたファイル名のみ</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff --name-only')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff --name-status</span></td>
+                            <td>ファイル名+変更タイプ(M/A/D)</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff --name-status')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff --color-words</span></td>
+                            <td>単語単位で色分け表示</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff --color-words')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff --word-diff</span></td>
+                            <td>単語単位で差分表示</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff --word-diff')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="command-box">
+<span class="comment"># --stat の出力例</span>
+<span class="prompt">$</span> <span class="command">git diff --stat</span>
+
+<span class="output"> app.py      | 15 +++++++++------
+ config.py   |  3 ++-
+ README.md   |  8 +++++---
+ 3 files changed, 16 insertions(+), 10 deletions(-)</span>
+                </div>
+                
+                <h3>4. 特定の変更を探す <span class="level-badge level-expert">エキスパート</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 45%;">コマンド</th>
+                            <th style="width: 45%;">検索内容</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git diff -S "function_name"</span></td>
+                            <td>特定の文字列が追加/削除された差分</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff -S \"\"')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff -G "pattern"</span></td>
+                            <td>正規表現パターンマッチ</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff -G \"\"')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git log -p -S "function_name"</span></td>
+                            <td>履歴から特定文字列の変更を検索</td>
+                            <td><button class="copy-btn" onclick="copyText('git log -p -S \"\"')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git log --all -p -S "text"</span></td>
+                            <td>全ブランチから検索</td>
+                            <td><button class="copy-btn" onclick="copyText('git log --all -p -S \"\"')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="tip-box">
+                    <h4>💡 -S オプションの使い所</h4>
+                    <ul>
+                        <li>特定の関数がいつ削除されたか調べる</li>
+                        <li>特定の設定値がいつ変更されたか追跡</li>
+                        <li>バグの原因となった変更を特定</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- コンフリクト解決 -->
+            <div class="section" id="conflict">
+                <h2>⚔️ コンフリクト解決完全マスター</h2>
+                
+                <h3>1. コンフリクトの発生パターン <span class="level-badge level-intermediate">中級</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">操作</th>
+                            <th style="width: 40%;">コンフリクト発生条件</th>
+                            <th style="width: 30%;">予防策</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git merge</span></td>
+                            <td>両ブランチが同じ箇所を変更</td>
+                            <td>こまめにmainをマージ</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git pull</span></td>
+                            <td>リモートと同じ箇所を変更</td>
+                            <td>作業前にpull</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git rebase</span></td>
+                            <td>ベースブランチと衝突</td>
+                            <td>小さいコミットで分割</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git cherry-pick</span></td>
+                            <td>ピックしたコミットと衝突</td>
+                            <td>関連する変更を確認</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>2. コンフリクトの確認 <span class="level-badge level-intermediate">中級</span></h3>
+                
+                <div class="command-box">
+<span class="comment"># コンフリクト発生時の表示</span>
+<span class="prompt">$</span> <span class="command">git merge feature/login</span>
+
+<span class="output">Auto-merging app.py
+<span class="error">CONFLICT (content): Merge conflict in app.py</span>
+Automatic merge failed; fix conflicts and then commit the result.</span>
+
+<span class="comment"># 状態確認</span>
+<span class="prompt">$</span> <span class="command">git status</span>
+
+<span class="output">On branch main
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+  (use "git merge --abort" to abort the merge)
+
+<span class="error">Unmerged paths:</span>
+  (use "git add <file>..." to mark resolution)
+        <span class="error">both modified:   app.py</span>
+
+no changes added to commit</span>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">コマンド</th>
+                            <th style="width: 55%;">表示内容</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git status</span></td>
+                            <td>コンフリクトしているファイル一覧</td>
+                            <td><button class="copy-btn" onclick="copyText('git status')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff</span></td>
+                            <td>コンフリクト箇所の詳細</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff --name-only --diff-filter=U</span></td>
+                            <td>コンフリクトファイル名のみ</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff --name-only --diff-filter=U')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git ls-files -u</span></td>
+                            <td>未マージファイルの詳細情報</td>
+                            <td><button class="copy-btn" onclick="copyText('git ls-files -u')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>3. コンフリクトマーカーの読み方 <span class="level-badge level-intermediate">中級</span></h3>
+                
+                <div class="command-box">
+<span class="comment"># コンフリクトが発生したファイルの中身</span>
+<span class="prompt">$</span> <span class="command">cat app.py</span>
+
+<span class="output">def login(username, password):
+    <span class="error"><<<<<<< HEAD</span>
+    # 現在のブランチ(あなた)の変更
+    return authenticate_v2(username, password)
+    <span class="error">=======</span>
+    # マージしようとしているブランチの変更
+    return new_auth_system(username, password)
+    <span class="error">>>>>>>> feature/login</span>
+    
+    # コンフリクトしていない部分
+    if result:
+        return True</span>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">マーカー</th>
+                            <th style="width: 70%;">意味</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code"><<<<<<< HEAD</span></td>
+                            <td>現在のブランチ(HEADが指す)の変更開始</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">=======</span></td>
+                            <td>区切り線(上が自分、下が相手)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">>>>>>>> branch-name</span></td>
+                            <td>マージしようとしているブランチの変更終了</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>4. コンフリクト解決の3つの方法 <span class="level-badge level-advanced">上級</span></h3>
+                
+                <h4>方法1: 手動で編集 (最も基本的)</h4>
+                
+                <div class="command-box">
+<span class="comment"># 1. ファイルをエディタで開く</span>
+<span class="prompt">$</span> <span class="command">code app.py</span>
+
+<span class="comment"># 2. マーカーを削除して正しいコードだけ残す</span>
+<span class="comment"># Before:</span>
+<span class="output"><<<<<<< HEAD
+return authenticate_v2(username, password)
+=======
+return new_auth_system(username, password)
+>>>>>>> feature/login</span>
+
+<span class="comment"># After (両方を統合):</span>
+<span class="success">return new_auth_system_v2(username, password)</span>
+
+<span class="comment"># 3. ステージングしてコミット</span>
+<span class="prompt">$</span> <span class="command">git add app.py</span>
+<span class="prompt">$</span> <span class="command">git commit</span>
+                </div>
+                
+                <h4>方法2: どちらか一方を採用</h4>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 45%;">コマンド</th>
+                            <th style="width: 45%;">動作</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git checkout --ours app.py</span></td>
+                            <td>自分(HEAD)の変更を採用</td>
+                            <td><button class="copy-btn" onclick="copyText('git checkout --ours ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git checkout --theirs app.py</span></td>
+                            <td>相手(マージ元)の変更を採用</td>
+                            <td><button class="copy-btn" onclick="copyText('git checkout --theirs ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git checkout --conflict=diff3 app.py</span></td>
+                            <td>3way diff形式で再表示</td>
+                            <td><button class="copy-btn" onclick="copyText('git checkout --conflict=diff3 ')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="command-box">
+<span class="comment"># 相手の変更を採用する例</span>
+<span class="prompt">$</span> <span class="command">git checkout --theirs app.py</span>
+<span class="prompt">$</span> <span class="command">git add app.py</span>
+<span class="prompt">$</span> <span class="command">git commit</span>
+                </div>
+                
+                <h4>方法3: マージツールを使う</h4>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">コマンド</th>
+                            <th style="width: 50%;">動作</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git mergetool</span></td>
+                            <td>設定されたマージツールを起動</td>
+                            <td><button class="copy-btn" onclick="copyText('git mergetool')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git mergetool --tool=vimdiff</span></td>
+                            <td>vimdiffを使用</td>
+                            <td><button class="copy-btn" onclick="copyText('git mergetool --tool=vimdiff')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git config merge.tool vscode</span></td>
+                            <td>VS Codeをマージツールに設定</td>
+                            <td><button class="copy-btn" onclick="copyText('git config merge.tool vscode')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>5. コンフリクト解決中の便利コマンド <span class="level-badge level-advanced">上級</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">コマンド</th>
+                            <th style="width: 50%;">動作</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git merge --abort</span></td>
+                            <td>マージを中止して元に戻す</td>
+                            <td><button class="copy-btn" onclick="copyText('git merge --abort')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git rebase --abort</span></td>
+                            <td>リベースを中止して元に戻す</td>
+                            <td><button class="copy-btn" onclick="copyText('git rebase --abort')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git cherry-pick --abort</span></td>
+                            <td>チェリーピックを中止</td>
+                            <td><button class="copy-btn" onclick="copyText('git cherry-pick --abort')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git diff --check</span></td>
+                            <td>コンフリクトマーカーが残っていないかチェック</td>
+                            <td><button class="copy-btn" onclick="copyText('git diff --check')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git show :1:app.py</span></td>
+                            <td>共通祖先の内容を表示</td>
+                            <td><button class="copy-btn" onclick="copyText('git show :1:')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git show :2:app.py</span></td>
+                            <td>自分(HEAD)の内容を表示</td>
+                            <td><button class="copy-btn" onclick="copyText('git show :2:')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git show :3:app.py</span></td>
+                            <td>相手(MERGE_HEAD)の内容を表示</td>
+                            <td><button class="copy-btn" onclick="copyText('git show :3:')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="tip-box">
+                    <h4>💡 :1 :2 :3 の意味</h4>
+                    <p><strong>:1</strong> = 共通祖先(base) - 両方が分岐する前の状態</p>
+                    <p><strong>:2</strong> = 自分(ours/HEAD) - 現在のブランチの状態</p>
+                    <p><strong>:3</strong> = 相手(theirs/MERGE_HEAD) - マージしようとしているブランチの状態</p>
+                </div>
+                
+                <h3>6. コンフリクト解決の完全フロー <span class="level-badge level-advanced">上級</span></h3>
+                
+                <div class="flow-steps">
+                    <div class="flow-step">
+                        <strong>Step 1</strong>
+                        <p>コンフリクト発生を確認</p>
+                        <span class="code">git status</span>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 2</strong>
+                        <p>ファイルを開いて編集</p>
+                        <span class="code">code app.py</span>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 3</strong>
+                        <p>マーカーを削除</p>
+                        <p>正しいコードを残す</p>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 4</strong>
+                        <p>ステージングする</p>
+                        <span class="code">git add .</span>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 5</strong>
+                        <p>マーカー残存確認</p>
+                        <span class="code">git diff --check</span>
+                    </div>
+                    <div class="flow-step">
+                        <strong>Step 6</strong>
+                        <p>コミット完了</p>
+                        <span class="code">git commit</span>
+                    </div>
+                </div>
+                
+                <div class="command-box">
+<span class="comment"># コンフリクト解決の完全な手順</span>
+
+<span class="comment"># 1. コンフリクト発生</span>
+<span class="prompt">$</span> <span class="command">git merge feature/login</span>
+<span class="error">CONFLICT (content): Merge conflict in app.py</span>
+
+<span class="comment"># 2. 状態確認</span>
+<span class="prompt">$</span> <span class="command">git status</span>
+<span class="error">both modified:   app.py</span>
+
+<span class="comment"># 3. どのファイルがコンフリクトしているか確認</span>
+<span class="prompt">$</span> <span class="command">git diff --name-only --diff-filter=U</span>
+<span class="output">app.py</span>
+
+<span class="comment"># 4. ファイルを編集</span>
+<span class="prompt">$</span> <span class="command">code app.py</span>
+<span class="comment"># <<<<<<< , ======= , >>>>>>> を削除して統合</span>
+
+<span class="comment"># 5. マーカーが残っていないか確認</span>
+<span class="prompt">$</span> <span class="command">git diff --check</span>
+<span class="success">(何も表示されなければOK)</span>
+
+<span class="comment"># 6. ステージング</span>
+<span class="prompt">$</span> <span class="command">git add app.py</span>
+
+<span class="comment"># 7. 状態再確認</span>
+<span class="prompt">$</span> <span class="command">git status</span>
+<span class="success">All conflicts fixed but you are still merging.</span>
+
+<span class="comment"># 8. コミット</span>
+<span class="prompt">$</span> <span class="command">git commit</span>
+<span class="success">[main abc1234] Merge branch 'feature/login'</span>
+
+<span class="comment"># 9. マージ完了確認</span>
+<span class="prompt">$</span> <span class="command">git log --oneline --graph -5</span>
+                </div>
+                
+                <h3>7. 複雑なコンフリクトの対処 <span class="level-badge level-expert">エキスパート</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">シチュエーション</th>
+                            <th style="width: 55%;">対処法</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ファイルが削除されている</td>
+                            <td><span class="code">git rm file.py</span> または <span class="code">git add file.py</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git rm ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td>バイナリファイルの衝突</td>
+                            <td><span class="code">git checkout --ours/--theirs file.png</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git checkout --ours ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td>大量のコンフリクト</td>
+                            <td><span class="code">git merge --abort</span> して戦略変更</td>
+                            <td><button class="copy-btn" onclick="copyText('git merge --abort')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td>同じコンフリクトが何度も</td>
+                            <td><span class="code">git config rerere.enabled true</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git config rerere.enabled true')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="tip-box">
+                    <h4>💡 rerere (Reuse Recorded Resolution)</h4>
+                    <p><strong>rerere</strong> を有効にすると、一度解決したコンフリクトを記憶して自動で再適用してくれます。</p>
+                    <div class="command-box">
+<span class="comment"># rerere を有効化</span>
+<span class="prompt">$</span> <span class="command">git config --global rerere.enabled true</span>
+
+<span class="comment"># 以降、同じコンフリクトは自動解決される!</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- マージ戦略 -->
+            <div class="section" id="merge">
+                <h2>🔀 マージ戦略完全マスター</h2>
+                
+                <h3>1. マージの基本 <span class="level-badge level-intermediate">中級</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">コマンド</th>
+                            <th style="width: 45%;">動作</th>
+                            <th style="width: 10%;">頻度</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git merge feature</span></td>
+                            <td>featureブランチをマージ</td>
+                            <td>⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git merge ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git merge --no-ff feature</span></td>
+                            <td>必ずマージコミットを作成</td>
+                            <td>⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git merge --no-ff ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git merge --ff-only feature</span></td>
+                            <td>Fast-forwardできる時のみマージ</td>
+                            <td>⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git merge --ff-only ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git merge --squash feature</span></td>
+                            <td>1つのコミットにまとめる</td>
+                            <td>⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git merge --squash ')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="diagram">
+<strong>マージの種類</strong>
+
+Fast-forward (--ff):
+  A --- B --- C (main)
+                 \
+                  D --- E (feature)
+  ↓ git merge feature
+  A --- B --- C --- D --- E (main)
+
+No Fast-forward (--no-ff):
+  A --- B --- C (main)
+                 \
+                  D --- E (feature)
+  ↓ git merge --no-ff feature
+  A --- B --- C ------- M (main)
+                 \     /
+                  D --- E
+
+Squash (--squash):
+  A --- B --- C (main)
+                 \
+                  D --- E (feature)
+  ↓ git merge --squash feature
+  A --- B --- C --- DE (main)
+  (D と E を1つにまとめる)
+                </div>
+                
+                <h3>2. マージ戦略の指定 <span class="level-badge level-advanced">上級</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">コマンド</th>
+                            <th style="width: 50%;">戦略の説明</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git merge -s ours feature</span></td>
+                            <td>自分の変更を完全に優先</td>
+                            <td><button class="copy-btn" onclick="copyText('git merge -s ours ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git merge -s theirs feature</span></td>
+                            <td>相手の変更を完全に優先(非推奨)</td>
+                            <td><button class="copy-btn" onclick="copyText('git merge -s theirs ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git merge -X ours feature</span></td>
+                            <td>コンフリクト時に自分優先</td>
+                            <td><button class="copy-btn" onclick="copyText('git merge -X ours ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git merge -X theirs feature</span></td>
+                            <td>コンフリクト時に相手優先</td>
+                            <td><button class="copy-btn" onclick="copyText('git merge -X theirs ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git merge -X patience feature</span></td>
+                            <td>より賢い差分アルゴリズム</td>
+                            <td><button class="copy-btn" onclick="copyText('git merge -X patience ')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="warning-box">
+                    <h4>⚠️ -s と -X の違い</h4>
+                    <p><strong>-s (strategy)</strong> = マージ戦略全体を指定</p>
+                    <p><strong>-X (strategy-option)</strong> = コンフリクト時の解決方法を指定</p>
+                    <p>→ 通常は <strong>-X ours/theirs</strong> の方が安全</p>
+                </div>
+                
+                <h3>3. マージの取り消し <span class="level-badge level-intermediate">中級</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">コマンド</th>
+                            <th style="width: 40%;">タイミング</th>
+                            <th style="width: 10%;">危険度</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git merge --abort</span></td>
+                            <td>マージ中(コンフリクト解決前)</td>
+                            <td>🟢 安全</td>
+                            <td><button class="copy-btn" onclick="copyText('git merge --abort')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git reset --merge</span></td>
+                            <td>マージ完了直後</td>
+                            <td>🟡 注意</td>
+                            <td><button class="copy-btn" onclick="copyText('git reset --merge')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git reset --hard HEAD~1</span></td>
+                            <td>マージコミット完了後(未プッシュ)</td>
+                            <td>🔴 危険</td>
+                            <td><button class="copy-btn" onclick="copyText('git reset --hard HEAD~1')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git revert -m 1 HEAD</span></td>
+                            <td>プッシュ済みマージを取り消し</td>
+                            <td>🟢 安全</td>
+                            <td><button class="copy-btn" onclick="copyText('git revert -m 1 HEAD')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="command-box">
+<span class="comment"># プッシュ済みマージを取り消す(推奨方法)</span>
+
+<span class="comment"># 1. マージコミットを確認</span>
+<span class="prompt">$</span> <span class="command">git log --oneline --graph -5</span>
+<span class="output">*   abc1234 (HEAD -> main) Merge branch 'feature'
+|\  
+| * def5678 Feature commit
+* | ghi9012 Main commit
+|/</span>
+
+<span class="comment"># 2. revert でマージを取り消す(-m 1 = mainを親として保持)</span>
+<span class="prompt">$</span> <span class="command">git revert -m 1 abc1234</span>
+<span class="success">[main xyz9876] Revert "Merge branch 'feature'"</span>
+
+<span class="comment"># 3. プッシュ</span>
+<span class="prompt">$</span> <span class="command">git push</span>
+                </div>
+                
+                <div class="tip-box">
+                    <h4>💡 -m 1 の意味</h4>
+                    <p>マージコミットには2つの親があります:</p>
+                    <ul>
+                        <li><strong>-m 1</strong> = 最初の親(main)を保持</li>
+                        <li><strong>-m 2</strong> = 2番目の親(feature)を保持</li>
+                    </ul>
+                    <p>通常は <strong>-m 1</strong> を使います。</p>
+                </div>
+            </div>
+            
+            <!-- 実践シナリオ -->
+            <div class="section" id="scenarios">
+                <h2>🎯 実践シナリオ集</h2>
+                
+                <h3>シナリオ1: 間違えてaddしてしまった <span class="level-badge level-intermediate">中級</span></h3>
+                
+                <div class="command-box">
+<span class="comment"># 状況: デバッグコードもaddしてしまった</span>
+<span class="prompt">$</span> <span class="command">git add .</span>
+
+<span class="comment"># 解決策1: 全て取り消す</span>
+<span class="prompt">$</span> <span class="command">git restore --staged .</span>
+
+<span class="comment"># 解決策2: 特定ファイルだけ取り消す</span>
+<span class="prompt">$</span> <span class="command">git restore --staged debug.py</span>
+
+<span class="comment"># 解決策3: 対話的に選び直す</span>
+<span class="prompt">$</span> <span class="command">git restore --staged .</span>
+<span class="prompt">$</span> <span class="command">git add -p</span>
+<span class="comment"># y/n で必要な変更だけ選択</span>
+                </div>
+                
+                <h3>シナリオ2: 複数のブランチで同時に作業している <span class="level-badge level-advanced">上級</span></h3>
+                
+                <div class="command-box">
+<span class="comment"># 状況: feature1で作業中に緊急でhotfixが必要</span>
+<span class="prompt">$</span> <span class="command">git status</span>
+<span class="output">On branch feature1
+Changes not staged for commit:
+        modified:   app.py</span>
+
+<span class="comment"># 解決策: stash で一時退避</span>
+<span class="prompt">$</span> <span class="command">git stash push -m "作業中のfeature1"</span>
+<span class="success">Saved working directory and index state</span>
+
+<span class="comment"># hotfix作業</span>
+<span class="prompt">$</span> <span class="command">git checkout main</span>
+<span class="prompt">$</span> <span class="command">git checkout -b hotfix/critical-bug</span>
+<span class="comment"># ... 修正作業 ...</span>
+<span class="prompt">$</span> <span class="command">git add . && git commit -m "緊急バグ修正"</span>
+<span class="prompt">$</span> <span class="command">git push</span>
+
+<span class="comment"># 元の作業に戻る</span>
+<span class="prompt">$</span> <span class="command">git checkout feature1</span>
+<span class="prompt">$</span> <span class="command">git stash pop</span>
+<span class="success">On branch feature1
+Changes not staged for commit:
+        modified:   app.py</span>
+                </div>
+                
+                <h3>シナリオ3: 他のブランチの特定コミットだけ取り込みたい <span class="level-badge level-advanced">上級</span></h3>
+                
+                <div class="command-box">
+<span class="comment"># 状況: feature2の特定のコミットだけ欲しい</span>
+<span class="prompt">$</span> <span class="command">git log --oneline feature2</span>
+<span class="output">abc1234 重要な修正 ← これが欲しい
+def5678 実験的な変更
+ghi9012 古い変更</span>
+
+<span class="comment"># 解決策: cherry-pick</span>
+<span class="prompt">$</span> <span class="command">git checkout main</span>
+<span class="prompt">$</span> <span class="command">git cherry-pick abc1234</span>
+<span class="success">[main xyz9876] 重要な修正</span>
+
+<span class="comment"># コンフリクトした場合</span>
+<span class="error">CONFLICT (content): Merge conflict in app.py</span>
+<span class="prompt">$</span> <span class="command">code app.py</span>
+<span class="comment"># ... 解決 ...</span>
+<span class="prompt">$</span> <span class="command">git add app.py</span>
+<span class="prompt">$</span> <span class="command">git cherry-pick --continue</span>
+                </div>
+                
+                <h3>シナリオ4: mainを間違えて進めてしまった <span class="level-badge level-expert">エキスパート</span></h3>
+                
+                <div class="command-box">
+<span class="comment"># 状況: mainブランチに直接コミットしてしまった</span>
+<span class="prompt">$</span> <span class="command">git log --oneline</span>
+<span class="output">abc1234 (HEAD -> main) 間違ってmainにコミット
+def5678 (origin/main) 正しい最新</span>
+
+<span class="comment"># 解決策: ブランチを作成してmainを戻す</span>
+
+<span class="comment"># 1. 今の状態で新しいブランチを作成</span>
+<span class="prompt">$</span> <span class="command">git branch feature/accidental</span>
+
+<span class="comment"># 2. mainをリモートに合わせる</span>
+<span class="prompt">$</span> <span class="command">git reset --hard origin/main</span>
+<span class="success">HEAD is now at def5678</span>
+
+<span class="comment"># 3. 新しいブランチに切り替え</span>
+<span class="prompt">$</span> <span class="command">git checkout feature/accidental</span>
+
+<span class="comment"># 4. 確認</span>
+<span class="prompt">$</span> <span class="command">git log --oneline</span>
+<span class="output">abc1234 (HEAD -> feature/accidental) 間違ってmainにコミット
+def5678 (origin/main, main) 正しい最新</span>
+                </div>
+                
+                <h3>シナリオ5: 大規模なコンフリクトに直面 <span class="level-badge level-expert">エキスパート</span></h3>
+                
+                <div class="command-box">
+<span class="comment"># 状況: 100ファイル以上でコンフリクト</span>
+<span class="prompt">$</span> <span class="command">git merge feature/big-change</span>
+<span class="error">CONFLICT: 103 files have conflicts</span>
+
+<span class="comment"># 解決策: 戦略を変更</span>
+
+<span class="comment"># 1. いったん中止</span>
+<span class="prompt">$</span> <span class="command">git merge --abort</span>
+
+<span class="comment"># 2. 自動的に自分の変更を優先してマージ</span>
+<span class="prompt">$</span> <span class="command">git merge -X ours feature/big-change</span>
+
+<span class="comment"># または相手を優先</span>
+<span class="prompt">$</span> <span class="command">git merge -X theirs feature/big-change</span>
+
+<span class="comment"># 3. 重要なファイルだけ手動で確認</span>
+<span class="prompt">$</span> <span class="command">git diff HEAD~1 HEAD -- important.py</span>
+<span class="prompt">$</span> <span class="command">code important.py</span>
+                </div>
+            </div>
+            
+            <!-- チートシート -->
+            <div class="section" id="cheatsheet">
+                <h2>📋 完全チートシート</h2>
+                
+                <h3>ステージング操作</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>やりたいこと</th>
+                            <th>コマンド</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>全て追加</td>
+                            <td><span class="code">git add .</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git add .')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td>対話的に追加</td>
+                            <td><span class="code">git add -p</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git add -p')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td>addを取り消し</td>
+                            <td><span class="code">git restore --staged .</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git restore --staged .')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td>変更を破棄</td>
+                            <td><span class="code">git restore .</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git restore .')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>ブランチ操作</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>やりたいこと</th>
+                            <th>コマンド</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>一覧表示</td>
+                            <td><span class="code">git branch -a</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git branch -a')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td>切り替え</td>
+                            <td><span class="code">git switch main</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git switch main')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td>作成+切り替え</td>
+                            <td><span class="code">git switch -c feature/new</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git switch -c ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td>削除</td>
+                            <td><span class="code">git branch -d old</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git branch -d ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td>リネーム</td>
+                            <td><span class="code">git branch -m old new</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git branch -m ')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>差分確認</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>やりたいこと</th>
+                            <th>コマンド</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>作業中の差分</td>
+                            <td><span class="code">git diff</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git diff')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td>ステージング済みの差分</td>
+                            <td><span class="code">git diff --staged</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git diff --staged')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td>ブランチ間差分</td>
+                            <td><span class="code">git diff main feature</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git diff main ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td>統計のみ</td>
+                            <td><span class="code">git diff --stat</span></td>
+                            <td><button class="copy-btn" onclick="copyText('git diff --stat')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td>ファイル名のみ</td>
+                            <td><span class="code">git diff --name-only</span>
+                            <th style="width: 30%;">コマンド</th>
+                            <th style="width: 35%;">動作</th>
+                            <th style="width: 25%;">使い所</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git add .</span></td>
+                            <td>カレントディレクトリ以下全て追加</td>
+                            <td>全変更を一括追加</td>
+                            <td><button class="copy-btn" onclick="copyText('git add .')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git add -A</span></td>
+                            <td>リポジトリ全体の変更を追加</td>
+                            <td>サブディレクトリ含む全て</td>
+                            <td><button class="copy-btn" onclick="copyText('git add -A')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git add -u</span></td>
+                            <td>追跡中ファイルの変更のみ追加</td>
+                            <td>新規ファイルは無視</td>
+                            <td><button class="copy-btn" onclick="copyText('git add -u')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git add -p</span></td>
+                            <td>対話的にハンク単位で追加</td>
+                            <td>部分的に追加したい時</td>
+                            <td><button class="copy-btn" onclick="copyText('git add -p')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git add *.py</span></td>
+                            <td>パターンマッチで追加</td>
+                            <td>特定拡張子のみ</td>
+                            <td><button class="copy-btn" onclick="copyText('git add *.py')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git add src/</span></td>
+                            <td>ディレクトリ単位で追加</td>
+                            <td>特定フォルダのみ</td>
+                            <td><button class="copy-btn" onclick="copyText('git add src/')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>2. add -p の使い方(対話的ステージング) <span class="level-badge level-advanced">上級</span></h3>
+                
+                <div class="command-box">
+<span class="prompt">$</span> <span class="command">git add -p app.py</span>
+
+<span class="output">diff --git a/app.py b/app.py
+index abc1234..def5678 100644
+--- a/app.py
++++ b/app.py
+@@ -10,7 +10,7 @@ def login():
+-    return False
++    return authenticate_user()
+ 
+Stage this hunk [y,n,q,a,d,s,e,?]?</span>
+                </div>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">キー</th>
+                            <th style="width: 30%;">意味</th>
+                            <th style="width: 55%;">説明</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>y</strong></td>
+                            <td>yes</td>
+                            <td>この変更をステージングする</td>
+                        </tr>
+                        <tr>
+                            <td><strong>n</strong></td>
+                            <td>no</td>
+                            <td>この変更をスキップ</td>
+                        </tr>
+                        <tr>
+                            <td><strong>q</strong></td>
+                            <td>quit</td>
+                            <td>終了(以降はスキップ)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>a</strong></td>
+                            <td>all</td>
+                            <td>このファイルの残り全てをステージング</td>
+                        </tr>
+                        <tr>
+                            <td><strong>d</strong></td>
+                            <td>done</td>
+                            <td>このファイルの残り全てをスキップ</td>
+                        </tr>
+                        <tr>
+                            <td><strong>s</strong></td>
+                            <td>split</td>
+                            <td>変更をさらに細かく分割</td>
+                        </tr>
+                        <tr>
+                            <td><strong>e</strong></td>
+                            <td>edit</td>
+                            <td>手動で編集</td>
+                        </tr>
+                        <tr>
+                            <td><strong>?</strong></td>
+                            <td>help</td>
+                            <td>ヘルプ表示</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="tip-box">
+                    <h4>💡 add -p の使い所</h4>
+                    <ul>
+                        <li>1つのファイルに複数の変更があり、別々にコミットしたい</li>
+                        <li>デバッグ用のprintを除外してコミットしたい</li>
+                        <li>コミットメッセージを明確にするため、論理的に分割したい</li>
+                    </ul>
+                </div>
+                
+                <h3>3. ステージングの取り消し <span class="level-badge level-intermediate">中級</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">コマンド</th>
+                            <th style="width: 35%;">動作</th>
+                            <th style="width: 20%;">範囲</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git restore --staged .</span></td>
+                            <td>全ファイルのステージング解除</td>
+                            <td>全て</td>
+                            <td><button class="copy-btn" onclick="copyText('git restore --staged .')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git restore --staged file.py</span></td>
+                            <td>特定ファイルのステージング解除</td>
+                            <td>1ファイル</td>
+                            <td><button class="copy-btn" onclick="copyText('git restore --staged ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git reset HEAD .</span></td>
+                            <td>全ファイルのステージング解除(旧)</td>
+                            <td>全て</td>
+                            <td><button class="copy-btn" onclick="copyText('git reset HEAD .')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git reset HEAD file.py</span></td>
+                            <td>特定ファイルのステージング解除(旧)</td>
+                            <td>1ファイル</td>
+                            <td><button class="copy-btn" onclick="copyText('git reset HEAD ')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="tip-box">
+                    <h4>💡 restore vs reset の違い</h4>
+                    <p><strong>git restore --staged</strong> = 新しい推奨コマンド(Git 2.23+)</p>
+                    <p><strong>git reset HEAD</strong> = 古いコマンド(互換性のため残っている)</p>
+                    <p>→ <strong>restore を使うことを推奨!</strong></p>
+                </div>
+                
+                <h3>4. 変更の破棄 <span class="level-badge level-intermediate">中級</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">コマンド</th>
+                            <th style="width: 35%;">動作</th>
+                            <th style="width: 20%;">危険度</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git restore file.py</span></td>
+                            <td>作業ディレクトリの変更を破棄</td>
+                            <td>🔴 戻せない</td>
+                            <td><button class="copy-btn" onclick="copyText('git restore ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git restore .</span></td>
+                            <td>全ての変更を破棄</td>
+                            <td>🔴 戻せない</td>
+                            <td><button class="copy-btn" onclick="copyText('git restore .')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git checkout -- file.py</span></td>
+                            <td>変更を破棄(旧コマンド)</td>
+                            <td>🔴 戻せない</td>
+                            <td><button class="copy-btn" onclick="copyText('git checkout -- ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git clean -fd</span></td>
+                            <td>未追跡ファイルを削除</td>
+                            <td>🔴 戻せない</td>
+                            <td><button class="copy-btn" onclick="copyText('git clean -fd')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git clean -fdn</span></td>
+                            <td>削除予定を表示(実行しない)</td>
+                            <td>🟢 安全</td>
+                            <td><button class="copy-btn" onclick="copyText('git clean -fdn')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="danger-box">
+                    <h4>⚠️ 警告: 破棄は取り消せない!</h4>
+                    <p><strong>git restore</strong> や <strong>git clean</strong> で削除した変更は<strong>二度と戻せません!</strong></p>
+                    <p>必ず <span class="code">git status</span> や <span class="code">git diff</span> で確認してから実行してください。</p>
+                </div>
+            </div>
+            
+            <!-- ブランチ操作 -->
+            <div class="section" id="branch">
+                <h2>🌿 ブランチ操作完全マスター</h2>
+                
+                <h3>1. ブランチの確認 <span class="level-badge level-intermediate">中級</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 35%;">コマンド</th>
+                            <th style="width: 45%;">表示内容</th>
+                            <th style="width: 10%;">頻度</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git branch</span></td>
+                            <td>ローカルブランチ一覧</td>
+                            <td>⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git branch')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git branch -r</span></td>
+                            <td>リモートブランチ一覧</td>
+                            <td>⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git branch -r')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git branch -a</span></td>
+                            <td>全ブランチ一覧(ローカル+リモート)</td>
+                            <td>⭐⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git branch -a')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git branch -vv</span></td>
+                            <td>詳細表示(上流ブランチも)</td>
+                            <td>⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git branch -vv')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git branch --merged</span></td>
+                            <td>マージ済みブランチ一覧</td>
+                            <td>⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git branch --merged')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git branch --no-merged</span></td>
+                            <td>未マージブランチ一覧</td>
+                            <td>⭐⭐</td>
+                            <td><button class="copy-btn" onclick="copyText('git branch --no-merged')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3>2. ブランチの切り替え <span class="level-badge level-intermediate">中級</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">コマンド</th>
+                            <th style="width: 40%;">動作</th>
+                            <th style="width: 10%;">推奨</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git switch main</span></td>
+                            <td>mainブランチに切り替え(新)</td>
+                            <td>✅</td>
+                            <td><button class="copy-btn" onclick="copyText('git switch main')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git switch -c feature/new</span></td>
+                            <td>ブランチ作成+切り替え(新)</td>
+                            <td>✅</td>
+                            <td><button class="copy-btn" onclick="copyText('git switch -c ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git switch -</span></td>
+                            <td>直前のブランチに戻る</td>
+                            <td>✅</td>
+                            <td><button class="copy-btn" onclick="copyText('git switch -')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git checkout main</span></td>
+                            <td>mainブランチに切り替え(旧)</td>
+                            <td>⚠️</td>
+                            <td><button class="copy-btn" onclick="copyText('git checkout main')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git checkout -b feature/new</span></td>
+                            <td>ブランチ作成+切り替え(旧)</td>
+                            <td>⚠️</td>
+                            <td><button class="copy-btn" onclick="copyText('git checkout -b ')">コピー</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="tip-box">
+                    <h4>💡 switch vs checkout</h4>
+                    <p><strong>git switch</strong> = ブランチ切り替え専用(Git 2.23+、推奨)</p>
+                    <p><strong>git checkout</strong> = 多機能すぎて混乱しやすい(旧コマンド)</p>
+                    <p>→ <strong>switch を使うことを推奨!</strong></p>
+                </div>
+                
+                <h3>3. ブランチの差し替え・リネーム <span class="level-badge level-advanced">上級</span></h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;">コマンド</th>
+                            <th style="width: 50%;">動作</th>
+                            <th style="width: 10%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="code">git branch -m old-name new-name</span></td>
+                            <td>ブランチ名を変更</td>
+                            <td><button class="copy-btn" onclick="copyText('git branch -m ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git branch -m new-name</span></td>
+                            <td>現在のブランチ名を変更</td>
+                            <td><button class="copy-btn" onclick="copyText('git branch -m ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git branch -M new-name</span></td>
+                            <td>強制的に変更(上書き)</td>
+                            <td><button class="copy-btn" onclick="copyText('git branch -M ')">コピー</button></td>
+                        </tr>
+                        <tr>
+                            <td><span class="code">git push origin :old-name new-name</span></td>
+                            <td>リモートのブランチ名も変更</td>
+                            <td><button class="copy-btn" onclick="copyText('git push origin :old-name new-name')">コピー</button></td>
+                        </tr>
+                        <tr>
