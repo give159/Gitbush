@@ -1,0 +1,1323 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitBash エラー・コンフリクト対応チートシート</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 3px solid #667eea;
+            overflow-x: auto;
+        }
+        
+        .tab-button {
+            padding: 15px 30px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            color: #666;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        
+        .tab-button:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+        
+        .tab-button.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .terminal {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .terminal-dots {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .dot.red { background: #ff5f56; }
+        .dot.yellow { background: #ffbd2e; }
+        .dot.green { background: #27c93f; }
+        
+        .terminal-title {
+            margin-left: 15px;
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .error-text { color: #f48771; font-weight: bold; }
+        .success-text { color: #89d185; font-weight: bold; }
+        .warning-text { color: #e5c07b; font-weight: bold; }
+        .info-text { color: #61afef; font-weight: bold; }
+        .comment { color: #5c6370; font-style: italic; }
+        .command { color: #c678dd; }
+        .path { color: #98c379; }
+        .hash { color: #d19a66; }
+        
+        .solution-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .solution-box h3 {
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        
+        .step {
+            background: white;
+            padding: 20px;
+            border-left: 5px solid #667eea;
+            margin: 15px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .color-legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .color-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            margin-right: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .conflict-marker {
+            background: #2d2d2d;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            position: relative;
+        }
+        
+        .marker-label {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            color: #fff;
+        }
+        
+        .code-line {
+            margin: 5px 0;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+        
+        .command-card {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: all 0.3s;
+        }
+        
+        .command-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .command-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .badge-error { background: #ffe5e5; color: #d32f2f; }
+        .badge-warning { background: #fff3e0; color: #f57c00; }
+        .badge-success { background: #e8f5e9; color: #388e3c; }
+        .badge-info { background: #e3f2fd; color: #1976d2; }
+        
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8em; }
+            .tabs { flex-wrap: wrap; }
+            .tab-button { padding: 10px 15px; font-size: 0.9em; }
+            .content { padding: 15px; }
+        }
+        
+        .quick-ref {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .ref-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .ref-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .ref-card h4 {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .ref-card code {
+            background: rgba(255,255,255,0.2);
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 GitBash エラー・コンフリクト完全対応ガイド</h1>
+            <p>コマンド画面の色とメッセージの読み方チートシート</p>
+        </header>
+        
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab(event, 'colors')">🎨 色の意味</button>
+            <button class="tab-button" onclick="openTab(event, 'errors')">❌ エラー対応</button>
+            <button class="tab-button" onclick="openTab(event, 'conflicts')">⚡ コンフリクト</button>
+            <button class="tab-button" onclick="openTab(event, 'status')">📊 Status読み方</button>
+            <button class="tab-button" onclick="openTab(event, 'merge')">🔀 マージ</button>
+            <button class="tab-button" onclick="openTab(event, 'quick')">⚡ クイックリファレンス</button>
+        </div>
+        
+        <div class="content">
+            <!-- 色の意味タブ -->
+            <div id="colors" class="tab-content active">
+                <h2>🎨 GitBash画面の色の意味</h2>
+                
+                <div class="color-legend">
+                    <div class="legend-item">
+                        <div class="color-box" style="background: #f48771;"></div>
+                        <div>
+                            <strong>赤色</strong><br>
+                            エラー・コンフリクト<br>
+                            追跡されていない変更
+                        </div>
+                    </div>
+                    
+                    <div class="legend-item">
+                        <div class="color-box" style="background: #89d185;"></div>
+                        <div>
+                            <strong>緑色</strong><br>
+                            成功メッセージ<br>
+                            ステージング済みファイル
+                        </div>
+                    </div>
+                    
+                    <div class="legend-item">
+                        <div class="color-box" style="background: #e5c07b;"></div>
+                        <div>
+                            <strong>黄色</strong><br>
+                            警告メッセージ<br>
+                            変更されたファイル
+                        </div>
+                    </div>
+                    
+                    <div class="legend-item">
+                        <div class="color-box" style="background: #61afef;"></div>
+                        <div>
+                            <strong>青色</strong><br>
+                            情報メッセージ<br>
+                            ブランチ名
+                        </div>
+                    </div>
+                    
+                    <div class="legend-item">
+                        <div class="color-box" style="background: #c678dd;"></div>
+                        <div>
+                            <strong>紫色</strong><br>
+                            コマンド<br>
+                            キーワード
+                        </div>
+                    </div>
+                    
+                    <div class="legend-item">
+                        <div class="color-box" style="background: #5c6370;"></div>
+                        <div>
+                            <strong>灰色</strong><br>
+                            コメント<br>
+                            ヒントメッセージ
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 30px;">実際の画面例</h3>
+                
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dots">
+                            <div class="dot red"></div>
+                            <div class="dot yellow"></div>
+                            <div class="dot green"></div>
+                        </div>
+                        <div class="terminal-title">GitBash - git status</div>
+                    </div>
+                    <div>
+<span class="info-text">On branch</span> <span class="command">feature/login</span>
+<span class="comment">Your branch is up to date with 'origin/feature/login'.</span>
+
+<span class="success-text">Changes to be committed:</span>
+  <span class="comment">(use "git restore --staged &lt;file&gt;..." to unstage)</span>
+        <span class="success-text">modified:   app.py</span>
+        <span class="success-text">new file:   login.py</span>
+
+<span class="error-text">Changes not staged for commit:</span>
+  <span class="comment">(use "git add &lt;file&gt;..." to update what will be committed)</span>
+  <span class="comment">(use "git restore &lt;file&gt;..." to discard changes)</span>
+        <span class="error-text">modified:   config.py</span>
+
+<span class="error-text">Untracked files:</span>
+  <span class="comment">(use "git add &lt;file&gt;..." to include in what will be committed)</span>
+        <span class="error-text">temp.py</span>
+                    </div>
+                </div>
+                
+                <div class="solution-box">
+                    <h3>💡 色から状態を判断する方法</h3>
+                    <ul>
+                        <li><strong>緑色のファイル</strong> → コミット準備OK！次は <code>git commit</code></li>
+                        <li><strong>赤色のファイル</strong> → まだ準備できていない。<code>git add</code> が必要</li>
+                        <li><strong>灰色のメッセージ</strong> → ヒントやコマンドの提案（従うと解決できる）</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- エラー対応タブ -->
+            <div id="errors" class="tab-content">
+                <h2>❌ よくあるエラーと対応方法</h2>
+                
+                <input type="text" class="search-box" placeholder="🔍 エラーメッセージで検索..." onkeyup="searchErrors(this.value)">
+                
+                <div class="error-list">
+                    <!-- エラー1 -->
+                    <div class="command-card" data-keywords="rejected push force リジェクト プッシュ">
+                        <div class="command-title">
+                            <span class="badge badge-error">ERROR</span>
+                            ! [rejected] - プッシュが拒否された
+                        </div>
+                        
+                        <div class="terminal">
+                            <div class="terminal-header">
+                                <div class="terminal-dots">
+                                    <div class="dot red"></div>
+                                    <div class="dot yellow"></div>
+                                    <div class="dot green"></div>
+                                </div>
+                                <div class="terminal-title">エラーメッセージ</div>
+                            </div>
+<span class="error-text">To https://github.com/user/repo.git
+ ! [rejected]        main -> main (fetch first)
+error: failed to push some refs to 'https://github.com/user/repo.git'</span>
+<span class="comment">hint: Updates were rejected because the remote contains work that you do
+hint: not have locally. This is usually caused by another repository pushing
+hint: to the same ref.</span>
+                        </div>
+                        
+                        <div class="step">
+                            <span class="step-number">1</span>
+                            <strong>原因:</strong> リモートに自分より新しいコミットがある
+                        </div>
+                        
+                        <div class="step">
+                            <span class="step-number">2</span>
+                            <strong>解決法:</strong>
+                            <div class="terminal">
+<span class="command">git pull origin main</span>
+<span class="comment"># コンフリクトがあれば解決</span>
+<span class="command">git push origin main</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- エラー2 -->
+                    <div class="command-card" data-keywords="conflict merge コンフリクト マージ 衝突">
+                        <div class="command-title">
+                            <span class="badge badge-error">CONFLICT</span>
+                            CONFLICT (content) - マージコンフリクト
+                        </div>
+                        
+                        <div class="terminal">
+                            <div class="terminal-header">
+                                <div class="terminal-dots">
+                                    <div class="dot red"></div>
+                                    <div class="dot yellow"></div>
+                                    <div class="dot green"></div>
+                                </div>
+                                <div class="terminal-title">エラーメッセージ</div>
+                            </div>
+<span class="warning-text">Auto-merging app.py</span>
+<span class="error-text">CONFLICT (content): Merge conflict in app.py</span>
+<span class="error-text">Automatic merge failed; fix conflicts and then commit the result.</span>
+                        </div>
+                        
+                        <div class="step">
+                            <span class="step-number">1</span>
+                            <strong>状況確認:</strong>
+                            <div class="terminal">
+<span class="command">git status</span>
+<span class="error-text">Unmerged paths:
+        both modified:   app.py</span>
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <span class="step-number">2</span>
+                            <strong>ファイルを開いて修正:</strong>
+                            <div class="conflict-marker">
+                                <div class="marker-label">現在のブランチ</div>
+<span class="error-text">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</span>
+<span class="code-line">    return a + b + 10</span>
+<span class="warning-text">=======</span>
+<span class="code-line">    return a * b</span>
+<span class="info-text">&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/other-branch</span>
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <span class="step-number">3</span>
+                            <strong>マーカー削除して保存:</strong>
+                            <div class="conflict-marker">
+<span class="success-text">    # 両方の意図を組み込む</span>
+<span class="code-line">    result = a * b</span>
+<span class="code-line">    return result + 10</span>
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <span class="step-number">4</span>
+                            <strong>コミット:</strong>
+                            <div class="terminal">
+<span class="command">git add app.py</span>
+<span class="command">git commit -m "merge: コンフリクト解決"</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- エラー3 -->
+                    <div class="command-card" data-keywords="detached head デタッチド ヘッド">
+                        <div class="command-title">
+                            <span class="badge badge-warning">WARNING</span>
+                            detached HEAD state - ヘッドが分離
+                        </div>
+                        
+                        <div class="terminal">
+                            <div class="terminal-header">
+                                <div class="terminal-dots">
+                                    <div class="dot red"></div>
+                                    <div class="dot yellow"></div>
+                                    <div class="dot green"></div>
+                                </div>
+                                <div class="terminal-title">警告メッセージ</div>
+                            </div>
+<span class="warning-text">Note: switching to 'a1b2c3d'.</span>
+
+<span class="warning-text">You are in 'detached HEAD' state.</span> <span class="comment">You can look around, make
+experimental changes and commit them, and you can discard any commits you
+make in this state without impacting any branches by switching back to a branch.</span>
+                        </div>
+                        
+                        <div class="step">
+                            <span class="step-number">1</span>
+                            <strong>意味:</strong> ブランチではなく特定のコミットにいる状態
+                        </div>
+                        
+                        <div class="step">
+                            <span class="step-number">2</span>
+                            <strong>ブランチに戻る:</strong>
+                            <div class="terminal">
+<span class="command">git checkout main</span>
+<span class="success-text">Switched to branch 'main'</span>
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <span class="step-number">3</span>
+                            <strong>変更を保存したい場合:</strong>
+                            <div class="terminal">
+<span class="command">git branch temp-branch</span>
+<span class="command">git checkout temp-branch</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- エラー4 -->
+                    <div class="command-card" data-keywords="overwritten checkout 上書き チェックアウト">
+                        <div class="command-title">
+                            <span class="badge badge-error">ERROR</span>
+                            Your local changes would be overwritten
+                        </div>
+                        
+                        <div class="terminal">
+                            <div class="terminal-header">
+                                <div class="terminal-dots">
+                                    <div class="dot red"></div>
+                                    <div class="dot yellow"></div>
+                                    <div class="dot green"></div>
+                                </div>
+                                <div class="terminal-title">エラーメッセージ</div>
+                            </div>
+<span class="error-text">error: Your local changes to the following files would be overwritten by checkout:
+        file.py
+Please commit your changes or stash them before you switch branches.
+Aborting</span>
+                        </div>
+                        
+                        <div class="step">
+                            <span class="step-number">1</span>
+                            <strong>原因:</strong> 変更を保存せずにブランチ切り替えしようとした
+                        </div>
+                        
+                        <div class="step">
+                            <span class="step-number">2</span>
+                            <strong>解決法A - コミットする:</strong>
+                            <div class="terminal">
+<span class="command">git add .</span>
+<span class="command">git commit -m "WIP: 作業途中"</span>
+<span class="command">git checkout other-branch</span>
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <span class="step-number">3</span>
+                            <strong>解決法B - 一時保存:</strong>
+                            <div class="terminal">
+<span class="command">git stash save "途中作業"</span>
+<span class="success-text">Saved working directory and index state</span>
+<span class="command">git checkout other-branch</span>
+<span class="comment"># 作業後、元のブランチに戻って...</span>
+<span class="command">git stash pop</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- エラー5 -->
+                    <div class="command-card" data-keywords="large file 巨大 ファイル サイズ">
+                        <div class="command-title">
+                            <span class="badge badge-error">ERROR</span>
+                            Large files detected - 巨大ファイル検出
+                        </div>
+                        
+                        <div class="terminal">
+                            <div class="terminal-header">
+                                <div class="terminal-dots">
+                                    <div class="dot red"></div>
+                                    <div class="dot yellow"></div>
+                                    <div class="dot green"></div>
+                                </div>
+                                <div class="terminal-title">エラーメッセージ</div>
+                            </div>
+<span class="error-text">remote: error: GH001: Large files detected.
+remote: error: File large_file.zip is 150.00 MB; this exceeds GitHub's file size limit of 100.00 MB</span>
+                        </div>
+                        
+                        <div class="step">
+                            <span class="step-number">1</span>
+                            <strong>直前のコミットから削除:</strong>
+                            <div class="terminal">
+<span class="command">git rm --cached large_file.zip</span>
+<span class="command">git commit --amend --no-edit</span>
+<span class="command">git push origin main</span>
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <span class="step-number">2</span>
+                            <strong>.gitignore に追加:</strong>
+                            <div class="terminal">
+<span class="command">echo "*.zip" >> .gitignore</span>
+<span class="command">echo "large_file.zip" >> .gitignore</span>
+<span class="command">git add .gitignore</span>
+<span class="command">git commit -m "chore: 巨大ファイルを除外"</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- コンフリクトタブ -->
+            <div id="conflicts" class="tab-content">
+                <h2>⚡ コンフリクト解決完全ガイド</h2>
+                
+                <div class="solution-box">
+                    <h3>🎯 コンフリクトマーカーの読み方</h3>
+                </div>
+                
+                <div class="conflict-marker">
+                    <div class="marker-label">HEAD（現在のブランチ）</div>
+<span class="error-text">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</span>
+<span class="code-line">def login(username, password):</span>
+<span class="code-line">    return authenticate_user(username, password)</span>
+<span class="warning-text">=======</span>
+<span class="code-line">def login(email, password):</span>
+<span class="code-line">    return check_credentials(email, password)</span>
+<span class="info-text">&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/other-branch</span>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h3>記号の意味:</h3>
+                    <div class="color-legend">
+                        <div class="legend-item">
+                            <div style="width: 60px; font-size: 1.5em; color: #f48771;">&lt;&lt;&lt;&lt;&lt;&lt;&lt;</div>
+                            <div>
+                                <strong>HEAD</strong><br>
+                                現在のブランチの内容開始
+                            </div>
+                        </div>
+                        
+                        <div class="legend-item">
+                            <div style="width: 60px; font-size: 1.5em; color: #e5c07b;">=======</div>
+                            <div>
+                                <strong>区切り線</strong><br>
+                                2つの変更の境界
+                            </div>
+                        </div>
+                        
+                        <div class="legend-item">
+                            <div style="width: 60px; font-size: 1.5em; color: #61afef;">&gt;&gt;&gt;&gt;&gt;&gt;&gt;</div>
+                            <div>
+                                <strong>ブランチ名</strong><br>
+                                マージ元の内容終了
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3>解決パターン</h3>
+                
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <strong>パターンA: HEADを採用</strong>
+                    <div class="conflict-marker">
+<span class="success-text"># マーカーを削除して、上側だけ残す</span>
+<span class="code-line">def login(username, password):</span>
+<span class="code-line">    return authenticate_user(username, password)</span>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <strong>パターンB: マージ元を採用</strong>
+                    <div class="conflict-marker">
+<span class="success-text"># マーカーを削除して、下側だけ残す</span>
+<span class="code-line">def login(email, password):</span>
+<span class="code-line">    return check_credentials(email, password)</span>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <strong>パターンC: 両方を統合（推奨）</strong>
+                    <div class="conflict-marker">
+<span class="success-text"># 両方の良いところを取り入れる</span>
+<span class="code-line">def login(username, password):</span>
+<span class="code-line">    # メールアドレスにも対応</span>
+<span class="code-line">    if "@" in username:</span>
+<span class="code-line">        return check_credentials(username, password)</span>
+<span class="code-line">    return authenticate_user(username, password)</span>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 30px;">解決後のコマンド</h3>
+                
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dots">
+                            <div class="dot red"></div>
+                            <div class="dot yellow"></div>
+                            <div class="dot green"></div>
+                        </div>
+                        <div class="terminal-title">コンフリクト解決手順</div>
+                    </div>
+<span class="comment"># 1. マーカーが残っていないか確認</span>
+<span class="command">grep -n "&lt;&lt;&lt;&lt;&lt;&lt;&lt;" app.py</span>
+<span class="comment"># 何も表示されなければOK</span>
+
+<span class="comment"># 2. 解決済みファイルをステージング</span>
+<span class="command">git add app.py</span>
+
+<span class="comment"># 3. 状態確認</span>
+<span class="command">git status</span>
+<span class="success-text">All conflicts fixed but you are still merging.
+Changes to be committed:
+        modified:   app.py</span>
+
+<span class="comment"># 4. コミット</span>
+<span class="command">git commit -m "merge: feature/xxx をマージ（コンフリクト解決）"</span>
+<span class="success-text">[main a1b2c3d] merge: feature/xxx をマージ（コンフリクト解決）</span>
+
+<span class="comment"># 5. プッシュ</span>
+<span class="command">git push origin main</span>
+                </div>
+                
+                <div class="solution-box" style="margin-top: 20px;">
+                    <h3>⚠️ よくある間違い</h3>
+                    <ul>
+                        <li>❌ マーカー（&lt;&lt;&lt;&lt;&lt;&lt;&lt;, =======, &gt;&gt;&gt;&gt;&gt;&gt;&gt;）を残したままコミット</li>
+                        <li>❌ テストせずにコミット</li>
+                        <li>❌ 意味を理解せずに片方を選択</li>
+                        <li>✅ 正解: マーカー完全削除 → テスト → コミット</li>
+                    </ul>
+                </div>
+                
+                <h3 style="margin-top: 30px;">マージを中止したい場合</h3>
+                
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dots">
+                            <div class="dot red"></div>
+                            <div class="dot yellow"></div>
+                            <div class="dot green"></div>
+                        </div>
+                        <div class="terminal-title">マージ中止</div>
+                    </div>
+<span class="command">git merge --abort</span>
+<span class="success-text"># 元の状態に戻る</span>
+
+<span class="command">git status</span>
+<span class="success-text">On branch main
+nothing to commit, working tree clean</span>
+                </div>
+            </div>
+            
+            <!-- Status読み方タブ -->
+            <div id="status" class="tab-content">
+                <h2>📊 git status の完全な読み方</h2>
+                
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dots">
+                            <div class="dot red"></div>
+                            <div class="dot yellow"></div>
+                            <div class="dot green"></div>
+                        </div>
+                        <div class="terminal-title">git status - 完全版</div>
+                    </div>
+<span class="info-text">On branch</span> <span class="command">feature/login</span>
+<span class="comment">Your branch is ahead of 'origin/feature/login' by 2 commits.
+  (use "git push" to publish your local commits)</span>
+
+<span class="success-text">Changes to be committed:</span>
+  <span class="comment">(use "git restore --staged &lt;file&gt;..." to unstage)</span>
+        <span class="success-text">modified:   app.py</span>
+        <span class="success-text">new file:   login.py</span>
+        <span class="success-text">deleted:    old.py</span>
+
+<span class="error-text">Changes not staged for commit:</span>
+  <span class="comment">(use "git add &lt;file&gt;..." to update what will be committed)</span>
+  <span class="comment">(use "git restore &lt;file&gt;..." to discard changes)</span>
+        <span class="error-text">modified:   config.py</span>
+        <span class="error-text">deleted:    temp.py</span>
+
+<span class="error-text">Untracked files:</span>
+  <span class="comment">(use "git add &lt;file&gt;..." to include in what will be committed)</span>
+        <span class="error-text">debug.log</span>
+        <span class="error-text">notes.txt</span>
+                </div>
+                
+                <h3>セクション別の意味</h3>
+                
+                <div class="command-card">
+                    <div class="command-title">
+                        <span class="badge badge-info">INFO</span>
+                        On branch feature/login
+                    </div>
+                    <p><strong>意味:</strong> 現在 feature/login ブランチにいる</p>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">
+                        <span class="badge badge-warning">AHEAD</span>
+                        Your branch is ahead of 'origin/feature/login' by 2 commits
+                    </div>
+                    <p><strong>意味:</strong> ローカルがリモートより2つ先行している（push が必要）</p>
+                    <div class="terminal">
+<span class="command">git push origin feature/login</span>
+                    </div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">
+                        <span class="badge badge-warning">BEHIND</span>
+                        Your branch is behind 'origin/main' by 3 commits
+                    </div>
+                    <p><strong>意味:</strong> リモートがローカルより3つ先行している（pull が必要）</p>
+                    <div class="terminal">
+<span class="command">git pull origin main</span>
+                    </div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">
+                        <span class="badge badge-success">STAGED</span>
+                        Changes to be committed（緑色）
+                    </div>
+                    <p><strong>意味:</strong> コミット準備完了！</p>
+                    <ul>
+                        <li><code>modified:</code> - 既存ファイルを変更</li>
+                        <li><code>new file:</code> - 新規ファイル追加</li>
+                        <li><code>deleted:</code> - ファイル削除</li>
+                        <li><code>renamed:</code> - ファイル名変更</li>
+                    </ul>
+                    <div class="terminal">
+<span class="command">git commit -m "feat: ログイン機能を追加"</span>
+                    </div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">
+                        <span class="badge badge-error">UNSTAGED</span>
+                        Changes not staged for commit（赤色）
+                    </div>
+                    <p><strong>意味:</strong> 変更はあるがまだステージングされていない</p>
+                    <div class="terminal">
+<span class="comment"># すべて追加</span>
+<span class="command">git add .</span>
+
+<span class="comment"># 特定ファイルのみ</span>
+<span class="command">git add config.py</span>
+
+<span class="comment"># 削除も反映</span>
+<span class="command">git add -u</span>
+                    </div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">
+                        <span class="badge badge-error">UNTRACKED</span>
+                        Untracked files（赤色）
+                    </div>
+                    <p><strong>意味:</strong> Gitが追跡していない新規ファイル</p>
+                    <div class="terminal">
+<span class="comment"># 追跡する場合</span>
+<span class="command">git add debug.log</span>
+
+<span class="comment"># 無視する場合（.gitignoreに追加）</span>
+<span class="command">echo "debug.log" >> .gitignore</span>
+<span class="command">echo "*.log" >> .gitignore</span>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 30px;">短縮表示: git status -s</h3>
+                
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dots">
+                            <div class="dot red"></div>
+                            <div class="dot yellow"></div>
+                            <div class="dot green"></div>
+                        </div>
+                        <div class="terminal-title">git status -s</div>
+                    </div>
+<span class="success-text">M </span> file1.py    <span class="comment"># ステージング済み変更</span>
+<span class="error-text"> M</span> file2.py    <span class="comment"># 未ステージング変更</span>
+<span class="warning-text">MM</span> file3.py    <span class="comment"># 両方に変更あり</span>
+<span class="success-text">A </span> file4.py    <span class="comment"># 新規追加（ステージング済み）</span>
+<span class="error-text">??</span> file5.py    <span class="comment"># 追跡されていない</span>
+<span class="success-text">D </span> file6.py    <span class="comment"># 削除（ステージング済み）</span>
+<span class="error-text"> D</span> file7.py    <span class="comment"># 削除（未ステージング）</span>
+<span class="success-text">R </span> old.py -> new.py  <span class="comment"># 名前変更</span>
+                </div>
+                
+                <div class="solution-box" style="margin-top: 20px;">
+                    <h3>💡 記号の位置の意味</h3>
+                    <ul>
+                        <li><strong>左側の記号</strong> = ステージングエリアの状態</li>
+                        <li><strong>右側の記号</strong> = ワーキングツリーの状態</li>
+                        <li><strong>例:</strong> <code>MM</code> = ステージング後さらに変更した</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- マージタブ -->
+            <div id="merge" class="tab-content">
+                <h2>🔀 マージメッセージの読み方</h2>
+                
+                <h3>成功パターン</h3>
+                
+                <div class="command-card">
+                    <div class="command-title">
+                        <span class="badge badge-success">SUCCESS</span>
+                        Fast-forward マージ
+                    </div>
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <div class="terminal-dots">
+                                <div class="dot red"></div>
+                                <div class="dot yellow"></div>
+                                <div class="dot green"></div>
+                            </div>
+                            <div class="terminal-title">git merge feature/xxx</div>
+                        </div>
+<span class="success-text">Updating a1b2c3d..e4f5g6h
+Fast-forward</span>
+ <span class="path">app.py</span>    | <span class="success-text">10 ++++++++++</span>
+ <span class="path">login.py</span>  | <span class="success-text">25 +++++++++++++++++++++++++</span>
+ 2 files changed, 35 insertions(+)
+ create mode 100644 login.py
+                    </div>
+                    <p><strong>意味:</strong> 競合なく自動的にマージ完了！</p>
+                    <ul>
+                        <li><code>2 files changed</code> - 2ファイルが変更</li>
+                        <li><code>35 insertions(+)</code> - 35行追加</li>
+                        <li><code>create mode 100644</code> - 新規ファイル作成</li>
+                    </ul>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">
+                        <span class="badge badge-success">SUCCESS</span>
+                        Merge made by 'recursive' strategy
+                    </div>
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <div class="terminal-dots">
+                                <div class="dot red"></div>
+                                <div class="dot yellow"></div>
+                                <div class="dot green"></div>
+                            </div>
+                            <div class="terminal-title">git merge --no-ff feature/xxx</div>
+                        </div>
+<span class="success-text">Merge made by the 'recursive' strategy.</span>
+ <span class="path">app.py</span> | <span class="success-text">5 +++++</span>
+ 1 file changed, 5 insertions(+)
+                    </div>
+                    <p><strong>意味:</strong> マージコミットが作成された</p>
+                </div>
+                
+                <h3 style="margin-top: 30px;">コンフリクトパターン</h3>
+                
+                <div class="command-card">
+                    <div class="command-title">
+                        <span class="badge badge-error">CONFLICT</span>
+                        Auto-merging failed
+                    </div>
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <div class="terminal-dots">
+                                <div class="dot red"></div>
+                                <div class="dot yellow"></div>
+                                <div class="dot green"></div>
+                            </div>
+                            <div class="terminal-title">git merge feature/xxx</div>
+                        </div>
+<span class="warning-text">Auto-merging app.py</span>
+<span class="warning-text">Auto-merging config.py</span>
+<span class="error-text">CONFLICT (content): Merge conflict in app.py</span>
+<span class="error-text">Automatic merge failed; fix conflicts and then commit the result.</span>
+                    </div>
+                    
+                    <div class="step">
+                        <span class="step-number">1</span>
+                        <strong>コンフリクトファイルを確認:</strong>
+                        <div class="terminal">
+<span class="command">git status</span>
+<span class="error-text">Unmerged paths:
+  (use "git add &lt;file&gt;..." to mark resolution)
+        both modified:   app.py</span>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <span class="step-number">2</span>
+                        <strong>どちらを採用するか決める:</strong>
+                        <div class="terminal">
+<span class="comment"># 自分の変更を採用</span>
+<span class="command">git checkout --ours app.py</span>
+
+<span class="comment"># 相手の変更を採用</span>
+<span class="command">git checkout --theirs app.py</span>
+
+<span class="comment"># 手動で編集</span>
+<span class="command">code app.py</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 30px;">リベースメッセージ</h3>
+                
+                <div class="command-card">
+                    <div class="command-title">
+                        <span class="badge badge-info">REBASE</span>
+                        Successfully rebased
+                    </div>
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <div class="terminal-dots">
+                                <div class="dot red"></div>
+                                <div class="dot yellow"></div>
+                                <div class="dot green"></div>
+                            </div>
+                            <div class="terminal-title">git rebase main</div>
+                        </div>
+<span class="success-text">First, rewinding head to replay your work on top of it...</span>
+<span class="success-text">Applying: feat: 機能A</span>
+<span class="success-text">Applying: feat: 機能B</span>
+<span class="success-text">Successfully rebased and updated refs/heads/feature/xxx.</span>
+                    </div>
+                    <p><strong>意味:</strong> コミットが新しいベースの上に再適用された</p>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">
+                        <span class="badge badge-error">CONFLICT</span>
+                        Rebase conflict
+                    </div>
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <div class="terminal-dots">
+                                <div class="dot red"></div>
+                                <div class="dot yellow"></div>
+                                <div class="dot green"></div>
+                            </div>
+                            <div class="terminal-title">git rebase main</div>
+                        </div>
+<span class="warning-text">Auto-merging file.py</span>
+<span class="error-text">CONFLICT (content): Merge conflict in file.py</span>
+<span class="error-text">error: could not apply a1b2c3d... feat: 新機能</span>
+<span class="comment">hint: Resolve all conflicts manually, mark them as resolved with
+hint: "git add/rm &lt;conflicted_files&gt;", then run "git rebase --continue".</span>
+                    </div>
+                    
+                    <div class="step">
+                        <span class="step-number">1</span>
+                        <strong>解決して続行:</strong>
+                        <div class="terminal">
+<span class="comment"># コンフリクト解決</span>
+<span class="command">git add file.py</span>
+<span class="command">git rebase --continue</span>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <span class="step-number">2</span>
+                        <strong>スキップ:</strong>
+                        <div class="terminal">
+<span class="command">git rebase --skip</span>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <span class="step-number">3</span>
+                        <strong>中止:</strong>
+                        <div class="terminal">
+<span class="command">git rebase --abort</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- クイックリファレンスタブ -->
+            <div id="quick" class="tab-content">
+                <h2>⚡ クイックリファレンス</h2>
+                
+                <div class="quick-ref">
+                    <div class="ref-card" onclick="alert('git status\n\n現在の状態を確認\n変更されたファイル、ステージング状態を表示')">
+                        <h4>📊 状態確認</h4>
+                        <code>git status</code>
+                        <p style="margin-top: 10px; font-size: 0.9em;">変更内容を確認</p>
+                    </div>
+                    
+                    <div class="ref-card" onclick="alert('git add ファイル名\ngit add .\n\nファイルをステージングに追加\n. は全ファイル')">
+                        <h4>➕ 追加</h4>
+                        <code>git add .</code>
+                        <p style="margin-top: 10px; font-size: 0.9em;">変更をステージング</p>
+                    </div>
+                    
+                    <div class="ref-card" onclick="alert('git commit -m \"メッセージ\"\n\nステージングされた変更をコミット')">
+                        <h4>💾 保存</h4>
+                        <code>git commit -m \"\"</code>
+                        <p style="margin-top: 10px; font-size: 0.9em;">変更を記録</p>
+                    </div>
+                    
+                    <div class="ref-card" onclick="alert('git push origin ブランチ名\n\nローカルの変更をリモートにアップロード')">
+                        <h4>📤 アップロード</h4>
+                        <code>git push</code>
+                        <p style="margin-top: 10px; font-size: 0.9em;">リモートに送信</p>
+                    </div>
+                    
+                    <div class="ref-card" onclick="alert('git pull origin ブランチ名\n\nリモートの最新をダウンロード')">
+                        <h4>📥 ダウンロード</h4>
+                        <code>git pull</code>
+                        <p style="margin-top: 10px; font-size: 0.9em;">最新を取得</p>
+                    </div>
+                    
+                    <div class="ref-card" onclick="alert('git merge --abort\n\nマージを中止して元に戻る')">
+                        <h4>🚫 マージ中止</h4>
+                        <code>git merge --abort</code>
+                        <p style="margin-top: 10px; font-size: 0.9em;">やり直す</p>
+                    </div>
+                    
+                    <div class="ref-card" onclick="alert('git stash save \"メモ\"\n\n変更を一時保存\n\ngit stash pop で復元')">
+                        <h4>💼 一時保存</h4>
+                        <code>git stash</code>
+                        <p style="margin-top: 10px; font-size: 0.9em;">作業を退避</p>
+                    </div>
+                    
+                    <div class="ref-card" onclick="alert('git checkout ブランチ名\n\nブランチを切り替える')">
+                        <h4>🔄 切り替え</h4>
+                        <code>git checkout</code>
+                        <p style="margin-top: 10px; font-size: 0.9em;">ブランチ移動</p>
+                    </div>
+                    
+                    <div class="ref-card" onclick="alert('git log --oneline --graph\n\nコミット履歴を表示')">
+                        <h4>📜 履歴</h4>
+                        <code>git log</code>
+                        <p style="margin-top: 10px; font-size: 0.9em;">変更履歴を確認</p>
+                    </div>
+                    
+                    <div class="ref-card" onclick="alert('git reset --soft HEAD~1\n\n直前のコミットを取り消す\n変更は残る')">
+                        <h4>↩️ 取り消し</h4>
+                        <code>git reset</code>
+                        <p style="margin-top: 10px; font-size: 0.9em;">コミット巻き戻し</p>
+                    </div>
+                    
+                    <div class="ref-card" onclick="alert('git branch\n\nブランチ一覧を表示\n* が現在のブランチ')">
+                        <h4>🌿 ブランチ</h4>
+                        <code>git branch</code>
+                        <p style="margin-top: 10px; font-size: 0.9em;">ブランチ確認</p>
+                    </div>
+                    
+                    <div class="ref-card" onclick="alert('git diff\n\n変更の詳細を表示\n赤が削除、緑が追加')">
+                        <h4>🔍 差分</h4>
+                        <code>git diff</code>
+                        <p style="margin-top: 10px; font-size: 0.9em;">変更内容を比較</p>
+                    </div>
+                </div>
+                
+                <h3 style="margin-top: 40px;">緊急時のコマンド</h3>
+                
+                <div class="command-card">
+                    <div class="command-title">🆘 パニック時の対応</div>
+                    <div class="terminal">
+<span class="comment"># 1. まず状況確認</span>
+<span class="command">git status</span>
+
+<span class="comment"># 2. 最近の操作を確認</span>
+<span class="command">git reflog</span>
+
+<span class="comment"># 3. すべてを元に戻したい</span>
+<span class="command">git reset --hard HEAD</span>
+
+<span class="comment"># 4. マージ/リベースを中止</span>
+<span class="command">git merge --abort</span>
+<span class="command">git rebase --abort</span>
+
+<span class="comment"># 5. どうしても分からない場合</span>
+<span class="comment"># → チームに相談！</span>
+                    </div>
+                </div>
+                
+                <div class="solution-box" style="margin-top: 20px;">
+                    <h3>🎓 覚えておくべき3つのコマンド</h3>
+                    <ol>
+                        <li><code>git status</code> - 困ったらまずこれ</li>
+                        <li><code>git reflog</code> - 操作履歴を確認（復元可能）</li>
+                        <li><code>git --help</code> - ヘルプを表示</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tabbuttons;
+            
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            
+            tabbuttons = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tabbuttons.length; i++) {
+                tabbuttons[i].classList.remove("active");
+            }
+            
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+        
+        function searchErrors(query) {
+            const cards = document.querySelectorAll('.error-list .command-card');
+            const searchTerm = query.toLowerCase();
+            
+            cards.forEach(card => {
+                const keywords = card.getAttribute('data-keywords').toLowerCase();
+                const title = card.querySelector('.command-title').textContent.toLowerCase();
+                
+                if (keywords.includes(searchTerm) || title.includes(searchTerm) || searchTerm === '') {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        // ページ読み込み時のアニメーション
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.command-card, .ref-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 50);
+            });
+        });
+    </script>
+</body>
+</html>
