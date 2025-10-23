@@ -1,0 +1,853 @@
+# 新人エンジニア向け：Jenkins Job種類完全ガイド
+
+**作成日**: 2025年10月24日  
+**対象者**: 新人エンジニア  
+**難易度**: 初級〜中級
+
+---
+
+## 📋 目次
+
+1. [Jenkins Jobとは](#jenkins-jobとは)
+2. [Freestyle Project（フリースタイル）](#1-freestyle-projectフリースタイル)
+3. [Pipeline（パイプライン）](#2-pipelineパイプライン)
+4. [Multibranch Pipeline（マルチブランチパイプライン）](#3-multibranch-pipelineマルチブランチパイプライン)
+5. [3つの比較表](#比較表-どれを選ぶべきか)
+6. [実践：それぞれの作り方](#実践それぞれの作り方)
+
+---
+
+## Jenkins Jobとは
+
+**Jenkins Job**とは、Jenkinsが自動的に実行する**一連のタスク**のことです。
+
+### 典型的なJobの流れ
+
+```
+1. Gitリポジトリから最新コードを取得
+   ↓
+2. コードをビルド・コンパイル
+   ↓
+3. テストを実行（ユニットテスト、統合テストなど）
+   ↓
+4. 成果物（Artifact）を作成
+   ↓
+5. 結果を通知（Slack、メールなど）
+```
+
+### 💡 補足：Artifactとは？
+
+**Artifact（アーティファクト）** = ビルドで作成された、実際にデプロイする「モノ」
+
+**例：**
+- `.jar`ファイル（Javaアプリケーション）
+- `.war`ファイル（Webアプリケーション）
+- Dockerイメージ
+- `.zip`ファイル（圧縮されたアプリケーション）
+- Helmチャート（Kubernetes用）
+
+---
+
+## Jenkins Jobの種類
+
+Jenkinsには主に3つのJobタイプがあります：
+
+| タイプ | 用途 | 難易度 |
+|--------|------|--------|
+| **Freestyle Project** | シンプルな1回限りのタスク | ⭐ 初心者向け |
+| **Pipeline** | 複雑なCI/CDフロー | ⭐⭐ 中級者向け |
+| **Multibranch Pipeline** | 複数ブランチの自動管理 | ⭐⭐⭐ 上級者向け |
+
+---
+
+## 1. Freestyle Project（フリースタイル）
+
+### 📝 特徴
+
+- **最もシンプル**で柔軟なJobタイプ
+- GUIで設定できる（コードを書く必要がない）
+- 1つのタスクを実行するのに最適
+
+### ✅ メリット
+
+- 初心者でも簡単に設定できる
+- GUIで全て完結
+- すぐに始められる
+- プラグインの機能を簡単に利用できる
+
+### ❌ デメリット
+
+- 複雑なワークフローには不向き
+- 複数のステップを可視化できない
+- 設定をコードで管理できない（バージョン管理が困難）
+- 手動承認ステップを作れない
+- 並列実行ができない
+
+### 🎯 こんな時に使う
+
+- **単純なビルドとテスト**を実行したい
+- **すぐに試したい**プロジェクトがある
+- **学習目的**で基本を理解したい
+- **1回限りのタスク**を実行したい
+
+### 📊 実例
+
+**シナリオ：**
+Gitからコードを取得して、ビルドして、テストを実行する
+
+```
+ステップ1: Git checkout
+ステップ2: mvn clean install （ビルド）
+ステップ3: mvn test （テスト実行）
+ステップ4: メールで結果を通知
+```
+
+### 💡 Freestyle Projectの構成要素
+
+#### 1. General（一般設定）
+
+**ビルド履歴の管理**
+```
+✓ 古いビルドの破棄
+  保存するビルドの最大数: 10
+  保存する成果物の最大数: 5
+```
+
+**プロジェクトの設定**
+```
+□ このプロジェクトを無効化（一時的に停止したい場合）
+□ 並行ビルド（同時に複数のビルドを実行）
+```
+
+#### 2. ソースコード管理
+
+**Gitの設定例：**
+```
+Repository URL: https://github.com/username/project.git
+Credentials: github-token
+Branch: */main
+```
+
+#### 3. ビルドトリガー
+
+**いつビルドを開始するか？**
+
+| トリガー | 説明 | 使用例 |
+|----------|------|--------|
+| **GitHubにプッシュされたらビルド** | コミット毎に自動ビルド | CI（継続的インテグレーション） |
+| **定期的にビルド** | Cron形式で定期実行 | 毎日深夜にビルド |
+| **SCMをポーリング** | 定期的にGitをチェック | Webhookが使えない場合 |
+| **他のプロジェクト後にビルド** | JobをChain化 | Job A → Job B |
+
+**Cron形式の例：**
+```
+# 毎日午前2時
+0 2 * * *
+
+# 毎時0分
+0 * * * *
+
+# 平日の午前9時
+0 9 * * 1-5
+```
+
+#### 4. ビルド環境
+
+**よく使う設定：**
+```
+✓ ビルド開始前にワークスペースを削除
+✓ タイムスタンプをコンソール出力に追加
+✓ ビルドのタイムアウト（例：30分）
+```
+
+#### 5. ビルド
+
+**実際のビルドコマンド：**
+
+**Shellスクリプトの例：**
+```bash
+#!/bin/bash
+echo "ビルド開始"
+mvn clean install
+mvn test
+echo "ビルド完了"
+```
+
+#### 6. ビルド後の処理
+
+**ビルド成功後にできること：**
+```
+✓ メール通知
+✓ Slack通知
+✓ テストレポートの公開
+✓ 成果物のアーカイブ
+✓ 次のJobをトリガー
+✓ 自動デプロイ
+```
+
+---
+
+## 2. Pipeline（パイプライン）
+
+### 📝 特徴
+
+- **コードでCI/CDフローを定義**（Jenkinsfile）
+- 複数のステージを可視化できる
+- バージョン管理できる（Infrastructure as Code）
+
+### ✅ メリット
+
+- **視覚化できる**：どのステップで失敗したか一目瞭然
+- **コードで管理**：Gitでバージョン管理できる
+- **手動承認**：本番デプロイ前に承認ステップを入れられる
+- **並列実行**：複数のテストを同時に実行できる
+- **再利用可能**：同じコードを複数のプロジェクトで使える
+- **耐久性**：Jenkins再起動後も処理を継続できる
+
+### ❌ デメリット
+
+- Groovy言語の知識が必要（学習コストがある）
+- 初期設定がFreestyleより複雑
+- デバッグが難しい場合がある
+
+### 🎯 こんな時に使う
+
+- **本格的なCI/CDパイプライン**を構築したい
+- **複数のステージ**（ビルド→テスト→デプロイ）がある
+- **手動承認**が必要（本番デプロイ前など）
+- **並列実行**でビルド時間を短縮したい
+- **Infrastructure as Code**を実践したい
+
+### 📊 Pipelineの視覚化
+
+```
+[ビルド] → [テスト] → [ステージング] → [承認] → [本番デプロイ]
+   ↓          ↓           ↓              ↓          ↓
+ 成功       成功        成功          待機中      成功
+```
+
+### 💡 Pipelineの2つの書き方
+
+#### Declarative Pipeline（宣言型・推奨）
+
+**特徴：**
+- 構造化されていて読みやすい
+- 初心者向け
+- エラーチェックが自動
+
+**基本構造：**
+```groovy
+pipeline {
+    agent any
+    
+    stages {
+        stage('ビルド') {
+            steps {
+                echo 'ビルド中...'
+                sh 'mvn clean install'
+            }
+        }
+        
+        stage('テスト') {
+            steps {
+                echo 'テスト実行中...'
+                sh 'mvn test'
+            }
+        }
+        
+        stage('デプロイ') {
+            steps {
+                echo 'デプロイ中...'
+                sh './deploy.sh'
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo 'ビルド成功！'
+        }
+        failure {
+            echo 'ビルド失敗...'
+        }
+    }
+}
+```
+
+#### Scripted Pipeline（スクリプト型）
+
+**特徴：**
+- より柔軟で高度な制御が可能
+- 上級者向け
+- Groovyの知識が必要
+
+**基本構造：**
+```groovy
+node {
+    stage('ビルド') {
+        echo 'ビルド中...'
+        sh 'mvn clean install'
+    }
+    
+    stage('テスト') {
+        echo 'テスト実行中...'
+        sh 'mvn test'
+    }
+    
+    stage('デプロイ') {
+        echo 'デプロイ中...'
+        sh './deploy.sh'
+    }
+}
+```
+
+### 🎨 実践例：手動承認ステップ付き
+
+```groovy
+pipeline {
+    agent any
+    
+    stages {
+        stage('ビルド') {
+            steps {
+                echo 'ビルド中...'
+                sh 'mvn clean package'
+            }
+        }
+        
+        stage('テスト') {
+            steps {
+                echo 'テスト実行中...'
+                sh 'mvn test'
+            }
+        }
+        
+        stage('ステージングにデプロイ') {
+            steps {
+                echo 'ステージング環境にデプロイ...'
+                sh './deploy-staging.sh'
+            }
+        }
+        
+        stage('本番デプロイの承認') {
+            steps {
+                input message: '本番環境にデプロイしますか？',
+                      ok: 'デプロイする'
+            }
+        }
+        
+        stage('本番デプロイ') {
+            steps {
+                echo '本番環境にデプロイ中...'
+                sh './deploy-production.sh'
+            }
+        }
+    }
+    
+    post {
+        success {
+            slackSend(
+                color: 'good',
+                message: "デプロイ成功: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+            )
+        }
+        failure {
+            slackSend(
+                color: 'danger',
+                message: "デプロイ失敗: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+            )
+        }
+    }
+}
+```
+
+### 🔄 並列実行の例
+
+```groovy
+pipeline {
+    agent any
+    
+    stages {
+        stage('並列テスト') {
+            parallel {
+                stage('Unitテスト') {
+                    steps {
+                        sh 'mvn test'
+                    }
+                }
+                stage('統合テスト') {
+                    steps {
+                        sh 'mvn verify'
+                    }
+                }
+                stage('セキュリティスキャン') {
+                    steps {
+                        sh './security-scan.sh'
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+---
+
+## 3. Multibranch Pipeline（マルチブランチパイプライン）
+
+### 📝 特徴
+
+- **複数のブランチを自動的に管理**
+- 各ブランチに対して自動的にPipelineを作成
+- ブランチ毎に異なるJenkinsfileを使える
+
+### ✅ メリット
+
+- **自動ブランチ検出**：新しいブランチを自動認識
+- **プルリクエスト対応**：PRごとにビルド・テスト
+- **ブランチ戦略に対応**：Git Flow、GitHub Flowなど
+- **自動クリーンアップ**：削除されたブランチのJobも自動削除
+
+### ❌ デメリット
+
+- 設定が最も複雑
+- リソース消費が大きい（ブランチ数に比例）
+- 初心者には理解が難しい
+
+### 🎯 こんな時に使う
+
+- **複数の開発ブランチ**がある
+- **プルリクエスト毎にテスト**したい
+- **Git Flow戦略**を採用している
+- **チーム開発**で各メンバーのブランチをテストしたい
+
+### 📊 ブランチ戦略の例
+
+```
+main ────────────────────────────────
+        ↓                    ↑
+develop ────────────────────────
+         ↓            ↑
+feature/login ────────
+         ↓        ↑
+feature/payment ──
+```
+
+**それぞれのブランチで自動的にビルド・テストが実行される！**
+
+### 💡 実際の動作
+
+#### 1. ブランチが作成されたとき
+
+```
+開発者: git checkout -b feature/new-function
+        git push origin feature/new-function
+        
+Jenkins: 新しいブランチを検出！
+         → 自動的にJobを作成
+         → Jenkinsfileを実行
+         → ビルド＆テスト
+```
+
+#### 2. プルリクエストが作成されたとき
+
+```
+開発者: GitHubでPRを作成
+        
+Jenkins: PRを検出！
+         → PRブランチをビルド
+         → テスト結果をGitHubに通知
+         → 緑のチェックマーク✓または赤のX✗
+```
+
+#### 3. ブランチが削除されたとき
+
+```
+開発者: git push origin --delete feature/old-function
+        
+Jenkins: ブランチ削除を検出！
+         → 対応するJobも自動削除
+```
+
+### 🎨 Jenkinsfileの例（ブランチ毎の処理）
+
+```groovy
+pipeline {
+    agent any
+    
+    stages {
+        stage('ビルド') {
+            steps {
+                echo "ブランチ: ${env.BRANCH_NAME}"
+                sh 'mvn clean package'
+            }
+        }
+        
+        stage('テスト') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+        
+        stage('デプロイ') {
+            when {
+                branch 'main'  // mainブランチの時だけデプロイ
+            }
+            steps {
+                echo '本番環境にデプロイ'
+                sh './deploy-production.sh'
+            }
+        }
+        
+        stage('ステージングデプロイ') {
+            when {
+                branch 'develop'  // developブランチの時だけ
+            }
+            steps {
+                echo 'ステージング環境にデプロイ'
+                sh './deploy-staging.sh'
+            }
+        }
+    }
+}
+```
+
+---
+
+## 比較表: どれを選ぶべきか？
+
+| 項目 | Freestyle | Pipeline | Multibranch Pipeline |
+|------|-----------|----------|---------------------|
+| **設定方法** | GUI | コード（Jenkinsfile） | コード（Jenkinsfile） |
+| **難易度** | ⭐ 簡単 | ⭐⭐ 中級 | ⭐⭐⭐ 上級 |
+| **視覚化** | ❌ なし | ✅ ステージごと | ✅ ブランチ＋ステージ |
+| **バージョン管理** | ❌ 困難 | ✅ 可能 | ✅ 可能 |
+| **手動承認** | ❌ 不可 | ✅ 可能 | ✅ 可能 |
+| **並列実行** | ❌ 不可 | ✅ 可能 | ✅ 可能 |
+| **複数ブランチ** | 手動作成 | 手動作成 | ✅ 自動作成 |
+| **学習コスト** | 低い | 中程度 | 高い |
+| **保守性** | 低い | 高い | 高い |
+| **適用範囲** | 単純タスク | CI/CDパイプライン | チーム開発 |
+
+### 📊 選択フローチャート
+
+```
+プロジェクトの規模は？
+├─ 小規模・学習目的
+│  └─ → Freestyle Project
+│
+├─ 中規模・CI/CDが必要
+│  └─ → Pipeline
+│
+└─ 大規模・複数ブランチ
+   └─ → Multibranch Pipeline
+```
+
+---
+
+## 実践：それぞれの作り方
+
+### 🔨 1. Freestyle Projectの作成
+
+#### ステップ1: 新規Job作成
+
+1. Jenkinsダッシュボードを開く
+2. **「新規ジョブ作成」** をクリック
+3. ジョブ名: `MyFirstFreestyle`
+4. **「フリースタイル・プロジェクトのビルド」** を選択
+5. **「OK」**
+
+#### ステップ2: ソースコード管理
+
+1. **「Git」** を選択
+2. **Repository URL**: `https://github.com/yourusername/your-repo.git`
+3. **Branch**: `*/main`
+
+#### ステップ3: ビルド手順
+
+1. **「ビルド手順の追加」** → **「シェルの実行」**
+2. 以下を入力：
+
+```bash
+#!/bin/bash
+echo "========== ビルド開始 =========="
+echo "現在時刻: $(date)"
+
+# ビルドコマンド（例）
+echo "ビルド中..."
+# mvn clean install
+
+echo "========== ビルド完了 =========="
+```
+
+#### ステップ4: 保存＆実行
+
+1. **「保存」**
+2. **「ビルド実行」**
+3. **「コンソール出力」** で確認
+
+---
+
+### 🔨 2. Pipelineの作成
+
+#### 方法A: Classic UI（従来のUI）
+
+1. **「新規ジョブ作成」**
+2. ジョブ名: `MyFirstPipeline`
+3. **「Pipeline」** を選択
+4. **「OK」**
+5. **「Pipeline」** セクションまでスクロール
+6. **Definition**: `Pipeline script`
+7. 以下のコードを入力：
+
+```groovy
+pipeline {
+    agent any
+    
+    stages {
+        stage('Hello') {
+            steps {
+                echo 'Hello World!'
+                echo "ビルド番号: ${env.BUILD_NUMBER}"
+            }
+        }
+    }
+}
+```
+
+8. **「保存」** → **「ビルド実行」**
+
+#### 方法B: SCMから取得（推奨）
+
+1. GitリポジトリにJenkinsfileを作成
+
+**Jenkinsfile:**
+```groovy
+pipeline {
+    agent any
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                echo 'Building...'
+                sh 'echo "ビルド処理"'
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                echo 'Testing...'
+                sh 'echo "テスト処理"'
+            }
+        }
+    }
+}
+```
+
+2. Jenkinsで設定
+
+- **Definition**: `Pipeline script from SCM`
+- **SCM**: `Git`
+- **Repository URL**: `https://github.com/yourusername/repo.git`
+- **Script Path**: `Jenkinsfile`
+
+3. **「保存」** → **「ビルド実行」**
+
+---
+
+### 🔨 3. Multibranch Pipelineの作成
+
+#### ステップ1: 準備
+
+GitリポジトリのルートにJenkinsfileを配置
+
+**Jenkinsfile:**
+```groovy
+pipeline {
+    agent any
+    
+    stages {
+        stage('Info') {
+            steps {
+                echo "ブランチ: ${env.BRANCH_NAME}"
+                echo "ビルド番号: ${env.BUILD_NUMBER}"
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                echo 'Building...'
+            }
+        }
+        
+        stage('Deploy to Production') {
+            when {
+                branch 'main'
+            }
+            steps {
+                echo '本番環境にデプロイ'
+            }
+        }
+        
+        stage('Deploy to Staging') {
+            when {
+                branch 'develop'
+            }
+            steps {
+                echo 'ステージング環境にデプロイ'
+            }
+        }
+    }
+}
+```
+
+#### ステップ2: Jenkins設定
+
+1. **「新規ジョブ作成」**
+2. ジョブ名: `MyMultibranchPipeline`
+3. **「Multibranch Pipeline」** を選択
+4. **「OK」**
+
+#### ステップ3: ブランチソースの設定
+
+1. **「Branch Sources」** → **「Add source」** → **「Git」**
+2. **Project Repository**: `https://github.com/yourusername/repo.git`
+3. **Credentials**: 認証情報を選択
+
+#### ステップ4: ビルド設定
+
+1. **「Build Configuration」**
+   - **Mode**: `by Jenkinsfile`
+   - **Script Path**: `Jenkinsfile`
+
+2. **「Scan Multibranch Pipeline Triggers」**
+   - ✓ Periodically if not otherwise run
+   - Interval: `1 minute`（テスト用）
+
+3. **「保存」**
+
+#### ステップ5: スキャン実行
+
+- 自動的にブランチスキャンが開始される
+- 検出されたブランチごとにJobが作成される
+
+---
+
+## 🎯 実践的な使い分け
+
+### シナリオ1: 個人プロジェクト
+
+**状況：** 小規模なWebアプリを開発中
+
+**推奨：** Freestyle Project
+```
+理由：
+- シンプルで十分
+- GUIで簡単に設定
+- 学習コストが低い
+```
+
+### シナリオ2: チームプロジェクト（単一ブランチ）
+
+**状況：** 5人のチームでmainブランチだけ使用
+
+**推奨：** Pipeline
+```
+理由：
+- CI/CDフローを可視化したい
+- コードレビューしたい（Jenkinsfile）
+- 手動承認ステップが必要
+```
+
+### シナリオ3: チームプロジェクト（Git Flow採用）
+
+**状況：** 10人以上のチームで複数ブランチを運用
+
+**推奨：** Multibranch Pipeline
+```
+理由：
+- 各ブランチを自動管理
+- PRごとにテスト
+- ブランチ戦略に対応
+```
+
+---
+
+## 🔧 トラブルシューティング
+
+### 問題1: Pipelineの構文エラー
+
+**症状：** `WorkflowScript: X: unexpected token`
+
+**解決：**
+1. [Pipeline Syntax Generator](http://your-jenkins-url/pipeline-syntax/)を使う
+2. Groovy構文を確認
+3. 引用符の種類を確認（`'` vs `"`）
+
+### 問題2: Jenkinsfileが見つからない
+
+**症状：** `ERROR: Could not find a Jenkinsfile`
+
+**解決：**
+```bash
+# リポジトリのルートにあるか確認
+ls -la Jenkinsfile
+
+# 大文字小文字を確認
+# ○ Jenkinsfile
+# × jenkinsfile
+```
+
+### 問題3: ブランチが検出されない
+
+**症状：** Multibranch Pipelineでブランチが表示されない
+
+**解決：**
+1. **「Scan Multibranch Pipeline Now」** をクリック
+2. 認証情報が正しいか確認
+3. Jenkinsfileが各ブランチに存在するか確認
+
+---
+
+## 📚 次のステップ
+
+### レベル1（初心者）
+- [ ] Freestyle Projectを5個作る
+- [ ] 基本的なシェルスクリプトを実行
+- [ ] ビルドトリガーを理解
+
+### レベル2（中級者）
+- [ ] 簡単なPipelineを作成
+- [ ] Declarative Pipelineの構文を学ぶ
+- [ ] Jenkinsfileをバージョン管理
+
+### レベル3（上級者）
+- [ ] Multibranch Pipelineを構築
+- [ ] 並列実行を実装
+- [ ] Shared Libraryを作成
+
+---
+
+## 📖 参考資料
+
+### 公式ドキュメント
+- [Jenkins Pipeline Documentation](https://www.jenkins.io/doc/book/pipeline/)
+- [Pipeline Syntax Reference](https://www.jenkins.io/doc/book/pipeline/syntax/)
+
+### おすすめプラグイン
+- **Blue Ocean**: Pipelineの視覚化
+- **Pipeline Stage View**: ステージごとの表示
+- **Git**: Gitリポジトリ連携
+- **Credentials Binding**: 認証情報の安全な管理
+
+---
+
+**手順書 終わり**
+
+頑張ってください！🚀
